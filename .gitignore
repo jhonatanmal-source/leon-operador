@@ -21,6 +21,7 @@ web_app/static/uploads/*
 tools/
 .codex-remote-attachments/
 .agents/
+.claude/
 screenshots/
 
 # Python and editor caches
