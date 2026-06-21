@@ -1,0 +1,47 @@
+{
+  "reference_date": "2026-06-18",
+  "generated_at": "2026-06-18T09:28:10",
+  "status": "SAFE_LEARNING",
+  "execution": {
+    "demo_execution_enabled": false,
+    "execution_enabled": false,
+    "demo_only": true
+  },
+  "metrics": {
+    "pre_operations_today": 23,
+    "orders_today": 3,
+    "observed_today": 20,
+    "protected_observations_today": 7,
+    "historical_structural_violations_today": 3,
+    "open_pre_operations": 0
+  },
+  "findings": [
+    {
+      "severity": "CRITICAL",
+      "code": "HISTORICAL_EXECUTION_WITHOUT_SMC",
+      "count": 3,
+      "operations": [
+        "PREOP-000105",
+        "PREOP-000106",
+        "PREOP-000107"
+      ]
+    },
+    {
+      "severity": "POSITIVE",
+      "code": "SMC_GUARD_BLOCKING_WEAK_SETUPS",
+      "count": 7
+    },
+    {
+      "severity": "POSITIVE",
+      "code": "LEARNING_ONLY_MODE_ACTIVE",
+      "count": 1
+    }
+  ],
+  "learning_rules": [
+    "Analise sem resultado real nao conta como acerto ou erro.",
+    "SMC neutro nunca aumenta reputacao operacional.",
+    "BOS, CHOCH e FVG devem estar alinhados com a direcao.",
+    "Resultado real do MT5 deve ser aprendido uma unica vez.",
+    "Durante auditoria, coletar e observar sem enviar ordens."
+  ]
+}

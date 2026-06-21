@@ -1,0 +1,43 @@
+# Secrets and machine-specific configuration
+.env
+config.ini
+*.key
+*.pem
+*.pfx
+*.p12
+*credentials*
+*secrets*
+
+# Runtime data and private databases
+data/
+logs/
+backups/
+web_app/database/admin_bootstrap.json
+web_app/database/leon_web.db
+web_app/static/uploads/*
+!web_app/static/uploads/.gitkeep
+
+# Downloaded tools and local attachments
+tools/
+.codex-remote-attachments/
+.agents/
+screenshots/
+
+# Python and editor caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Windows and temporary files
+Thumbs.db
+Desktop.ini
+*.tmp
+*.bak
+*.log
+*.zip
+*.msi
+*.exe

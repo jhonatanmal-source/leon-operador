@@ -1,0 +1,20 @@
+{
+  "topic": "Fibonacci Probabilistico em Elliott",
+  "level": "advanced",
+  "description": "Usa proporcoes Fibonacci como zonas estatisticas de estudo, nunca como confirmacao isolada.",
+  "rules": [
+    "Onda 2 frequentemente retrai 50%, 61.8% ou 76.4% da onda 1.",
+    "Onda 3 pode projetar 161.8% ou mais da onda 1 quando estendida.",
+    "Onda 4 frequentemente retrai 23.6% ou 38.2% da onda 3 e tende a ser menos profunda.",
+    "Onda 5 pode se relacionar com a onda 1 ou com a onda 3.",
+    "Onda C frequentemente se aproxima da amplitude de A ou de uma extensao desta.",
+    "Confluencia de proporcoes aumenta interesse, mas nao comprova a contagem.",
+    "Nivel Fibonacci sem estrutura completa e sem confirmacao SMC vale zero como gatilho."
+  ],
+  "leon_policy": [
+    "Trabalhar com faixas, nao pontos exatos.",
+    "Registrar erro entre projecao e movimento realizado.",
+    "Priorizar invalidacao estrutural sobre alvo Fibonacci."
+  ],
+  "confidence_impact": 7
+}

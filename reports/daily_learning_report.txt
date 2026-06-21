@@ -1,0 +1,575 @@
+=================================
+LEON DAILY LEARNING REPORT
+=================================
+Data: 2026-06-15
+
+Resumo do dia
+- Registros analisados: 0
+- Planos gerados: 0
+- Direcao dominante: SEM DADOS
+- Qualidade dominante: SEM DADOS
+- Confianca dominante: SEM DADOS
+
+Leitura SMC + Elliott
+- SMC dominante: SEM DADOS
+- Elliott dominante: SEM DADOS
+- Brain Score medio dos planos: 0.00
+
+Memoria geral do cerebro
+- Acertos registrados: 23
+- Erros registrados: 1
+- Taxa historica de acerto: 95.83%
+
+Aprendizado do LEON
+- Hoje nao houve memoria operacional suficiente para aprendizado.
+=================================
+
+=================================
+LEON DAILY LEARNING REPORT
+=================================
+Data: 2026-06-15
+
+Resumo do dia
+- Registros analisados: 0
+- Planos gerados: 0
+- Direcao dominante: SEM DADOS
+- Qualidade dominante: SEM DADOS
+- Confianca dominante: SEM DADOS
+
+Leitura SMC + Elliott
+- SMC dominante: SEM DADOS
+- Elliott dominante: SEM DADOS
+- Brain Score medio dos planos: 0.00
+
+Memoria geral do cerebro
+- Acertos registrados: 23
+- Erros registrados: 1
+- Taxa historica de acerto: 95.83%
+
+Aprendizado do LEON
+- Hoje nao houve memoria operacional suficiente para aprendizado.
+=================================
+
+=================================
+LEON DAILY LEARNING REPORT
+=================================
+Data: 2026-06-15
+
+Resumo do dia
+- Registros analisados: 0
+- Planos gerados: 0
+- Direcao dominante: SEM DADOS
+- Qualidade dominante: SEM DADOS
+- Confianca dominante: SEM DADOS
+
+Leitura SMC + Elliott
+- SMC dominante: SEM DADOS
+- Elliott dominante: SEM DADOS
+- Brain Score medio dos planos: 0.00
+
+Memoria geral do cerebro
+- Acertos registrados: 23
+- Erros registrados: 1
+- Taxa historica de acerto: 95.83%
+
+Aprendizado do LEON
+- Hoje nao houve memoria operacional suficiente para aprendizado.
+=================================
+
+=================================
+LEON DAILY LEARNING REPORT
+=================================
+Data: 2026-06-16
+
+Resumo do dia
+- Registros analisados: 0
+- Planos gerados: 0
+- Direcao dominante: SEM DADOS
+- Qualidade dominante: SEM DADOS
+- Confianca dominante: SEM DADOS
+
+Leitura SMC + Elliott
+- SMC dominante: SEM DADOS
+- Elliott dominante: SEM DADOS
+- Brain Score medio dos planos: 0.00
+
+Memoria geral do cerebro
+- Acertos registrados: 23
+- Erros registrados: 1
+- Taxa historica de acerto: 95.83%
+
+Aprendizado do LEON
+- Hoje nao houve memoria operacional suficiente para aprendizado.
+=================================
+
+=================================
+LEON DAILY LEARNING REPORT
+=================================
+Data: 2026-06-16
+
+Resumo do dia
+- Precos coletados: 1
+- Candles coletados: 1
+- Sinais registrados: 0
+- Registros analisados: 0
+- Planos gerados: 0
+- Direcao dominante: SEM DADOS
+- Qualidade dominante: SEM DADOS
+- Confianca dominante: SEM DADOS
+
+Ultima coleta
+- Ativo: XAUUSD
+- Bid: 4339.3
+- Ask: 4339.43
+- Candle close: 4339.3
+
+Ultima leitura estrutural
+- Tendencia: SEM DADOS
+- Momentum: SEM DADOS
+- Score: SEM DADOS
+- Sinal: SEM DADOS
+
+Leitura SMC + Elliott
+- SMC dominante: SEM DADOS
+- Elliott dominante: SEM DADOS
+- Brain Score medio dos planos: 0.00
+
+Memoria geral do cerebro
+- Acertos registrados: 23
+- Erros registrados: 1
+- Taxa historica de acerto: 95.83%
+
+Aprendizado do LEON
+- Hoje houve coleta de mercado, mas ainda nao houve novo setup registrado na memoria operacional.
+=================================
+
+=================================
+LEON DAILY LEARNING REPORT
+=================================
+Data: 2026-06-16
+
+Resumo do dia
+- Precos coletados: 1
+- Candles coletados: 1
+- Sinais registrados: 0
+- Contextos cerebrais: 0
+- Registros analisados: 0
+- Planos gerados: 0
+- Direcao dominante: SEM DADOS
+- Qualidade dominante: SEM DADOS
+- Confianca dominante: SEM DADOS
+
+Ultima coleta
+- Ativo: XAUUSD
+- Bid: 4339.3
+- Ask: 4339.43
+- Candle close: 4339.3
+
+Ultima leitura estrutural
+- Tendencia: SEM DADOS
+- Momentum: SEM DADOS
+- Score: SEM DADOS
+- Sinal: SEM DADOS
+
+Leitura SMC + Elliott
+- SMC dominante: SEM DADOS
+- Elliott dominante: SEM DADOS
+- Brain Score medio dos planos: 0.00
+
+Ultimo contexto do cerebro
+- Origem: SEM DADOS
+- Tipo: SEM DADOS
+- Alinhamento: SEM DADOS
+- Observacao: SEM DADOS
+
+Memoria geral do cerebro
+- Acertos registrados: 23
+- Erros registrados: 1
+- Taxa historica de acerto: 95.83%
+
+Aprendizado do LEON
+- Hoje houve coleta de mercado, mas ainda nao houve novo setup registrado na memoria operacional.
+=================================
+
+=================================
+LEON DAILY LEARNING REPORT
+=================================
+Data: 2026-06-16
+
+Resumo do dia
+- Precos coletados: 1
+- Candles coletados: 1
+- Sinais registrados: 0
+- Contextos cerebrais: 1
+- Registros analisados: 0
+- Planos gerados: 0
+- Direcao dominante: SEM DADOS
+- Qualidade dominante: SEM DADOS
+- Confianca dominante: SEM DADOS
+
+Ultima coleta
+- Ativo: XAUUSD
+- Bid: 4339.3
+- Ask: 4339.43
+- Candle close: 4339.3
+
+Ultima leitura estrutural
+- Tendencia: SEM DADOS
+- Momentum: SEM DADOS
+- Score: SEM DADOS
+- Sinal: SEM DADOS
+
+Leitura SMC + Elliott
+- SMC dominante: SEM DADOS
+- Elliott dominante: SEM DADOS
+- Brain Score medio dos planos: 0.00
+
+Ultimo contexto do cerebro
+- Origem: codex
+- Tipo: revisao_cerebro
+- Alinhamento: CONFLITO
+- Observacao: Cerebro revisado para colher contexto de mercado e observacoes humanas.
+
+Memoria geral do cerebro
+- Acertos registrados: 23
+- Erros registrados: 1
+- Taxa historica de acerto: 95.83%
+
+Aprendizado do LEON
+- Hoje houve coleta de mercado, mas ainda nao houve novo setup registrado na memoria operacional.
+=================================
+
+=================================
+LEON DAILY LEARNING REPORT
+=================================
+Data: 2026-06-16
+
+Resumo do dia
+- Precos coletados: 1
+- Candles coletados: 1
+- Sinais registrados: 0
+- Contextos cerebrais: 2
+- Registros analisados: 0
+- Planos gerados: 0
+- Direcao dominante: SEM DADOS
+- Qualidade dominante: SEM DADOS
+- Confianca dominante: SEM DADOS
+
+Ultima coleta
+- Ativo: XAUUSD
+- Bid: 4339.3
+- Ask: 4339.43
+- Candle close: 4339.3
+
+Ultima leitura estrutural
+- Tendencia: SEM DADOS
+- Momentum: SEM DADOS
+- Score: SEM DADOS
+- Sinal: SEM DADOS
+
+Leitura SMC + Elliott
+- SMC dominante: SEM DADOS
+- Elliott dominante: SEM DADOS
+- Brain Score medio dos planos: 0.00
+
+Ultimo contexto do cerebro
+- Origem: humano
+- Tipo: observacao_humana
+- Alinhamento: CONFLITO
+- Observacao: Teste de estudo colaborativo protegido.
+
+Memoria geral do cerebro
+- Acertos registrados: 23
+- Erros registrados: 1
+- Taxa historica de acerto: 95.83%
+
+Aprendizado do LEON
+- Hoje houve coleta de mercado, mas ainda nao houve novo setup registrado na memoria operacional.
+=================================
+
+=================================
+LEON DAILY LEARNING REPORT
+=================================
+Data: 2026-06-16
+
+Resumo do dia
+- Precos coletados: 2
+- Candles coletados: 2
+- Sinais registrados: 0
+- Contextos cerebrais: 2
+- Registros analisados: 0
+- Planos gerados: 0
+- Direcao dominante: SEM DADOS
+- Qualidade dominante: SEM DADOS
+- Confianca dominante: SEM DADOS
+
+Ultima coleta
+- Ativo: XAUUSD
+- Bid: 4340.03
+- Ask: 4340.16
+- Candle close: 4340.03
+
+Ultima leitura estrutural
+- Tendencia: SEM DADOS
+- Momentum: SEM DADOS
+- Score: SEM DADOS
+- Sinal: SEM DADOS
+
+Leitura SMC + Elliott
+- SMC dominante: SEM DADOS
+- Elliott dominante: SEM DADOS
+- Brain Score medio dos planos: 0.00
+
+Ultimo contexto do cerebro
+- Origem: humano
+- Tipo: observacao_humana
+- Alinhamento: CONFLITO
+- Observacao: Teste de estudo colaborativo protegido.
+
+Memoria geral do cerebro
+- Acertos registrados: 23
+- Erros registrados: 1
+- Taxa historica de acerto: 95.83%
+
+Aprendizado do LEON
+- Hoje houve coleta de mercado, mas ainda nao houve novo setup registrado na memoria operacional.
+=================================
+
+=================================
+LEON DAILY LEARNING REPORT
+=================================
+Data: 2026-06-16
+
+Resumo do dia
+- Precos coletados: 2
+- Candles coletados: 2
+- Sinais registrados: 0
+- Contextos cerebrais: 2
+- Registros analisados: 0
+- Planos gerados: 0
+- Direcao dominante: SEM DADOS
+- Qualidade dominante: SEM DADOS
+- Confianca dominante: SEM DADOS
+
+Ultima coleta
+- Ativo: XAUUSD
+- Bid: 4340.03
+- Ask: 4340.16
+- Candle close: 4340.03
+
+Ultima leitura estrutural
+- Tendencia: SEM DADOS
+- Momentum: SEM DADOS
+- Score: SEM DADOS
+- Sinal: SEM DADOS
+
+Leitura SMC + Elliott
+- SMC dominante: SEM DADOS
+- Elliott dominante: SEM DADOS
+- Brain Score medio dos planos: 0.00
+
+Ultimo contexto do cerebro
+- Origem: humano
+- Tipo: observacao_humana
+- Alinhamento: CONFLITO
+- Observacao: Teste de estudo colaborativo protegido.
+
+Memoria geral do cerebro
+- Acertos registrados: 23
+- Erros registrados: 1
+- Taxa historica de acerto: 95.83%
+
+Aprendizado do LEON
+- Hoje houve coleta de mercado, mas ainda nao houve novo setup registrado na memoria operacional.
+=================================
+
+=================================
+LEON DAILY LEARNING REPORT
+=================================
+Data: 2026-06-17
+
+Resumo do dia
+- Precos coletados: 117
+- Candles coletados: 117
+- Sinais registrados: 61
+- Contextos cerebrais: 133
+- Registros analisados: 60
+- Planos gerados: 60
+- Direcao dominante: VENDA
+- Qualidade dominante: A+
+- Confianca dominante: ALTA
+
+Ultima coleta
+- Ativo: XAUUSD
+- Bid: 4314.34
+- Ask: 4314.51
+- Candle close: 4314.34
+
+Ultima leitura estrutural
+- Tendencia: BAIXA
+- Momentum: BAIXA
+- Score: 100
+- Sinal: POSSÍVEL SETUP
+
+Leitura SMC + Elliott
+- SMC dominante: NEUTRO
+- Elliott dominante: ONDA C
+- Brain Score medio dos planos: 62.00
+
+Ultimo contexto do cerebro
+- Origem: operator
+- Tipo: analise_programada
+- Alinhamento: ALINHADO
+- Observacao: Ciclo automatico de analise executado.
+
+Memoria geral do cerebro
+- Acertos registrados: 87
+- Erros registrados: 45
+- Taxa historica de acerto: 65.91%
+
+Aprendizado do LEON
+- O LEON acumulou contexto para comparar SMC, Elliott e confianca nos proximos ciclos.
+=================================
+
+=================================
+LEON DAILY LEARNING REPORT
+=================================
+Data: 2026-06-18
+
+Resumo do dia
+- Precos coletados: 43
+- Candles coletados: 43
+- Sinais registrados: 23
+- Contextos cerebrais: 41
+- Registros analisados: 23
+- Planos gerados: 23
+- Direcao dominante: VENDA
+- Qualidade dominante: A+
+- Confianca dominante: ALTA
+
+Ultima coleta
+- Ativo: XAUUSD
+- Bid: 4255.95
+- Ask: 4256.08
+- Candle close: 4255.94
+
+Ultima leitura estrutural
+- Tendencia: BAIXA
+- Momentum: BAIXA
+- Score: 100
+- Sinal: POSSÍVEL SETUP
+
+Leitura SMC + Elliott
+- SMC dominante: NEUTRO
+- Elliott dominante: ONDA C
+- Brain Score medio dos planos: 79.57
+
+Ultimo contexto do cerebro
+- Origem: operator
+- Tipo: analise_programada
+- Alinhamento: ATENCAO
+- Observacao: Ciclo automatico de analise executado.
+
+Memoria geral do cerebro
+- Acertos registrados: 2
+- Erros registrados: 5
+- Taxa historica de acerto: 28.57%
+
+Aprendizado do LEON
+- O LEON acumulou contexto para comparar SMC, Elliott e confianca nos proximos ciclos.
+=================================
+
+=================================
+LEON DAILY LEARNING REPORT
+=================================
+Data: 2026-06-19
+
+Resumo do dia
+- Precos coletados: 155
+- Candles coletados: 155
+- Sinais registrados: 114
+- Contextos cerebrais: 154
+- Registros analisados: 114
+- Planos gerados: 114
+- Direcao dominante: AGUARDAR
+- Qualidade dominante: FIBONACCI_LIQUIDEZ_NAO_CONFIRMADOS
+- Confianca dominante: MÉDIA
+
+Ultima coleta
+- Ativo: XAUUSD
+- Bid: 4152.54
+- Ask: 4152.67
+- Candle close: 4152.54
+
+Ultima leitura estrutural
+- Tendencia: ALTA
+- Score: 100
+- Sinal: OBSERVAR
+
+Leitura SMC + Elliott
+- SMC dominante: BEARISH
+- Elliott dominante: POSSIVEL ONDA 3
+- Brain Score medio dos planos: 55.35
+
+Ultimo contexto do cerebro
+- Origem: operator
+- Tipo: coleta_programada
+- Alinhamento: ATENCAO
+- Observacao: Snapshot automatico apos coleta.
+
+Memoria geral do cerebro
+- Acertos registrados: 2
+- Erros registrados: 5
+- Taxa historica de acerto: 28.57%
+
+Aprendizado do LEON
+- O LEON acumulou contexto para comparar SMC, Elliott e confianca nos proximos ciclos.
+=================================
+
+=================================
+LEON DAILY LEARNING REPORT
+=================================
+Data: 2026-06-19
+
+Resumo do dia
+- Precos coletados: 338
+- Candles coletados: 338
+- Sinais registrados: 253
+- Contextos cerebrais: 336
+- Registros analisados: 253
+- Planos gerados: 253
+- Direcao dominante: AGUARDAR
+- Qualidade dominante: SMC_NAO_CONFIRMADO
+- Confianca dominante: MÉDIA
+
+Ultima coleta
+- Ativo: XAUUSD
+- Bid: 4152.52
+- Ask: 4158.34
+- Candle close: 4152.52
+
+Ultima leitura estrutural
+- Tendencia: ALTA
+- Score: 100
+- Sinal: OBSERVAR
+
+Leitura SMC + Elliott
+- SMC dominante: NEUTRO
+- Elliott dominante: CORRECAO
+- Brain Score medio dos planos: 52.41
+
+Ultimo contexto do cerebro
+- Origem: operator
+- Tipo: analise_programada
+- Alinhamento: ATENCAO
+- Observacao: Ciclo automatico de analise executado.
+
+Memoria geral do cerebro
+- Acertos registrados: 2
+- Erros registrados: 5
+- Taxa historica de acerto: 28.57%
+
+Aprendizado do LEON
+- O LEON acumulou contexto para comparar SMC, Elliott e confianca nos proximos ciclos.
+=================================
+

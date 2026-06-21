@@ -1,0 +1,18 @@
+{
+  "topic": "Alternancia Extensao e Truncamento",
+  "level": "advanced",
+  "description": "Diretrizes que qualificam a contagem sem serem tratadas como regras absolutas.",
+  "rules": [
+    "Se a onda 2 for profunda e rapida, a onda 4 tende a diferir em forma e pode ser lateral.",
+    "Normalmente apenas uma das ondas 1, 3 ou 5 apresenta extensao dominante.",
+    "A onda 3 frequentemente apresenta maior deslocamento e momentum, mas nao precisa ser sempre a mais longa.",
+    "Onda 5 truncada falha em superar o extremo da onda 3 e exige evidencia de exaustao.",
+    "Extensao e truncamento sao hipoteses confirmadas pela estrutura, nao desculpas para salvar uma contagem invalida."
+  ],
+  "smc_confluence": [
+    "Onda 3 provavel deve coincidir com BOS e deslocamento.",
+    "Onda 5 provavel perto de liquidez externa exige cautela com sweep.",
+    "Truncamento ganha relevancia se houver CHoCH e falha de continuidade."
+  ],
+  "confidence_impact": 9
+}

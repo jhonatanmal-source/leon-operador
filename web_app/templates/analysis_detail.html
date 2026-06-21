@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Análise {{ analysis.id }} | LEON WEB COLLAB{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div>
+    <div class="eyebrow">ANÁLISE #{{ analysis.id }}</div>
+    <h1>{{ analysis.symbol }} · {{ analysis.timeframe }} · {{ analysis.direction }}</h1>
+    <p class="muted">Enviada por {{ analysis.username }} em {{ analysis.created_at }}</p>
+  </div>
+  <span class="badge large {{ analysis.status|lower }}">{{ analysis.status }}</span>
+</section>
+
+<section class="detail-grid">
+  <article class="card">
+    <h2>Leitura humana</h2>
+    <dl class="details">
+      <div><dt>Operador</dt><dd>{{ analysis.username }}</dd></div>
+      <div><dt>Tipo</dt><dd>{{ analysis.analysis_type }}</dd></div>
+      <div><dt>Direção</dt><dd>{{ analysis.direction }}</dd></div>
+      <div><dt>Timeframe</dt><dd>{{ analysis.timeframe }}</dd></div>
+    </dl>
+    <div class="analysis-text">{{ analysis.text_analysis }}</div>
+    {% if analysis.image_path %}
+      <a href="{{ url_for('static', filename='uploads/' + analysis.image_path) }}" target="_blank" rel="noopener">
+        <img class="analysis-image" src="{{ url_for('static', filename='uploads/' + analysis.image_path) }}" alt="Print da análise">
+      </a>
+    {% endif %}
+  </article>
+
+  <aside class="stack">
+    <article class="card leon-card">
+      <div class="eyebrow">O QUE O LEON ENTENDEU</div>
+      <p>{{ analysis.leon_summary }}</p>
+      <h3>Palavras detectadas</h3>
+      <p class="muted">{{ analysis.detected_keywords or 'Nenhuma' }}</p>
+      <div class="score"><span>Confiança inicial</span><strong>{{ analysis.confidence_score or 0 }}%</strong></div>
+    </article>
+
+    <article class="card">
+      <h2>Supervisão</h2>
+      <p><strong>Status:</strong> {{ analysis.status }}</p>
+      <p><strong>Qualidade:</strong> {{ analysis.quality_score }} / 100</p>
+      <p><strong>Revisor:</strong> {{ analysis.reviewer_username or 'Aguardando' }}</p>
+      <p class="analysis-text">{{ analysis.supervisor_comment or 'Sem comentário.' }}</p>
+    </article>
+  </aside>
+</section>
+
+{% if current_user.role in ['ADMIN', 'SUPERVISOR'] %}
+<section class="card review-card">
+  <h2>Revisar estudo</h2>
+  <form method="post" action="{{ url_for('analysis.review', analysis_id=analysis.id) }}" class="form-grid">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Status<select name="status" required><option>APROVADA</option><option>PARCIAL</option><option>REJEITADA</option></select></label>
+    <label>Qualidade 0–100<input type="number" name="quality_score" min="0" max="100" value="{{ analysis.quality_score }}" required></label>
+    <label class="span-2">Comentário do supervisor<textarea name="supervisor_comment" rows="5">{{ analysis.supervisor_comment or '' }}</textarea></label>
+    <button class="button success" type="submit">Salvar revisão</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

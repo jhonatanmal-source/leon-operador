@@ -1,0 +1,216 @@
+
+=================================
+DATA: 2026-05-28 20:45:41.585236
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-28 20:46:00.982887
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-28 20:55:08.400321
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-28 20:59:29.171589
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-28 21:09:13.149227
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-28 21:15:50.349833
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-28 21:16:00.199462
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-28 21:38:13.161107
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-28 21:41:17.182226
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-28 21:44:26.596829
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-28 21:50:36.397810
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-28 21:52:22.987405
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-28 22:03:43.859065
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-28 22:06:31.595364
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-28 22:17:23.978618
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-28 22:23:25.935294
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-28 22:29:37.496444
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-28 22:36:29.087657
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-29 07:36:23.540523
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-30 00:03:47.120695
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-30 00:12:19.607494
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-30 00:21:57.225865
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-30 00:57:34.851191
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-30 19:12:27.112545
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-30 19:13:16.009896
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-05-31 18:45:05.906285
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-06-01 21:57:22.814997
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-06-01 22:13:12.499682
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-06-01 22:18:49.181638
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-06-01 22:24:14.627932
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-06-01 22:34:02.283644
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-06-01 22:37:00.989061
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-06-01 22:41:21.169947
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-06-01 22:45:05.997303
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-06-01 22:49:19.406467
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================
+
+=================================
+DATA: 2026-06-01 22:51:48.486978
+LEON EXECUTADO COM SUCESSO
+STATUS: OPERACIONAL
+=================================

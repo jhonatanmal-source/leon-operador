@@ -1,0 +1,21 @@
+{
+  "topic": "Familias Corretivas Elliott",
+  "level": "advanced",
+  "description": "Diferencia correcoes simples e complexas para reduzir a antecipacao incorreta do fim de uma onda C.",
+  "rules": [
+    "Zigue-zague costuma ter estrutura direcional A-B-C e maior profundidade.",
+    "Flat ou correcao plana tende a ser lateral, com onda B retornando perto da origem de A.",
+    "Triangulo possui cinco pernas corretivas A-B-C-D-E e costuma aparecer perto do fim de uma estrutura maior.",
+    "Triangulo nao deve ser marcado como onda 2 de um impulso.",
+    "Correcoes podem formar combinacoes W-X-Y e permanecer complexas por mais tempo.",
+    "Padrao corretivo incompleto nao autoriza prever imediatamente a onda seguinte.",
+    "A onda C deve ser confirmada por estrutura interna, POI e reacao SMC."
+  ],
+  "common_mistakes": [
+    "Forcar todo pullback em ABC simples.",
+    "Confundir consolidacao com triangulo completo.",
+    "Declarar fim da correcao somente por nivel Fibonacci.",
+    "Ignorar que uma onda B pode varrer liquidez."
+  ],
+  "confidence_impact": 10
+}

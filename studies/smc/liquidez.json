@@ -1,0 +1,28 @@
+{
+  "topic": "Liquidez",
+  "level": "basic",
+  "description": "Liquidez representa regioes onde existem ordens, stops e interesse do mercado. No XAUUSD, maximas e minimas anteriores costumam atrair preco antes de uma decisao relevante.",
+  "rules": [
+    "Maximas e minimas anteriores sao zonas de liquidez.",
+    "Topos duplos e fundos duplos atraem liquidez.",
+    "O preco frequentemente busca liquidez antes de inverter.",
+    "Nao considerar toda maxima ou minima como entrada.",
+    "Liquidez so e forte quando existe reacao depois da varredura."
+  ],
+  "examples": [
+    "Se o XAUUSD rompe uma maxima anterior e fecha com rejeicao, o LEON deve registrar possivel varredura de liquidez.",
+    "Se o preco toca uma minima antiga sem reacao, a liquidez nao deve aumentar muito a confianca."
+  ],
+  "common_mistakes": [
+    "Comprar ou vender exatamente na liquidez sem confirmacao.",
+    "Tratar qualquer topo como liquidez forte.",
+    "Ignorar a sessao e a volatilidade do momento."
+  ],
+  "what_leon_should_observe": [
+    "Distancia ate maximas e minimas recentes.",
+    "Rejeicao apos romper nivel anterior.",
+    "Volume de candles ou amplitude do deslocamento.",
+    "Se a varredura ocorre perto de zona SMC ou Elliott."
+  ],
+  "confidence_impact": 10
+}

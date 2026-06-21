@@ -1,0 +1,29 @@
+LEON | RELATORIO OPERACIONAL DIARIO
+=================================
+Data: 2026-06-19
+Inicio do operador: 2026-06-19 00:21:21.602581
+
+Resumo
+- Checkpoints enviados: 22
+- Estudos realizados: 253
+- Setups A+: 0
+- Setups bloqueados/observados: 253
+
+Decisoes por operacao
+- Entrar: 0
+- Bloquear: 0
+- Observar: 251
+
+Bloqueios
+- Alvo tecnico nao pagou o risco: 0
+- Brain Score abaixo do minimo atual (60): 0
+- Bloqueios de score por regra antiga: 0
+- Preco fora da zona: 0
+
+Erros
+- Ativos: 0
+- Recuperados no mesmo dia: 0
+
+Melhoria sugerida para o proximo dia
+- Continuar estudando ate aparecer Setup A+ com confluencia limpa.
+=================================

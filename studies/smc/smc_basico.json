@@ -1,0 +1,28 @@
+{
+  "topic": "SMC Basico",
+  "level": "basic",
+  "description": "Base inicial de Smart Money Concepts para o LEON interpretar estrutura, liquidez e zonas de decisao no XAUUSD sem operar de forma cega.",
+  "rules": [
+    "Observar primeiro a estrutura maior antes da menor.",
+    "Separar liquidez, deslocamento e zona de interesse.",
+    "Nao tratar qualquer rompimento como entrada.",
+    "Esperar contexto antes de validar setup.",
+    "Priorizar confluencia entre estrutura, liquidez e reacao."
+  ],
+  "examples": [
+    "No XAUUSD, uma varredura de maxima seguida de rejeicao forte pode indicar busca de liquidez antes de reversao.",
+    "Um BOS apos consolidacao so ganha peso se romper nivel relevante com candle de deslocamento."
+  ],
+  "common_mistakes": [
+    "Entrar apenas porque houve rompimento.",
+    "Ignorar a tendencia do timeframe maior.",
+    "Confundir lateralidade com acumulacao clara."
+  ],
+  "what_leon_should_observe": [
+    "Maximas e minimas relevantes.",
+    "Reacao apos varredura de liquidez.",
+    "Forca do candle de deslocamento.",
+    "Se o mercado esta lateral ou direcional."
+  ],
+  "confidence_impact": 5
+}

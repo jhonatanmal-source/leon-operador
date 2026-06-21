@@ -1,0 +1,28 @@
+{
+  "topic": "Impulso",
+  "level": "basic",
+  "description": "Impulso e movimento direcional forte que pode ser estudado em cinco ondas. No XAUUSD, deve ser confirmado por deslocamento e estrutura.",
+  "rules": [
+    "Movimento impulsivo tende a ter 5 ondas.",
+    "Onda 3 geralmente e forte.",
+    "Onda 2 corrige a onda 1.",
+    "Onda 4 corrige a onda 3.",
+    "Onda 5 pode buscar liquidez final."
+  ],
+  "examples": [
+    "Se o ouro acelera apos BOS, o LEON pode registrar possivel fase impulsiva.",
+    "Uma extensao forte no meio do movimento pode representar possivel onda 3."
+  ],
+  "common_mistakes": [
+    "Chamar qualquer candle forte de onda 3.",
+    "Ignorar correcao interna.",
+    "Entrar tarde em possivel onda 5 sem liquidez."
+  ],
+  "what_leon_should_observe": [
+    "Forca relativa das pernas.",
+    "Correcoes entre impulsos.",
+    "Liquidez no fim do movimento.",
+    "BOS alinhado ao impulso."
+  ],
+  "confidence_impact": 8
+}

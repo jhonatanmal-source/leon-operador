@@ -1,0 +1,28 @@
+{
+  "topic": "Estrutura de Mercado",
+  "level": "basic",
+  "description": "Estrutura de mercado define se o XAUUSD esta em alta, baixa ou lateral. Essa leitura protege o LEON contra setups fora de contexto.",
+  "rules": [
+    "Alta tem topos e fundos ascendentes.",
+    "Baixa tem topos e fundos descendentes.",
+    "Lateral tem rompimentos falsos e baixa clareza.",
+    "O LEON deve evitar setups em mercado lateral.",
+    "Estrutura maior tem prioridade sobre estrutura menor."
+  ],
+  "examples": [
+    "H4 em alta e M15 corrigindo pode preparar estudo de compra se a zona SMC reagir.",
+    "H1 lateral reduz a nota do setup mesmo com gatilho em M15."
+  ],
+  "common_mistakes": [
+    "Operar contra estrutura maior sem motivo forte.",
+    "Confundir correcao com reversao.",
+    "Ignorar lateralidade antes de noticia."
+  ],
+  "what_leon_should_observe": [
+    "Sequencia de topos e fundos.",
+    "Timeframe macro e micro.",
+    "Regioes de range.",
+    "Se a direcao esta clara."
+  ],
+  "confidence_impact": 12
+}

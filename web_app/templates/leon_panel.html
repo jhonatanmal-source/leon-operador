@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Painel Leon | LEON WEB COLLAB{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div>
+    <div class="eyebrow">PAINEL LEON UNIFICADO</div>
+    <h1>Operação, autonomia e acesso remoto</h1>
+    <p class="muted">Atualizado em {{ panel.generated_at }} com modo remoto protegido por login.</p>
+  </div>
+  <span class="badge large {{ 'aprovada' if panel.autonomy.active else 'pendente' }}">
+    {{ 'AUTONOMIA ATIVA' if panel.autonomy.active else 'MODO SEGURO' }}
+  </span>
+</section>
+
+{% if current_user.role in ['COLABORADOR', 'VISUALIZADOR'] %}
+<section class="card notice-panel">
+  <strong>Modo visualização:</strong> seu perfil pode acompanhar o Leon, mas não altera usuários nem fluxo administrativo.
+</section>
+{% endif %}
+
+<section class="stats-grid">
+  <article class="card stat"><span>Operador</span><strong class="{{ 'green' if panel.processes.operator else 'red' }}">{{ 'ONLINE' if panel.processes.operator else 'OFF' }}</strong></article>
+  <article class="card stat"><span>Web remoto</span><strong class="{{ 'green' if panel.processes.web_collab else 'red' }}">{{ 'ONLINE' if panel.processes.web_collab else 'OFF' }}</strong></article>
+  <article class="card stat"><span>Túnel</span><strong class="{{ 'green' if panel.processes.cloudflare_tunnel else 'yellow' }}">{{ 'ATIVO' if panel.processes.cloudflare_tunnel else 'PARADO' }}</strong></article>
+  <article class="card stat"><span>Execução demo</span><strong class="{{ 'yellow' if panel.mode.demo_execution == 'true' else 'red' }}">{{ panel.mode.demo_execution|upper }}</strong></article>
+  <article class="card stat"><span>Bloqueio real</span><strong class="{{ 'green' if panel.mode.real_blocked == 'true' else 'red' }}">{{ panel.mode.real_blocked|upper }}</strong></article>
+</section>
+
+<section class="health-grid">
+  <article class="card">
+    <h2>Acesso remoto</h2>
+    <dl class="details">
+      <div><dt>Colaboração</dt><dd>{{ panel.collaboration.enabled|upper }}</dd></div>
+      <div><dt>Escopo</dt><dd>{{ panel.collaboration.scope }}</dd></div>
+      <div><dt>Telegram ativo</dt><dd>{{ panel.telegram.enabled|upper }}</dd></div>
+      <div><dt>Token configurado</dt><dd>{{ 'SIM' if panel.telegram.has_token else 'NÃO' }}</dd></div>
+      <div><dt>Chat ID configurado</dt><dd>{{ 'SIM' if panel.telegram.has_chat_id else 'NÃO' }}</dd></div>
+      <div><dt>Painel legado</dt><dd>{{ 'ONLINE' if panel.processes.legacy_panel else 'OFF' }}</dd></div>
+    </dl>
+    {% if panel.remote.remote_url %}
+      <p><a href="{{ panel.remote.remote_url }}" target="_blank" rel="noopener">Abrir link remoto atual</a></p>
+    {% else %}
+      <p class="muted">Nenhum link remoto ativo no momento.</p>
+    {% endif %}
+  </article>
+
+  <article class="card">
+    <h2>Autonomia e prontidão</h2>
+    <dl class="details">
+      <div><dt>Autonomia</dt><dd>{{ 'ATIVA' if panel.autonomy.active else 'INATIVA' }}</dd></div>
+      <div><dt>Motivo</dt><dd>{{ panel.autonomy.reason }}</dd></div>
+      <div><dt>Escopo</dt><dd>{{ panel.autonomy.scope }}</dd></div>
+      <div><dt>Prontidão</dt><dd>{{ panel.readiness.nivel }}</dd></div>
+      <div><dt>Conselho</dt><dd>{{ panel.council.status }}</dd></div>
+      <div><dt>Modo estudo</dt><dd>{{ panel.mode.study_scope }}</dd></div>
+    </dl>
+  </article>
+
+  <article class="card">
+    <h2>Leitura atual do Leon</h2>
+    <dl class="details">
+      <div><dt>Direção</dt><dd>{{ panel.operator_status.operators.setup.direcao }}</dd></div>
+      <div><dt>SMC</dt><dd>{{ panel.operator_status.operators.setup.smc }}</dd></div>
+      <div><dt>Elliott</dt><dd>{{ panel.operator_status.operators.setup.elliott }}</dd></div>
+      <div><dt>Confiança</dt><dd>{{ panel.operator_status.operators.setup.confianca }}</dd></div>
+      <div><dt>Alinhamento</dt><dd>{{ panel.operator_status.operators.alignment.status }}</dd></div>
+      <div><dt>MT5 monitor</dt><dd>{{ panel.mt5_monitor.status }}</dd></div>
+    </dl>
+  </article>
+
+  <article class="card">
+    <h2>Risco e lote</h2>
+    <dl class="details">
+      <div><dt>Risco por método</dt><dd>{{ panel.risk_control.method_risk_percent }}%</dd></div>
+      <div><dt>Limite diário</dt><dd>{{ panel.risk_control.daily_loss_percent }}%</dd></div>
+      <div><dt>Método ativo</dt><dd>{{ panel.risk_control.active_method }}</dd></div>
+      <div><dt>Pré-operações</dt><dd>{{ panel.pre_operation.total }}</dd></div>
+      <div><dt>Fechadas</dt><dd>{{ panel.pre_operation.fechados }}</dd></div>
+      <div><dt>Liberar real</dt><dd>{{ panel.mode.mt5_enabled|upper }}</dd></div>
+    </dl>
+    {% if panel.risk_plan %}
+      <p class="analysis-text">{{ panel.risk_plan.reason }}</p>
+    {% endif %}
+  </article>
+</section>
+
+<section class="detail-grid">
+  <article class="card">
+    <div class="section-title">
+      <h2>Log operacional</h2>
+      <span class="badge pendente">Somente leitura</span>
+    </div>
+    <pre class="log-box">{{ panel.logs or 'Sem logs recentes.' }}</pre>
+  </article>
+
+  <article class="stack">
+    <article class="card">
+      <div class="section-title">
+        <h2>Erros recentes</h2>
+        <span class="badge {{ 'rejeitada' if panel.errors else 'aprovada' }}">{{ 'ATENÇÃO' if panel.errors else 'OK' }}</span>
+      </div>
+      <pre class="log-box">{{ panel.errors or 'Sem erros recentes.' }}</pre>
+    </article>
+
+    <article class="card">
+      <h2>Aprendizado diário</h2>
+      <p><strong>Estado:</strong> {{ panel.daily_learning_state or 'Sem estado salvo.' }}</p>
+      <pre class="log-box">{{ panel.daily_learning_report or 'Sem relatório diário ainda.' }}</pre>
+    </article>
+  </article>
+</section>
+
+{% if current_user.role in ['ADMIN', 'SUPERVISOR'] %}
+<section class="card">
+  <div class="section-title">
+    <h2>Últimos acessos</h2>
+    <span class="badge aprovada">Auditoria</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Data</th><th>Usuário</th><th>IP</th><th>Rota</th><th>Ação</th></tr></thead>
+      <tbody>
+        {% for row in panel.recent_access_logs %}
+        <tr>
+          <td>{{ row.created_at }}</td>
+          <td>{{ row.username or '-' }}</td>
+          <td>{{ row.ip_address or '-' }}</td>
+          <td>{{ row.route or '-' }}</td>
+          <td>{{ row.action }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

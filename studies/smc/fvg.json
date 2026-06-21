@@ -1,0 +1,28 @@
+{
+  "topic": "FVG",
+  "level": "intermediate",
+  "description": "FVG e desequilibrio de preco. Ele cria zona de interesse onde o preco pode voltar para mitigar antes de continuar ou inverter.",
+  "rules": [
+    "FVG representa desequilibrio de preco.",
+    "O preco pode voltar para mitigar FVG.",
+    "FVG forte aparece apos deslocamento forte.",
+    "FVG em mercado lateral tem baixa qualidade.",
+    "FVG deve ser usado como zona de interesse, nao como entrada cega."
+  ],
+  "examples": [
+    "Apos BOS forte no XAUUSD, um FVG no candle de deslocamento pode virar zona de retorno para estudo.",
+    "FVG pequeno dentro de range deve ser marcado como baixa qualidade."
+  ],
+  "common_mistakes": [
+    "Entrar em todo FVG sem contexto.",
+    "Ignorar se o FVG ja foi mitigado.",
+    "Dar peso alto para FVG contra tendencia macro."
+  ],
+  "what_leon_should_observe": [
+    "Tamanho do desequilibrio.",
+    "Forca do candle que gerou o FVG.",
+    "Se existe BOS ou CHOCH relacionado.",
+    "Se o preco retorna com perda de momentum."
+  ],
+  "confidence_impact": 8
+}

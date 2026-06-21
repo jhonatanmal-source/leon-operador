@@ -1,0 +1,28 @@
+{
+  "topic": "Correcao ABC",
+  "level": "basic",
+  "description": "Correcao ABC e padrao corretivo apos impulso. O LEON deve observar se a correcao entrega o preco para uma zona SMC relevante.",
+  "rules": [
+    "Correcao ABC costuma aparecer apos movimento impulsivo.",
+    "Onda A inicia correcao.",
+    "Onda B pode enganar o mercado.",
+    "Onda C costuma finalizar a correcao.",
+    "O LEON deve observar ABC proximo de zonas SMC."
+  ],
+  "examples": [
+    "Apos alta forte, queda A, recuperacao B e nova queda C ate FVG pode formar estudo de compra.",
+    "ABC dentro de range estreito deve ter baixa confianca."
+  ],
+  "common_mistakes": [
+    "Antecipar fim da C sem reacao.",
+    "Ignorar que B pode varrer liquidez.",
+    "Validar ABC sem impulso anterior."
+  ],
+  "what_leon_should_observe": [
+    "Impulso anterior ao ABC.",
+    "Zona onde a onda C termina.",
+    "Reacao em FVG, OB ou liquidez.",
+    "CHOCH apos fim provavel da correcao."
+  ],
+  "confidence_impact": 8
+}

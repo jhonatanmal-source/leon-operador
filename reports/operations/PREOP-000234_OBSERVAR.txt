@@ -1,0 +1,18 @@
+LEON | RELATORIO POR OPERACAO
+=================================
+Data/hora: 2026-06-19T04:29:56
+Pre-op: PREOP-000234
+Simbolo: XAUUSD
+Direcao planejada: AGUARDAR
+Preco planejado: 
+Preco real: 
+RR planejado: 
+RR real: 
+Brain Score: 50
+Classificacao: SETUP FRACO
+Decisao: OBSERVAR
+Motivo: Pre-operacao registrada sem entrada simulada. INVALID_ORDER_DIRECTION.
+Contexto SMC: NEUTRO
+Contexto Elliott: POSSIVEL ONDA 3
+Melhoria sugerida: Aguardar confluencia mais forte antes de permitir execucao demo.
+=================================

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Histórico | LEON WEB COLLAB{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div>
+    <div class="eyebrow">MEMÓRIA HUMANA</div>
+    <h1>Histórico de análises</h1>
+  </div>
+  {% if current_user.role in ['ADMIN', 'SUPERVISOR', 'COLABORADOR'] %}
+    <a class="button" href="{{ url_for('analysis.upload') }}">Enviar análise</a>
+  {% endif %}
+</section>
+
+<section class="card">
+  {% if analyses %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Data</th><th>Usuário</th><th>Símbolo</th><th>TF</th><th>Direção</th><th>Tipo</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for analysis in analyses %}
+        <tr>
+          <td>{{ analysis.created_at }}</td>
+          <td>{{ analysis.username }}</td>
+          <td>{{ analysis.symbol }}</td>
+          <td>{{ analysis.timeframe }}</td>
+          <td>{{ analysis.direction }}</td>
+          <td>{{ analysis.analysis_type }}</td>
+          <td><span class="badge {{ analysis.status|lower }}">{{ analysis.status }}</span></td>
+          <td><a href="{{ url_for('analysis.detail', analysis_id=analysis.id) }}">Detalhes</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <p class="empty">Nenhuma análise encontrada.</p>
+  {% endif %}
+</section>
+{% endblock %}

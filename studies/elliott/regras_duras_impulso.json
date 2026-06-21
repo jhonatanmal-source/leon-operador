@@ -1,0 +1,27 @@
+{
+  "topic": "Regras Duras do Impulso Elliott",
+  "level": "advanced",
+  "description": "Regras de invalidação para impedir que qualquer movimento direcional seja chamado de impulso Elliott.",
+  "rules": [
+    "Um impulso completo possui cinco ondas: 1, 2, 3, 4 e 5.",
+    "Ondas 1, 3 e 5 sao motrizes; ondas 2 e 4 sao corretivas.",
+    "A onda 2 nao pode ultrapassar a origem da onda 1.",
+    "A onda 3 precisa ultrapassar o final da onda 1.",
+    "A onda 3 nao pode ser a menor entre as ondas 1, 3 e 5.",
+    "Em impulso comum, a onda 4 nao pode terminar dentro do territorio da onda 1.",
+    "Sobreposicao entre ondas 1 e 4 exige testar hipotese de diagonal, nao manter rotulo de impulso comum.",
+    "Onda 5 pode truncar, mas isso reduz confianca e exige perda de momentum ou divergencia."
+  ],
+  "invalidations": [
+    "Onda 2 rompe a origem da onda 1.",
+    "Onda 3 nao supera o final da onda 1.",
+    "Onda 3 e menor que ondas 1 e 5.",
+    "Onda 4 termina dentro do territorio da onda 1 em uma contagem marcada como impulso comum."
+  ],
+  "leon_policy": [
+    "Se uma regra dura falhar, descartar a contagem.",
+    "Manter pelo menos uma contagem alternativa.",
+    "Nunca aumentar score apenas porque cinco swings podem ser numerados."
+  ],
+  "confidence_impact": 15
+}

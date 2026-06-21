@@ -1,0 +1,337 @@
+{
+  "batch": 1,
+  "generated_at": "2026-06-17T23:47:31",
+  "period_start": "2026-06-16T21:09:18",
+  "period_end": "2026-06-17T09:27:53",
+  "operation_ids": [
+    "PREOP-000024",
+    "PREOP-000025",
+    "PREOP-000026",
+    "PREOP-000027",
+    "PREOP-000028",
+    "PREOP-000029",
+    "PREOP-000030",
+    "PREOP-000031",
+    "PREOP-000032",
+    "PREOP-000033",
+    "PREOP-000034",
+    "PREOP-000035",
+    "PREOP-000036",
+    "PREOP-000037",
+    "PREOP-000038",
+    "PREOP-000039",
+    "PREOP-000043",
+    "PREOP-000044",
+    "PREOP-000049",
+    "PREOP-000050"
+  ],
+  "total": 20,
+  "wins": 13,
+  "losses": 7,
+  "winrate": 65.0,
+  "average_rr": 2.66,
+  "net_r": 8.58,
+  "best_contexts": [
+    {
+      "dimension": "direcao",
+      "value": "VENDA",
+      "total": 4,
+      "wins": 4,
+      "losses": 0,
+      "winrate": 100.0
+    },
+    {
+      "dimension": "elliott",
+      "value": "ONDA C",
+      "total": 4,
+      "wins": 4,
+      "losses": 0,
+      "winrate": 100.0
+    },
+    {
+      "dimension": "sessao",
+      "value": "LONDRES",
+      "total": 3,
+      "wins": 3,
+      "losses": 0,
+      "winrate": 100.0
+    },
+    {
+      "dimension": "top_down",
+      "value": "ALINHADO",
+      "total": 3,
+      "wins": 3,
+      "losses": 0,
+      "winrate": 100.0
+    },
+    {
+      "dimension": "rr",
+      "value": "RR_3_OU_MAIS",
+      "total": 11,
+      "wins": 9,
+      "losses": 2,
+      "winrate": 81.82
+    }
+  ],
+  "weak_contexts": [
+    {
+      "dimension": "bos",
+      "value": "BOS_BULLISH",
+      "total": 3,
+      "wins": 1,
+      "losses": 2,
+      "winrate": 33.33
+    },
+    {
+      "dimension": "bos",
+      "value": "BOS_BEARISH",
+      "total": 3,
+      "wins": 1,
+      "losses": 2,
+      "winrate": 33.33
+    },
+    {
+      "dimension": "choch",
+      "value": "CHOCH_BULLISH",
+      "total": 3,
+      "wins": 1,
+      "losses": 2,
+      "winrate": 33.33
+    },
+    {
+      "dimension": "rr",
+      "value": "RR_2_A_3",
+      "total": 9,
+      "wins": 4,
+      "losses": 5,
+      "winrate": 44.44
+    },
+    {
+      "dimension": "direcao",
+      "value": "COMPRA",
+      "total": 16,
+      "wins": 9,
+      "losses": 7,
+      "winrate": 56.25
+    }
+  ],
+  "recommendations": [
+    {
+      "batch": 1,
+      "dimension": "direcao",
+      "value": "COMPRA",
+      "sample": 16,
+      "winrate": 56.25,
+      "action": "MANTER_EM_OBSERVACAO",
+      "suggested_adjustment": 0,
+      "reason": "Amostra ainda sem vantagem clara.",
+      "applied_automatically": false
+    },
+    {
+      "batch": 1,
+      "dimension": "elliott",
+      "value": "ONDA 3",
+      "sample": 16,
+      "winrate": 56.25,
+      "action": "MANTER_EM_OBSERVACAO",
+      "suggested_adjustment": 0,
+      "reason": "Amostra ainda sem vantagem clara.",
+      "applied_automatically": false
+    },
+    {
+      "batch": 1,
+      "dimension": "setup",
+      "value": "SETUP MODERADO",
+      "sample": 20,
+      "winrate": 65.0,
+      "action": "MANTER_EM_OBSERVACAO",
+      "suggested_adjustment": 0,
+      "reason": "Amostra ainda sem vantagem clara.",
+      "applied_automatically": false
+    },
+    {
+      "batch": 1,
+      "dimension": "rr",
+      "value": "RR_3_OU_MAIS",
+      "sample": 11,
+      "winrate": 81.82,
+      "action": "AUMENTAR_CONFIANCA_RECOMENDADA",
+      "suggested_adjustment": 5,
+      "reason": "Contexto consistente no bloco.",
+      "applied_automatically": false
+    },
+    {
+      "batch": 1,
+      "dimension": "rr",
+      "value": "RR_2_A_3",
+      "sample": 9,
+      "winrate": 44.44,
+      "action": "MANTER_EM_OBSERVACAO",
+      "suggested_adjustment": 0,
+      "reason": "Amostra ainda sem vantagem clara.",
+      "applied_automatically": false
+    }
+  ],
+  "analyses": {
+    "sessao": [
+      {
+        "value": "LONDRES",
+        "total": 3,
+        "wins": 3,
+        "losses": 0,
+        "winrate": 100.0
+      },
+      {
+        "value": "NY_ABERTURA",
+        "total": 1,
+        "wins": 1,
+        "losses": 0,
+        "winrate": 100.0
+      },
+      {
+        "value": "SEM_DADOS",
+        "total": 15,
+        "wins": 9,
+        "losses": 6,
+        "winrate": 60.0
+      },
+      {
+        "value": "FORA_DAS_SESSOES",
+        "total": 1,
+        "wins": 0,
+        "losses": 1,
+        "winrate": 0.0
+      }
+    ],
+    "top_down": [
+      {
+        "value": "ALINHADO",
+        "total": 3,
+        "wins": 3,
+        "losses": 0,
+        "winrate": 100.0
+      },
+      {
+        "value": "SEM_DADOS",
+        "total": 15,
+        "wins": 9,
+        "losses": 6,
+        "winrate": 60.0
+      },
+      {
+        "value": "MISTO",
+        "total": 2,
+        "wins": 1,
+        "losses": 1,
+        "winrate": 50.0
+      }
+    ],
+    "direcao": [
+      {
+        "value": "VENDA",
+        "total": 4,
+        "wins": 4,
+        "losses": 0,
+        "winrate": 100.0
+      },
+      {
+        "value": "COMPRA",
+        "total": 16,
+        "wins": 9,
+        "losses": 7,
+        "winrate": 56.25
+      }
+    ],
+    "smc": [
+      {
+        "value": "NEUTRO",
+        "total": 20,
+        "wins": 13,
+        "losses": 7,
+        "winrate": 65.0
+      }
+    ],
+    "elliott": [
+      {
+        "value": "ONDA C",
+        "total": 4,
+        "wins": 4,
+        "losses": 0,
+        "winrate": 100.0
+      },
+      {
+        "value": "ONDA 3",
+        "total": 16,
+        "wins": 9,
+        "losses": 7,
+        "winrate": 56.25
+      }
+    ],
+    "setup": [
+      {
+        "value": "SETUP MODERADO",
+        "total": 20,
+        "wins": 13,
+        "losses": 7,
+        "winrate": 65.0
+      }
+    ],
+    "bos": [
+      {
+        "value": "SEM_BOS",
+        "total": 14,
+        "wins": 11,
+        "losses": 3,
+        "winrate": 78.57
+      },
+      {
+        "value": "BOS_BULLISH",
+        "total": 3,
+        "wins": 1,
+        "losses": 2,
+        "winrate": 33.33
+      },
+      {
+        "value": "BOS_BEARISH",
+        "total": 3,
+        "wins": 1,
+        "losses": 2,
+        "winrate": 33.33
+      }
+    ],
+    "choch": [
+      {
+        "value": "SEM_CHOCH",
+        "total": 17,
+        "wins": 12,
+        "losses": 5,
+        "winrate": 70.59
+      },
+      {
+        "value": "CHOCH_BULLISH",
+        "total": 3,
+        "wins": 1,
+        "losses": 2,
+        "winrate": 33.33
+      }
+    ],
+    "rr": [
+      {
+        "value": "RR_3_OU_MAIS",
+        "total": 11,
+        "wins": 9,
+        "losses": 2,
+        "winrate": 81.82
+      },
+      {
+        "value": "RR_2_A_3",
+        "total": 9,
+        "wins": 4,
+        "losses": 5,
+        "winrate": 44.44
+      }
+    ]
+  },
+  "rules_changed": false,
+  "report": "LEON | REVISAO DE 20 OPERACOES\n=================================\nBloco: 1\nPeriodo: 2026-06-16T21:09:18 ate 2026-06-17T09:27:53\nOperacoes: 20\nVitorias: 13\nDerrotas: 7\nTaxa de acerto: 65.0%\nRR medio: 1:2.66\nResultado liquido simulado: 8.58R\n\nMelhores contextos\n- direcao=VENDA | 100.0% em 4 operacoes\n- elliott=ONDA C | 100.0% em 4 operacoes\n- sessao=LONDRES | 100.0% em 3 operacoes\n- top_down=ALINHADO | 100.0% em 3 operacoes\n- rr=RR_3_OU_MAIS | 81.82% em 11 operacoes\n\nContextos para revisar\n- bos=BOS_BULLISH | 33.33% em 3 operacoes\n- bos=BOS_BEARISH | 33.33% em 3 operacoes\n- choch=CHOCH_BULLISH | 33.33% em 3 operacoes\n- rr=RR_2_A_3 | 44.44% em 9 operacoes\n- direcao=COMPRA | 56.25% em 16 operacoes\n\nRecomendacoes de confianca\n- MANTER_EM_OBSERVACAO: direcao=COMPRA (56.25%, amostra 16, ajuste sugerido +0)\n- MANTER_EM_OBSERVACAO: elliott=ONDA 3 (56.25%, amostra 16, ajuste sugerido +0)\n- MANTER_EM_OBSERVACAO: setup=SETUP MODERADO (65.0%, amostra 20, ajuste sugerido +0)\n- AUMENTAR_CONFIANCA_RECOMENDADA: rr=RR_3_OU_MAIS (81.82%, amostra 11, ajuste sugerido +5)\n- MANTER_EM_OBSERVACAO: rr=RR_2_A_3 (44.44%, amostra 9, ajuste sugerido +0)\n\nProtecao\n- Nenhuma recomendacao foi aplicada automaticamente.\n- Risco, BOS, CHOCH, setup e regras operacionais permanecem inalterados.\n================================="
+}

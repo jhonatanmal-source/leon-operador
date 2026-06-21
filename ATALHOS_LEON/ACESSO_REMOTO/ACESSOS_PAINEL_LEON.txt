@@ -1,0 +1,25 @@
+============================================================
+                 ACESSOS DO PAINEL LEON
+============================================================
+
+Atualizado em: 20/06/2026
+
+ACESSO LOCAL - neste computador
+http://127.0.0.1:5000/login
+
+ACESSO REMOTO - internet, HTTPS seguro
+https://leon-operador.tailcdf4e1.ts.net/login
+
+OBSERVACOES
+- O acesso remoto usa Tailscale Funnel.
+- Nao e necessario abrir portas no modem.
+- O painel inicia automaticamente pela tarefa "LEON Web Diario".
+- Compartilhe apenas o acesso de colaborador/visualizacao.
+- Nao anote senhas neste arquivo.
+
+Projeto:
+C:\XAU_ELITE_AI
+
+Atalhos:
+C:\XAU_ELITE_AI\ATALHOS_LEON
+============================================================

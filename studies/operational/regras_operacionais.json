@@ -1,0 +1,27 @@
+{
+  "topic": "Regras Operacionais",
+  "level": "basic",
+  "description": "Regras para manter o LEON dentro do plano operacional, estudando SMC e Elliott sem sair do escopo definido.",
+  "rules": [
+    "Nao operar sem contexto macro e micro.",
+    "Nao executar ordem neste modulo de estudo.",
+    "Registrar motivo de cada observacao.",
+    "Separar estudo, validacao e execucao.",
+    "Proteger o gerenciamento de risco existente."
+  ],
+  "examples": [
+    "Um sinal pode ser registrado como estudo mesmo sem virar operacao.",
+    "Se mercado estiver lateral, o LEON deve registrar motivo de recusa."
+  ],
+  "common_mistakes": [
+    "Misturar estudo com execucao.",
+    "Alterar risco por impulso.",
+    "Validar entrada sem checklist."
+  ],
+  "what_leon_should_observe": [
+    "Se a regra operacional foi respeitada.",
+    "Se houve motivo claro para aprovar ou recusar.",
+    "Se o aprendizado foi registrado."
+  ],
+  "confidence_impact": 10
+}

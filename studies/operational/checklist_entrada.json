@@ -1,0 +1,32 @@
+{
+  "topic": "Checklist de Entrada",
+  "level": "basic",
+  "description": "Checklist de estudo para validar se um contexto poderia virar Setup A+ no futuro, sem executar ordem nesta etapa.",
+  "rules": [
+    "Direcao esta clara.",
+    "Tendencia maior confirma o lado.",
+    "Momentum acompanha a direcao.",
+    "Liquidez foi identificada.",
+    "Existe BOS ou CHOCH valido.",
+    "Existe FVG ou OB como zona de interesse.",
+    "Risco retorno minimo e 1:2.",
+    "Nao existe noticia de alto impacto proxima.",
+    "Mercado nao esta lateral."
+  ],
+  "examples": [
+    "Checklist completo permite classificar estudo como candidato A+.",
+    "Falta de liquidez identificada deve impedir aprovacao A+."
+  ],
+  "common_mistakes": [
+    "Pular etapa de noticia.",
+    "Aceitar RR menor que 1:2.",
+    "Ignorar lateralidade."
+  ],
+  "what_leon_should_observe": [
+    "Itens aprovados e recusados.",
+    "Motivo de cada falha.",
+    "Pontuacao final do contexto.",
+    "Se o estudo deve aguardar mais candles."
+  ],
+  "confidence_impact": 12
+}

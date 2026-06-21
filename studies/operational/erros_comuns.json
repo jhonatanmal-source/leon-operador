@@ -1,0 +1,28 @@
+{
+  "topic": "Erros Comuns",
+  "level": "basic",
+  "description": "Lista inicial de falhas que o LEON deve registrar e estudar para reduzir repeticao de erros no XAUUSD.",
+  "rules": [
+    "Registrar erro com contexto, nao apenas com texto solto.",
+    "Classificar erro por SMC, Elliott, risco ou execucao.",
+    "Revisar erros semanalmente.",
+    "Transformar erro recorrente em regra de bloqueio futura.",
+    "Nao esconder erro operacional."
+  ],
+  "examples": [
+    "Entrada em range apos FVG fraco deve ser registrada como erro de contexto.",
+    "CHOCH isolado sem liquidez deve ser registrado como leitura incompleta."
+  ],
+  "common_mistakes": [
+    "Apagar erro sem aprendizado.",
+    "Registrar erro sem timeframe.",
+    "Culpar mercado sem revisar regra quebrada."
+  ],
+  "what_leon_should_observe": [
+    "Regra quebrada.",
+    "Condicao de mercado.",
+    "Impacto na confianca.",
+    "Como evitar repeticao."
+  ],
+  "confidence_impact": -10
+}

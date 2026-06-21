@@ -1,0 +1,134 @@
+{
+  "generated_at": "20/06/2026 19:59:32",
+  "period_start": "14/06/2026",
+  "period_end": "20/06/2026",
+  "reference_date": "2026-06-20",
+  "status": "CRITICO",
+  "score": 49,
+  "metrics": {
+    "studies": 565,
+    "entries": 4,
+    "blocks": 28,
+    "observations": 467,
+    "technical_errors": 0,
+    "wins": 25,
+    "losses": 13
+  },
+  "human_analyses": {
+    "total": 0,
+    "pending": 0,
+    "approved": 0,
+    "rejected": 0
+  },
+  "findings": [
+    {
+      "severity": "CRITICO",
+      "title": "Execução sem estrutura completa",
+      "count": 7,
+      "detail": "Há operações executadas sem SMC, BOS e CHOCH válidos.",
+      "correction": "Manter essas entradas bloqueadas e revisar cada ID antes de qualquer nova liberação.",
+      "items": [
+        "PREOP-000035",
+        "PREOP-000037",
+        "PREOP-000039",
+        "PREOP-000094",
+        "PREOP-000105",
+        "PREOP-000106",
+        "PREOP-000107"
+      ]
+    },
+    {
+      "severity": "MEDIO",
+      "title": "Risco-retorno insuficiente",
+      "count": 21,
+      "detail": "Entradas foram bloqueadas ou avaliadas com RR abaixo do mínimo.",
+      "correction": "Aguardar retorno à zona planejada; não perseguir preço para forçar uma entrada.",
+      "items": []
+    },
+    {
+      "severity": "MEDIO",
+      "title": "Preço fora da zona planejada",
+      "count": 21,
+      "detail": "O preço se afastou da região definida para entrada.",
+      "correction": "Invalidar a oportunidade após o drift e exigir uma nova estrutura antes de recalcular a entrada.",
+      "items": []
+    },
+    {
+      "severity": "INFO",
+      "title": "Setups fracos bloqueados corretamente",
+      "count": 559,
+      "detail": "O filtro evitou execução em contexto neutro ou fraco.",
+      "correction": "Manter o bloqueio. Usar esses casos como estudo, sem tratá-los como erro operacional.",
+      "items": []
+    }
+  ],
+  "daily": [
+    {
+      "date": "14/06/2026",
+      "studies": 0,
+      "entries": 0,
+      "blocks": 0,
+      "observations": 0,
+      "errors": 0
+    },
+    {
+      "date": "15/06/2026",
+      "studies": 0,
+      "entries": 0,
+      "blocks": 0,
+      "observations": 0,
+      "errors": 0
+    },
+    {
+      "date": "16/06/2026",
+      "studies": 40,
+      "entries": 0,
+      "blocks": 0,
+      "observations": 0,
+      "errors": 0
+    },
+    {
+      "date": "17/06/2026",
+      "studies": 60,
+      "entries": 1,
+      "blocks": 28,
+      "observations": 15,
+      "errors": 0
+    },
+    {
+      "date": "18/06/2026",
+      "studies": 84,
+      "entries": 3,
+      "blocks": 0,
+      "observations": 74,
+      "errors": 0
+    },
+    {
+      "date": "19/06/2026",
+      "studies": 254,
+      "entries": 0,
+      "blocks": 0,
+      "observations": 252,
+      "errors": 0
+    },
+    {
+      "date": "20/06/2026",
+      "studies": 127,
+      "entries": 0,
+      "blocks": 0,
+      "observations": 126,
+      "errors": 0
+    }
+  ],
+  "top_block_reasons": [
+    {
+      "reason": "ENTRY_PRICE_DRIFT_ABOVE_LIMIT",
+      "count": 21
+    },
+    {
+      "reason": "SETUP_SCORE_BELOW_MINIMUM",
+      "count": 7
+    }
+  ],
+  "safety_note": "A auditoria recomenda correções, mas não altera regras, risco ou execução automaticamente."
+}

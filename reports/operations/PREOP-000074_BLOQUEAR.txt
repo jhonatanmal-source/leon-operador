@@ -1,0 +1,18 @@
+LEON | RELATORIO POR OPERACAO
+=================================
+Data/hora: 2026-06-17T14:11:14
+Pre-op: PREOP-000074
+Simbolo: XAUUSD
+Direcao planejada: COMPRA
+Preco planejado: 4349.07
+Preco real: 4358.06
+RR planejado: 3.0
+RR real: 0.43
+Brain Score: 75
+Classificacao: SETUP MODERADO
+Decisao: BLOQUEAR
+Motivo: ENTRY_PRICE_DRIFT_ABOVE_LIMIT
+Contexto SMC: NEUTRO
+Contexto Elliott: ONDA 3
+Melhoria sugerida: Recalcular entrada somente quando o preco ainda entregar RR minimo.
+=================================

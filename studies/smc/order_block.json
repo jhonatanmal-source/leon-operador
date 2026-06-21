@@ -1,0 +1,28 @@
+{
+  "topic": "Order Block",
+  "level": "intermediate",
+  "description": "Order Block e uma regiao de decisao anterior a um deslocamento relevante. Para o LEON, OB deve ser validado por contexto, nao por aparencia isolada.",
+  "rules": [
+    "OB e a ultima regiao de decisao antes de um deslocamento relevante.",
+    "OB precisa estar ligado a BOS, CHOCH ou liquidez.",
+    "OB sem reacao perde forca.",
+    "OB muito antigo deve ter menor peso.",
+    "OB contra tendencia principal deve ser tratado com cautela."
+  ],
+  "examples": [
+    "Ultimo candle vendedor antes de impulso comprador com BOS pode ser OB bullish de estudo.",
+    "OB tocado varias vezes perde qualidade para entrada futura."
+  ],
+  "common_mistakes": [
+    "Marcar qualquer candle contrario como OB.",
+    "Usar OB sem deslocamento posterior.",
+    "Ignorar mitigacao anterior."
+  ],
+  "what_leon_should_observe": [
+    "Candle de origem do deslocamento.",
+    "BOS, CHOCH ou liquidez conectado ao OB.",
+    "Numero de retornos na zona.",
+    "Reacao do preco ao retestar."
+  ],
+  "confidence_impact": 9
+}

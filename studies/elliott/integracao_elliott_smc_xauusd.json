@@ -1,0 +1,25 @@
+{
+  "topic": "Integracao Elliott SMC no XAUUSD",
+  "level": "advanced",
+  "description": "Define o papel de Elliott como narrativa e de SMC como confirmacao operacional no ouro.",
+  "rules": [
+    "Elliott descreve fase provavel; SMC decide se existe gatilho.",
+    "Contagem principal deve ter nivel objetivo de invalidacao.",
+    "Possivel onda 3 exige BOS, deslocamento e FVG na mesma direcao.",
+    "Possivel fim de onda C exige POI, captura de liquidez e CHoCH no M15.",
+    "Possivel onda 5 perto de liquidez externa nao autoriza perseguir preco.",
+    "Se Elliott e SMC divergirem, o LEON observa e nao entra.",
+    "Noticia ou spike do ouro pode distorcer a leitura e reduzir a confianca.",
+    "Analises externas de autores servem para comparacao posterior, nunca para copiar entrada."
+  ],
+  "entry_sequence": [
+    "CONTAGEM_VALIDA",
+    "NIVEL_INVALIDACAO",
+    "POI_SMC",
+    "EVENTO_LIQUIDEZ",
+    "CONFIRMACAO_M15",
+    "FVG_DO_DESLOCAMENTO",
+    "RISCO_RETORNO"
+  ],
+  "confidence_impact": 15
+}

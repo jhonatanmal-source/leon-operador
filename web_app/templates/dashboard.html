@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Painel | LEON WEB COLLAB{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div>
+    <div class="eyebrow">VISÃO GERAL</div>
+    <h1>Painel colaborativo</h1>
+    <p class="muted">Estudos humanos organizados, interpretados e supervisionados.</p>
+  </div>
+  {% if user.role in ['ADMIN', 'SUPERVISOR', 'COLABORADOR'] %}
+    <a class="button" href="{{ url_for('analysis.upload') }}">Nova análise</a>
+  {% endif %}
+</section>
+
+{% if user.must_change_password %}
+<section class="card password-alert">
+  <div>
+    <h2>Troque sua senha inicial</h2>
+    <p class="muted">Use uma senha exclusiva com pelo menos 10 caracteres.</p>
+  </div>
+  <form method="post" action="{{ url_for('auth.change_password') }}" class="inline-form password-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="password" name="current_password" placeholder="Senha atual" required>
+    <input type="password" name="new_password" placeholder="Nova senha" minlength="10" required>
+    <input type="password" name="confirm_password" placeholder="Confirmar senha" minlength="10" required>
+    <button class="button success" type="submit">Alterar senha</button>
+  </form>
+</section>
+{% endif %}
+
+<section class="stats-grid">
+  <article class="card stat"><span>Total</span><strong>{{ stats.total }}</strong></article>
+  <article class="card stat"><span>Pendentes</span><strong class="yellow">{{ stats.pending }}</strong></article>
+  <article class="card stat"><span>Aprovadas</span><strong class="green">{{ stats.approved }}</strong></article>
+  <article class="card stat"><span>Rejeitadas</span><strong class="red">{{ stats.rejected }}</strong></article>
+  {% if user.role in ['ADMIN', 'SUPERVISOR'] %}
+    <article class="card stat"><span>Usuários ativos</span><strong>{{ stats.active_users }}</strong></article>
+  {% endif %}
+</section>
+
+<section class="card">
+  <div class="section-title">
+    <h2>Análises recentes</h2>
+    <a href="{{ url_for('analysis.history') }}">Ver histórico</a>
+  </div>
+  {% if recent %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Data</th><th>Operador</th><th>Timeframe</th><th>Direção</th><th>Tipo</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for analysis in recent %}
+        <tr>
+          <td>{{ analysis.created_at }}</td>
+          <td>{{ analysis.username }}</td>
+          <td>{{ analysis.timeframe }}</td>
+          <td>{{ analysis.direction }}</td>
+          <td>{{ analysis.analysis_type }}</td>
+          <td><span class="badge {{ analysis.status|lower }}">{{ analysis.status }}</span></td>
+          <td><a href="{{ url_for('analysis.detail', analysis_id=analysis.id) }}">Detalhes</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <p class="empty">Nenhuma análise disponível para seu perfil.</p>
+  {% endif %}
+</section>
+{% endblock %}

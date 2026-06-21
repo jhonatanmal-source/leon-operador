@@ -1,0 +1,28 @@
+{
+  "topic": "SMC Avancado",
+  "level": "advanced",
+  "description": "Camada avancada para o LEON combinar liquidez, BOS, CHOCH, FVG, OB e contexto macro para filtrar setups no XAUUSD.",
+  "rules": [
+    "Confluencia vale mais que sinal isolado.",
+    "Estrutura maior tem prioridade sobre gatilhos menores.",
+    "Zonas antigas perdem peso se ja foram mitigadas.",
+    "Varredura sem reacao nao confirma reversao.",
+    "Setup contra tendencia precisa de evidencias mais fortes."
+  ],
+  "examples": [
+    "CHOCH em M15 apos varredura de liquidez em H1 pode sinalizar transicao se houver FVG ou OB proximo.",
+    "ABC de Elliott voltando para OB institucional pode formar zona de estudo, nao entrada automatica."
+  ],
+  "common_mistakes": [
+    "Forcar leitura institucional em qualquer movimento.",
+    "Usar OB sem deslocamento posterior.",
+    "Dar peso alto para FVG em mercado lateral."
+  ],
+  "what_leon_should_observe": [
+    "Sequencia macro para micro.",
+    "Se a liquidez foi realmente varrida.",
+    "Se o rompimento teve deslocamento.",
+    "Se Elliott e SMC apontam para o mesmo lado."
+  ],
+  "confidence_impact": 8
+}

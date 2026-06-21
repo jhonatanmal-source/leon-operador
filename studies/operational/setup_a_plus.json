@@ -1,0 +1,31 @@
+{
+  "topic": "Setup A+",
+  "level": "advanced",
+  "description": "Setup A+ e a combinacao operacional de maior qualidade para o LEON, exigindo direcao clara, contexto SMC, Elliott coerente e risco controlado.",
+  "rules": [
+    "Direcao clara e obrigatoria.",
+    "Tendencia e momentum precisam estar alinhados.",
+    "Liquidez deve estar identificada.",
+    "BOS ou CHOCH valido deve existir.",
+    "FVG ou OB deve atuar como zona de interesse.",
+    "Risco retorno minimo 1:2, ideal 1:3.",
+    "Evitar noticia de alto impacto.",
+    "Evitar mercado lateral."
+  ],
+  "examples": [
+    "H1 em alta, liquidez varrida, CHOCH bullish em M15, retorno ao FVG e RR 1:3 pode virar Setup A+.",
+    "Setup com BOS valido mas noticia forte proxima deve ser recusado ou reduzido para estudo."
+  ],
+  "common_mistakes": [
+    "Chamar setup moderado de A+.",
+    "Ignorar risco retorno.",
+    "Operar lateralidade por ansiedade."
+  ],
+  "what_leon_should_observe": [
+    "Checklist completo antes de aprovar.",
+    "Motivos objetivos da entrada.",
+    "Pontos que reduzem confianca.",
+    "Se risco e contexto estao dentro das regras."
+  ],
+  "confidence_impact": 15
+}

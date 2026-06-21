@@ -1,0 +1,22 @@
+{
+  "topic": "Graus e Contagens Alternativas Elliott",
+  "level": "advanced",
+  "description": "Organiza a natureza fractal das ondas e evita misturar swings de graus diferentes.",
+  "rules": [
+    "Cada onda pode ser subdividida em ondas de grau inferior.",
+    "Uma contagem valida deve usar swings do mesmo grau.",
+    "O contexto HTF define a onda maior; M15 descreve apenas uma parte dessa estrutura.",
+    "Uma reversao no M15 pode ser apenas correcao da onda HTF.",
+    "Toda leitura deve registrar contagem principal e alternativa.",
+    "A confianca cai quando mais de duas contagens permanecem igualmente plausiveis.",
+    "Novos extremos devem atualizar ou invalidar contagens, nao ser encaixados a forca."
+  ],
+  "required_output": [
+    "grau_analisado",
+    "contagem_principal",
+    "contagem_alternativa",
+    "nivel_de_invalidacao",
+    "proxima_confirmacao_necessaria"
+  ],
+  "confidence_impact": 12
+}

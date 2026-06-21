@@ -1,0 +1,28 @@
+{
+  "topic": "CHOCH",
+  "level": "intermediate",
+  "description": "CHOCH indica possivel mudanca de carater do mercado. Ele sugere transicao, mas nao deve ser tratado como entrada isolada.",
+  "rules": [
+    "CHOCH indica possivel mudanca de carater.",
+    "CHOCH bullish ocorre apos quebra de estrutura baixista.",
+    "CHOCH bearish ocorre apos quebra de estrutura altista.",
+    "CHOCH isolado nao e entrada.",
+    "CHOCH deve ser combinado com liquidez, FVG ou OB."
+  ],
+  "examples": [
+    "Depois de uma queda, se o XAUUSD varre fundo e rompe topo menor, o LEON pode marcar CHOCH bullish em estudo.",
+    "CHOCH sem liquidez previa deve ter confianca reduzida."
+  ],
+  "common_mistakes": [
+    "Assumir reversao completa com um unico CHOCH.",
+    "Ignorar timeframe maior.",
+    "Confundir pullback comum com mudanca de carater."
+  ],
+  "what_leon_should_observe": [
+    "Estrutura anterior antes da quebra.",
+    "Liquidez varrida antes do CHOCH.",
+    "FVG ou OB criado apos a quebra.",
+    "Confirmacao em candles seguintes."
+  ],
+  "confidence_impact": 10
+}

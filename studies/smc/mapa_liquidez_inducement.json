@@ -1,0 +1,26 @@
+{
+  "topic": "Mapa de Liquidez e Inducement",
+  "level": "advanced",
+  "description": "Mapeia a liquidez interna usada durante o deslocamento e a liquidez externa que pode servir como alvo estrutural.",
+  "rules": [
+    "Liquidez interna fica entre os extremos do range de trabalho.",
+    "Liquidez externa fica acima do swing high ou abaixo do swing low relevante.",
+    "Equal highs, equal lows e subestruturas que falham em romper swings podem concentrar liquidez.",
+    "Inducement e uma liquidez proxima de um POI que pode ser capturada antes da reacao principal.",
+    "Entrada antes da captura de inducement recebe baixa confianca.",
+    "Sweep precisa de retorno ao range e reacao; rompimento sustentado nao e sweep.",
+    "Alvo deve priorizar weak point ou liquidez externa coerente com o fluxo."
+  ],
+  "entry_requirements": [
+    "Identificar qual liquidez foi capturada.",
+    "Identificar qual liquidez permanece como alvo.",
+    "Confirmar que o POI esta alem ou proximo do inducement esperado.",
+    "Aguardar reacao estrutural depois da captura."
+  ],
+  "common_mistakes": [
+    "Chamar toda maxima ou minima de liquidez relevante.",
+    "Entrar diretamente no primeiro toque sem avaliar inducement.",
+    "Confundir rompimento verdadeiro com stop hunt."
+  ],
+  "confidence_impact": 16
+}

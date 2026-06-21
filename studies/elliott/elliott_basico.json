@@ -1,0 +1,28 @@
+{
+  "topic": "Elliott Basico",
+  "level": "basic",
+  "description": "Base de Elliott para o LEON estudar impulso, correcao e possiveis fases do mercado sem afirmar ondas com certeza absoluta.",
+  "rules": [
+    "Movimentos impulsivos tendem a ocorrer em cinco fases.",
+    "Correcoes costumam aparecer em tres fases.",
+    "Elliott deve ser usado como contexto, nao como gatilho isolado.",
+    "O LEON nunca deve afirmar onda com certeza sem confirmacao.",
+    "SMC deve validar zonas e reacoes."
+  ],
+  "examples": [
+    "Apos impulso forte no XAUUSD, o LEON pode estudar possivel ABC antes de nova decisao.",
+    "Uma possivel onda 5 perto de liquidez deve ser observada com cautela."
+  ],
+  "common_mistakes": [
+    "Forcar contagem em mercado lateral.",
+    "Prever onda sem confirmacao.",
+    "Ignorar liquidez e estrutura."
+  ],
+  "what_leon_should_observe": [
+    "Sequencia de impulsos e correcoes.",
+    "Amplitude relativa das pernas.",
+    "Confluencia com liquidez, FVG ou OB.",
+    "Clareza ou falta de clareza da contagem."
+  ],
+  "confidence_impact": 5
+}

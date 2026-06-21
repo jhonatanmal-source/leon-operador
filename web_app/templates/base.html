@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}LEON WEB COLLAB{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('dashboard.index') if current_user else url_for('auth.login') }}">
+      <span class="brand-mark">LE</span>
+      <span>LEON WEB COLLAB</span>
+    </a>
+    {% if current_user %}
+      <nav class="nav">
+        <a href="{{ url_for('dashboard.index') }}">Painel</a>
+        <a href="{{ url_for('leon.index') }}">Painel Leon</a>
+        <a href="{{ url_for('weekly_audit.index') }}">Auditoria semanal</a>
+        <a href="{{ url_for('health.index') }}">Saúde</a>
+        <a href="{{ url_for('analysis.history') }}">Histórico</a>
+        {% if current_user.role in ['ADMIN', 'SUPERVISOR', 'COLABORADOR'] %}
+          <a href="{{ url_for('analysis.upload') }}">Enviar análise</a>
+        {% endif %}
+        {% if current_user.role == 'ADMIN' %}
+          <a href="{{ url_for('users.list_users') }}">Usuários</a>
+        {% endif %}
+        <a href="{{ url_for('auth.logout') }}">Sair</a>
+      </nav>
+      <div class="identity">
+        <strong>{{ current_user.username }}</strong>
+        <span>{{ current_user.role }}</span>
+      </div>
+    {% endif %}
+  </header>
+
+  <main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    {% if standalone_message %}
+      <section class="card centered">
+        <h1>{{ standalone_message }}</h1>
+        <a class="button" href="{{ url_for('dashboard.index') }}">Voltar ao painel</a>
+      </section>
+    {% else %}
+      {% block content %}{% endblock %}
+    {% endif %}
+  </main>
+</body>
+</html>

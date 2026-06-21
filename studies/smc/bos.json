@@ -1,0 +1,28 @@
+{
+  "topic": "BOS",
+  "level": "basic",
+  "description": "BOS e quebra de estrutura. Ele confirma continuacao quando o preco rompe um topo ou fundo relevante na direcao da estrutura dominante.",
+  "rules": [
+    "BOS confirma continuacao de estrutura.",
+    "BOS bullish ocorre quando rompe topo relevante.",
+    "BOS bearish ocorre quando rompe fundo relevante.",
+    "Evitar BOS em candle fraco ou mercado lateral.",
+    "BOS precisa ser validado com contexto."
+  ],
+  "examples": [
+    "Em alta, rompimento de topo com candle forte pode confirmar BOS bullish no XAUUSD.",
+    "Rompimento pequeno dentro de lateralidade deve ser classificado como baixa qualidade."
+  ],
+  "common_mistakes": [
+    "Validar BOS sem topo ou fundo relevante.",
+    "Ignorar pavios falsos.",
+    "Entrar no rompimento sem zona de retorno."
+  ],
+  "what_leon_should_observe": [
+    "Topo ou fundo rompido.",
+    "Fechamento do candle alem da estrutura.",
+    "Forca do deslocamento.",
+    "Contexto de tendencia maior."
+  ],
+  "confidence_impact": 12
+}

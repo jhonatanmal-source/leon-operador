@@ -1,0 +1,28 @@
+{
+  "topic": "Ondas XAUUSD",
+  "level": "intermediate",
+  "description": "Estudo especifico de como movimentos de Elliott podem aparecer no XAUUSD, respeitando volatilidade, noticias e liquidez do ouro.",
+  "rules": [
+    "XAUUSD pode estender movimentos impulsivos com alta volatilidade.",
+    "Onda 5 pode varrer liquidez antes de reversao.",
+    "ABC pode ser profundo em dias de noticia.",
+    "Leitura macro deve vir antes da micro.",
+    "Nao operar onda sem confirmacao SMC."
+  ],
+  "examples": [
+    "Domingo ou inicio da semana pode servir para leitura macro, enquanto M15 busca gatilho durante a semana.",
+    "Movimento forte de Londres pode formar impulso, mas entrada exige retorno a zona de interesse."
+  ],
+  "common_mistakes": [
+    "Aplicar contagem perfeita em ativo muito volatil.",
+    "Ignorar abertura de sessao.",
+    "Confundir spike de noticia com impulso limpo."
+  ],
+  "what_leon_should_observe": [
+    "Sessao do mercado.",
+    "Volatilidade anormal.",
+    "Confluencia com SMC.",
+    "Se a contagem continua valida apos novos candles."
+  ],
+  "confidence_impact": 6
+}

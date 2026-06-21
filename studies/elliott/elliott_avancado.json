@@ -1,0 +1,28 @@
+{
+  "topic": "Elliott Avancado",
+  "level": "advanced",
+  "description": "Camada avancada para combinar leitura de ondas com SMC, buscando contexto operacional sem transformar Elliott em previsao rigida.",
+  "rules": [
+    "Onda provavel precisa respeitar estrutura e momentum.",
+    "Fim de impulso pode coincidir com busca de liquidez.",
+    "ABC pode devolver preco para FVG ou OB.",
+    "Divergencia entre Elliott e SMC reduz confianca.",
+    "Confluencia entre Elliott e SMC aumenta qualidade do estudo."
+  ],
+  "examples": [
+    "Possivel onda 5 varrendo topo em H1 seguida de CHOCH em M15 pode indicar estudo de reversao.",
+    "Possivel ABC terminando em OB macro pode indicar zona de retomada."
+  ],
+  "common_mistakes": [
+    "Trocar contagem toda vez que o preco oscila.",
+    "Usar onda como certeza de alvo.",
+    "Ignorar noticia e volatilidade do ouro."
+  ],
+  "what_leon_should_observe": [
+    "Onde a contagem perde validade.",
+    "Se a onda estimada tem confirmacao estrutural.",
+    "Se a correcao respeita zona SMC.",
+    "Se ha deslocamento apos a zona."
+  ],
+  "confidence_impact": 7
+}

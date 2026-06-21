@@ -1,0 +1,37 @@
+{
+  "topic": "Entrada SMC por Confirmacao M15",
+  "level": "advanced",
+  "description": "Modelo conservador para o XAUUSD: contexto no HTF, POI qualificado e confirmacao estrutural no M15 antes de qualquer refino adicional.",
+  "rules": [
+    "O LEON nao utiliza entrada de risco no primeiro toque.",
+    "Definir tendencia, range e alvo de liquidez no HTF.",
+    "Esperar o preco tocar POI HTF qualificado.",
+    "No M15, esperar sweep ou captura de liquidez seguida de deslocamento.",
+    "Exigir BOS ou CHoCH com fechamento na direcao da operacao.",
+    "Exigir FVG criado pelo mesmo deslocamento que confirmou a estrutura.",
+    "Somente depois do M15 confirmado o M5 pode refinar o preco.",
+    "Se M15 e HTF estiverem mistos, observar sem entrar.",
+    "Operar apenas durante sessoes permitidas e sem perseguir preco fora da zona."
+  ],
+  "sequence": [
+    "HTF_CONTEXT",
+    "EXTERNAL_LIQUIDITY_TARGET",
+    "QUALIFIED_POI",
+    "LIQUIDITY_EVENT",
+    "M15_DISPLACEMENT",
+    "M15_STRUCTURE_CONFIRMATION",
+    "M15_FVG",
+    "OPTIONAL_M5_REFINEMENT",
+    "RISK_VALIDATION"
+  ],
+  "hard_blocks": [
+    "SMC neutro.",
+    "Sem BOS e sem CHoCH.",
+    "FVG anterior sem relacao com o deslocamento atual.",
+    "Top-down misto.",
+    "Fora das sessoes permitidas.",
+    "RR real abaixo do minimo.",
+    "Entrada distante da zona planejada."
+  ],
+  "confidence_impact": 22
+}

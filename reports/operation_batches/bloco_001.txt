@@ -1,0 +1,36 @@
+LEON | REVISAO DE 20 OPERACOES
+=================================
+Bloco: 1
+Periodo: 2026-06-16T21:09:18 ate 2026-06-17T09:27:53
+Operacoes: 20
+Vitorias: 13
+Derrotas: 7
+Taxa de acerto: 65.0%
+RR medio: 1:2.66
+Resultado liquido simulado: 8.58R
+
+Melhores contextos
+- direcao=VENDA | 100.0% em 4 operacoes
+- elliott=ONDA C | 100.0% em 4 operacoes
+- sessao=LONDRES | 100.0% em 3 operacoes
+- top_down=ALINHADO | 100.0% em 3 operacoes
+- rr=RR_3_OU_MAIS | 81.82% em 11 operacoes
+
+Contextos para revisar
+- bos=BOS_BULLISH | 33.33% em 3 operacoes
+- bos=BOS_BEARISH | 33.33% em 3 operacoes
+- choch=CHOCH_BULLISH | 33.33% em 3 operacoes
+- rr=RR_2_A_3 | 44.44% em 9 operacoes
+- direcao=COMPRA | 56.25% em 16 operacoes
+
+Recomendacoes de confianca
+- MANTER_EM_OBSERVACAO: direcao=COMPRA (56.25%, amostra 16, ajuste sugerido +0)
+- MANTER_EM_OBSERVACAO: elliott=ONDA 3 (56.25%, amostra 16, ajuste sugerido +0)
+- MANTER_EM_OBSERVACAO: setup=SETUP MODERADO (65.0%, amostra 20, ajuste sugerido +0)
+- AUMENTAR_CONFIANCA_RECOMENDADA: rr=RR_3_OU_MAIS (81.82%, amostra 11, ajuste sugerido +5)
+- MANTER_EM_OBSERVACAO: rr=RR_2_A_3 (44.44%, amostra 9, ajuste sugerido +0)
+
+Protecao
+- Nenhuma recomendacao foi aplicada automaticamente.
+- Risco, BOS, CHOCH, setup e regras operacionais permanecem inalterados.
+=================================

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Saúde do LEON | WEB COLLAB{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div>
+    <div class="eyebrow">MONITORAMENTO SOMENTE LEITURA</div>
+    <h1>Saúde do LEON</h1>
+    <p class="muted">Atualizado em {{ health.generated_at }}. Esta tela não executa ordens.</p>
+  </div>
+  <span class="badge large {{ 'aprovada' if health.overall == 'OK' else 'pendente' if health.overall == 'ATENÇÃO' else 'rejeitada' }}">
+    {{ health.overall }}
+  </span>
+</section>
+
+<section class="stats-grid health-stats">
+  <article class="card stat"><span>Operador 24h</span><strong class="{{ 'green' if health.processes.operator else 'red' }}">{{ 'ONLINE' if health.processes.operator else 'OFF' }}</strong></article>
+  <article class="card stat"><span>MT5</span><strong class="{{ 'green' if health.mt5.status == 'OK' else 'red' }}">{{ health.mt5.status }}</strong></article>
+  <article class="card stat"><span>Coletor</span><strong>{{ health.operators.collector.status }}</strong></article>
+  <article class="card stat"><span>Análises fechadas</span><strong>{{ health.pre_operations.fechados }}</strong></article>
+  <article class="card stat"><span>Win rate decidido</span><strong>{{ health.pre_operations.win_rate_decidido }}%</strong></article>
+</section>
+
+<section class="health-grid">
+  <article class="card">
+    <h2>Processos</h2>
+    <dl class="details">
+      <div><dt>Operador</dt><dd>{{ 'ONLINE' if health.processes.operator else 'OFF' }}</dd></div>
+      <div><dt>Painel legado</dt><dd>{{ 'ONLINE' if health.processes.legacy_panel else 'OFF' }}</dd></div>
+      <div><dt>WEB COLLAB</dt><dd>{{ 'ONLINE' if health.processes.web_collab else 'OFF' }}</dd></div>
+      <div><dt>Túnel Cloudflare</dt><dd>{{ 'ONLINE' if health.processes.cloudflare_tunnel else 'OFF' }}</dd></div>
+    </dl>
+    {% if health.remote.remote_url %}
+      <p><a href="{{ health.remote.remote_url }}" target="_blank" rel="noopener">Abrir acesso remoto atual</a></p>
+    {% endif %}
+  </article>
+
+  <article class="card">
+    <h2>MT5 e risco</h2>
+    <dl class="details">
+      <div><dt>Conta</dt><dd>{{ health.mt5.account_mode }}</dd></div>
+      <div><dt>Conectado</dt><dd>{{ 'SIM' if health.mt5.connected else 'NÃO' }}</dd></div>
+      <div><dt>Negociação permitida</dt><dd>{{ 'SIM' if health.mt5.trade_allowed else 'NÃO' }}</dd></div>
+      <div><dt>Saldo</dt><dd>{{ health.mt5.balance or 'SEM DADOS' }}</dd></div>
+      <div><dt>Equity</dt><dd>{{ health.mt5.equity or 'SEM DADOS' }}</dd></div>
+      <div><dt>Resultado aberto</dt><dd>{{ health.mt5.open_profit or 0 }}</dd></div>
+      <div><dt>Risco por entrada</dt><dd>{{ health.risk.method_risk_percent }}%</dd></div>
+      <div><dt>Limite diário</dt><dd>{{ health.risk.daily_loss_percent }}%</dd></div>
+    </dl>
+  </article>
+
+  <article class="card">
+    <h2>Leitura atual</h2>
+    <dl class="details">
+      <div><dt>Direção</dt><dd>{{ health.operators.setup.direcao }}</dd></div>
+      <div><dt>SMC</dt><dd>{{ health.operators.setup.smc }}</dd></div>
+      <div><dt>Elliott</dt><dd>{{ health.operators.setup.elliott }}</dd></div>
+      <div><dt>Confiança</dt><dd>{{ health.operators.setup.confianca }}</dd></div>
+      <div><dt>Alinhamento</dt><dd>{{ health.operators.alignment.status }}</dd></div>
+      <div><dt>Prontidão</dt><dd>{{ health.readiness.nivel }}</dd></div>
+    </dl>
+    <h3>Motivo sem entrada</h3>
+    <p class="analysis-text">{{ health.entry_block }}</p>
+    <h3>News Shield</h3>
+    <p>
+      Fonte: {{ health.news.source }} ·
+      {{ 'BLOQUEANDO' if not health.news.approved else 'SEM JANELA DE BLOQUEIO' }}
+    </p>
+    {% if health.news.warning %}<p class="muted">{{ health.news.warning }}</p>{% endif %}
+  </article>
+
+  <article class="card">
+    <h2>Aprendizado</h2>
+    <dl class="details">
+      <div><dt>Pré-operações</dt><dd>{{ health.pre_operations.total }}</dd></div>
+      <div><dt>Abertas</dt><dd>{{ health.pre_operations.abertos }}</dd></div>
+      <div><dt>Wins</dt><dd>{{ health.pre_operations.wins }}</dd></div>
+      <div><dt>Losses</dt><dd>{{ health.pre_operations.losses }}</dd></div>
+      <div><dt>Resultados decididos</dt><dd>{{ health.pre_operations.decididos }}</dd></div>
+      <div><dt>Taxa global</dt><dd>{{ health.pre_operations.taxa }}%</dd></div>
+      <div><dt>Shadow total</dt><dd>{{ health.shadow.total }}</dd></div>
+      <div><dt>Shadow abertas</dt><dd>{{ health.shadow.open }}</dd></div>
+      <div><dt>Shadow wins</dt><dd>{{ health.shadow.wins }}</dd></div>
+      <div><dt>Shadow losses</dt><dd>{{ health.shadow.losses }}</dd></div>
+    </dl>
+  </article>
+</section>
+
+<section class="card">
+  <div class="section-title">
+    <h2>Watchdog</h2>
+    <span class="badge {{ 'aprovada' if health.watchdog.status == 'OK' else 'pendente' if health.watchdog.status == 'ATENCAO' else 'rejeitada' }}">{{ health.watchdog.status }}</span>
+  </div>
+  <p>{{ health.watchdog.summary }}</p>
+  <dl class="details">
+    <div><dt>Última análise</dt><dd>{{ health.watchdog.checks.analise_minutos }} min</dd></div>
+    <div><dt>Última coleta</dt><dd>{{ health.watchdog.checks.coleta_minutos }} min</dd></div>
+    <div><dt>Último Telegram</dt><dd>{{ health.watchdog.checks.telegram_minutos }} min</dd></div>
+  </dl>
+  {% if health.watchdog.events %}
+    <div class="event-list">
+      {% for event in health.watchdog.events %}
+        <div class="event {{ event.level|lower }}">
+          <strong>{{ event.level }}</strong>
+          <span>{{ event.source }}</span>
+          <p>{{ event.message }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

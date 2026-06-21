@@ -1,0 +1,46 @@
+{
+  "topic": "Fontes SMC 2026-06-18",
+  "level": "reference",
+  "description": "Registro dos materiais fornecidos para estudo. O LEON usa apenas resumos e regras derivadas, sem reproduzir o conteudo integral.",
+  "sources": [
+    {
+      "name": "E-BOOK VEGAS 3D PRO.pdf",
+      "status": "aguardando_ocr",
+      "notes": "PDF digitalizado sem camada de texto."
+    },
+    {
+      "name": "E-BOOK VEGAS 4D Institucional.pdf",
+      "status": "aguardando_ocr",
+      "notes": "PDF digitalizado sem camada de texto."
+    },
+    {
+      "name": "Ebook Operacional 4d (4).pdf",
+      "status": "estudado",
+      "notes": "Estrutura fractal, BMS/SMS, momentum, fases do mercado, order block, FVG, mitigacao e trading plan."
+    },
+    {
+      "name": "Smart Money Concepts - MARRAIK.pdf",
+      "status": "estudado",
+      "notes": "Estrutura, liquidez, inducement, POI, OB, FVG, premium/discount, alinhamento de fluxo e entradas por confirmacao."
+    },
+    {
+      "name": "Principio de Ondas de Elliott - resumo Frost e Prechter",
+      "url": "https://www.livros1.com.br/pdf-view/princ%C3%ADpio-de-ondas-de-elliott.pdf",
+      "status": "estudado",
+      "notes": "Estrutura 5-3, graus fractais, regras de impulso, alternancia, extensoes, truncamento e relacoes Fibonacci."
+    },
+    {
+      "name": "As Ondas Elliott - teoria e pratica de aplicacao",
+      "url": "https://www.litefinance.org/uploads/blog_post/blog_posts/elliott-wave-theory/upd/PDF/What-Is-the-Elliott-Wave-Theory-Comprehensive-Guide-pt.pdf",
+      "status": "estudado",
+      "notes": "Regras formais para impulso, diagonais e familias corretivas, com proporcoes estatisticas de Fibonacci."
+    },
+    {
+      "name": "Autores LiteFinance",
+      "url": "https://www.litefinance.org/blog/authors/",
+      "status": "referencia_periodica",
+      "notes": "Alex Geuta e referencia de analise Elliott e publica leitura semanal de moedas e ouro. Conteudo futuro deve ser tratado como opiniao externa, nunca como sinal."
+    }
+  ],
+  "core_warning": "Material educacional nao transforma conceito visual em certeza operacional. Toda regra precisa de teste e confirmacao em dados do XAUUSD."
+}

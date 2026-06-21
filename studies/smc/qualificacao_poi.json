@@ -1,0 +1,25 @@
+{
+  "topic": "Qualificacao de POI",
+  "level": "advanced",
+  "description": "Classifica Order Block, Supply, Demand e FVG pela causa e pelo efeito estrutural, evitando marcar qualquer candle contrario como zona institucional.",
+  "rules": [
+    "POI deve estar ligado a deslocamento relevante.",
+    "Order Block forte origina quebra de estrutura e deixa imbalance ou FVG.",
+    "Zona ja mitigada perde prioridade.",
+    "Multiplos retornos reduzem a qualidade da zona.",
+    "POI de venda deve preferencialmente estar em premium do range.",
+    "POI de compra deve preferencialmente estar em discount do range.",
+    "Inducement entre o preco e o POI aumenta a chance de visita mais profunda.",
+    "FVG isolado sem estrutura, liquidez e deslocamento nao autoriza entrada."
+  ],
+  "score_components": {
+    "causou_quebra_estrutura": 25,
+    "deixou_fvg": 20,
+    "capturou_liquidez": 20,
+    "zona_nao_mitigada": 15,
+    "premium_discount_correto": 10,
+    "alinhado_htf": 10
+  },
+  "minimum_candidate_score": 70,
+  "confidence_impact": 18
+}

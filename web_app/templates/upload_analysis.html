@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Enviar análise | LEON WEB COLLAB{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div>
+    <div class="eyebrow">ESTUDO SUPERVISIONADO</div>
+    <h1>Enviar análise humana</h1>
+    <p class="muted">O painel registra o estudo. Ele não executa ordens.</p>
+  </div>
+</section>
+
+<section class="card form-card wide">
+  <form method="post" enctype="multipart/form-data" class="form-grid">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Símbolo<input name="symbol" value="XAUUSD" required></label>
+    <label>Timeframe<select name="timeframe" required>{% for item in timeframes %}<option>{{ item }}</option>{% endfor %}</select></label>
+    <label>Direção<select name="direction" required>{% for item in directions %}<option>{{ item }}</option>{% endfor %}</select></label>
+    <label>Tipo<select name="analysis_type" required>{% for item in analysis_types %}<option>{{ item }}</option>{% endfor %}</select></label>
+    <label class="span-2">
+      Print JPG/JPEG/PNG — máximo 5 MB
+      <input type="file" name="image" accept=".jpg,.jpeg,.png,image/jpeg,image/png">
+    </label>
+    <label class="span-2">
+      Análise
+      <textarea name="text_analysis" rows="11" minlength="20" placeholder="Descreva estrutura, liquidez, Fibonacci, Elliott, CHOCH, BOS, FVG, OB, entrada, stop e alvo..." required></textarea>
+    </label>
+    <div class="span-2 actions">
+      <button class="button" type="submit">Registrar estudo</button>
+      <a class="button secondary" href="{{ url_for('analysis.history') }}">Cancelar</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,27 @@
+{
+  "topic": "Estrutura SMC Hierarquica",
+  "level": "advanced",
+  "description": "Distingue estrutura externa, estrutura interna e subestrutura para evitar que uma quebra pequena seja tratada como reversao do contexto maior.",
+  "rules": [
+    "Definir primeiro o range externo por swing high e swing low relevantes.",
+    "Movimentos dentro do range externo sao estrutura interna ate romperem um extremo confirmado.",
+    "BOS de LTF nao implica automaticamente mudanca no HTF.",
+    "BOS de continuacao deve fechar alem do swing relevante na direcao do fluxo.",
+    "Pavio isolado alem do nivel pode ser sweep e nao quebra confirmada.",
+    "CHoCH indica mudanca local de comportamento, mas precisa de POI e contexto HTF para sugerir reversao.",
+    "Strong point e o swing que originou deslocamento capaz de quebrar estrutura.",
+    "Weak point e um alvo provavel quando nao originou quebra estrutural."
+  ],
+  "entry_requirements": [
+    "Direcao HTF definida.",
+    "M15 alinhado ao fluxo ou reagindo em POI HTF.",
+    "Fechamento estrutural confirmado, nao apenas pavio.",
+    "Deslocamento com corpo e velocidade superiores a correcao."
+  ],
+  "invalidations": [
+    "M15 rompe estrutura na direcao oposta depois do gatilho.",
+    "O strong point que sustenta a tese e violado.",
+    "A suposta quebra ocorre somente por pavio sem deslocamento."
+  ],
+  "confidence_impact": 18
+}
