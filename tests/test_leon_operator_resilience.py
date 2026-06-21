@@ -124,6 +124,15 @@ class LeonOperatorResilienceTests(unittest.TestCase):
             self.assertEqual(state_file.read_text(encoding="utf-8"), "novo")
             self.assertEqual(list(Path(temp_dir).glob("*.tmp")), [])
 
+    def test_demo_execution_requires_active_autonomy(self):
+        source = Path(leon_operator.__file__).read_text(encoding="utf-8")
+
+        self.assertIn(
+            'config["demo_execution_enabled"] and autonomia["active"]',
+            source,
+        )
+        self.assertIn('"OBSERVACAO"', source)
+
 
 if __name__ == "__main__":
     unittest.main()

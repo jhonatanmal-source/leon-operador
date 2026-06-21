@@ -65,7 +65,7 @@ from pre_operation_engine import registrar_pre_operacao
 from top_down_agent import gerar_leitura_top_down
 
 from setup_validator import validar_setup
-from smc_entry_guard import validate_smc_entry
+from smc_entry_guard import infer_candidate_direction, validate_smc_entry
 from institutional_analysis_engine import (
     analyze_elliott_context,
     analyze_smc_context,
@@ -437,12 +437,10 @@ brain_score = analisar_cerebro(
 )
 confianca = calcular_confianca(brain_score)
 
-direcao_candidata = (
-    "COMPRA"
-    if smc_context.get("direction") == "BULLISH"
-    else "VENDA"
-    if smc_context.get("direction") == "BEARISH"
-    else "AGUARDAR"
+direcao_candidata = infer_candidate_direction(
+    smc_context.get("direction"),
+    bos,
+    choch,
 )
 
 smc_guard = validate_smc_entry(
@@ -652,7 +650,7 @@ print(f"ALINHAMENTO: {leitura_top_down['alinhamento']}")
 
 registrar_pre_operacao(
     "XAUUSD",
-    direcao,
+    direcao if direcao != "AGUARDAR" else direcao_candidata,
     status_setup,
     operacao,
     smc,

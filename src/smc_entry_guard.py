@@ -1,6 +1,18 @@
 VALID_DIRECTIONS = {"COMPRA", "VENDA"}
 
 
+def infer_candidate_direction(context_direction, bos, choch):
+    if context_direction == "BULLISH":
+        return "COMPRA"
+    if context_direction == "BEARISH":
+        return "VENDA"
+    if bos == "BOS_BULLISH" and choch == "CHOCH_BULLISH":
+        return "COMPRA"
+    if bos == "BOS_BEARISH" and choch == "CHOCH_BEARISH":
+        return "VENDA"
+    return "AGUARDAR"
+
+
 def expected_structure(direction):
     if direction == "COMPRA":
         return {

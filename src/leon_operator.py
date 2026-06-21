@@ -1109,29 +1109,22 @@ def iniciar_operador():
 
     config = _carregar_operador_config()
     autonomia = status_autonomia()
-
-    if not autonomia["active"]:
-        _registrar_heartbeat(
-            "BLOQUEADO",
-            {"reason": autonomia.get("reason")},
-        )
-        registrar_log(f"PROFESSOR LEON | autonomia bloqueada: {autonomia}")
-        print("===================================")
-        print("PROFESSOR LEON BLOQUEADO")
-        print("===================================")
-        print(f"Motivo: {autonomia['reason']}")
-        print("Conceda autonomia temporaria para iniciar.")
-        print("===================================")
-        return
+    autonomia_anterior_ativa = autonomia["active"]
 
     _registrar_heartbeat(
         "INICIANDO",
         {
             "scope": autonomia.get("scope"),
             "expires_at": autonomia.get("expires_at"),
+            "execution_authorized": autonomia["active"],
         },
     )
     registrar_log("PROFESSOR LEON | operador iniciado")
+    if not autonomia["active"]:
+        registrar_log(
+            "PROFESSOR LEON | modo observacao 24h; "
+            f"execucao bloqueada: {autonomia.get('reason')}"
+        )
     register_emotional_event("startup")
     print("===================================")
     print("PROFESSOR LEON ONLINE")
@@ -1146,7 +1139,10 @@ def iniciar_operador():
     print(f"Execucao demo: {config['demo_execution_enabled']}")
     print(f"Sessao pela corretora: {config['market_session_enabled']}")
     print(f"Simbolo monitorado: {config['market_symbol']}")
-    print(f"Autonomia ate: {autonomia['expires_at']}")
+    if autonomia["active"]:
+        print(f"Autonomia ate: {autonomia['expires_at']}")
+    else:
+        print("Modo: observacao 24h (execucao bloqueada)")
     print("===================================")
 
     if config["telegram_status_enabled"] and config["telegram_status_on_start"]:
@@ -1163,13 +1159,10 @@ def iniciar_operador():
         while True:
             autonomia = status_autonomia()
 
-            if not autonomia["active"]:
-                _registrar_heartbeat(
-                    "ENCERRADO",
-                    {"reason": autonomia.get("reason")},
-                )
+            if autonomia_anterior_ativa and not autonomia["active"]:
                 registrar_log(
-                    f"PROFESSOR LEON | autonomia encerrada: {autonomia}"
+                    "PROFESSOR LEON | autonomia encerrada; "
+                    f"continuando em observacao: {autonomia}"
                 )
                 resultado_alerta = _executar_tarefa_segura(
                     "alerta_autonomia_encerrada",
@@ -1183,9 +1176,15 @@ def iniciar_operador():
                 print("AUTONOMIA ENCERRADA")
                 print("===================================")
                 print(f"Motivo: {autonomia['reason']}")
-                print("Operador finalizado com seguranca.")
+                print("Execucao bloqueada; analise continua em observacao.")
                 print("===================================")
-                return
+            elif not autonomia_anterior_ativa and autonomia["active"]:
+                registrar_log(
+                    "PROFESSOR LEON | autonomia ativada; "
+                    f"execucao liberada ate {autonomia.get('expires_at')}"
+                )
+
+            autonomia_anterior_ativa = autonomia["active"]
 
             config = _carregar_operador_config()
             agora = datetime.now()
@@ -1207,6 +1206,7 @@ def iniciar_operador():
                                 "maintenance_done",
                                 False,
                             ),
+                            "execution_authorized": autonomia["active"],
                         },
                     )
                     time.sleep(config["market_pause_poll_seconds"])
@@ -1224,7 +1224,7 @@ def iniciar_operador():
                     executar_analise_programada,
                 )
 
-            if config["demo_execution_enabled"]:
+            if config["demo_execution_enabled"] and autonomia["active"]:
                 resultados["demo_execution"] = _executar_tarefa_segura(
                     "execucao_demo",
                     executar_ordem_demo_programada,
@@ -1262,9 +1262,17 @@ def iniciar_operador():
                 )
             ]
             _registrar_heartbeat(
-                "DEGRADADO" if falhas else "ONLINE",
+                (
+                    "DEGRADADO"
+                    if falhas
+                    else "ONLINE"
+                    if autonomia["active"]
+                    else "OBSERVACAO"
+                ),
                 {
                     "scope": autonomia.get("scope"),
+                    "execution_authorized": autonomia["active"],
+                    "autonomy_reason": autonomia.get("reason"),
                     "failed_tasks": falhas,
                     "next_poll_seconds": config["poll_seconds"],
                 },

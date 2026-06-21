@@ -262,7 +262,13 @@ def analisar_sistema():
             }
         )
     elif (
-        heartbeat_status in {"ONLINE", "INICIANDO", "DEGRADADO"}
+        heartbeat_status in {
+            "ONLINE",
+            "INICIANDO",
+            "DEGRADADO",
+            "OBSERVACAO",
+            "PAUSA_MERCADO",
+        }
         and (heartbeat_age is None or heartbeat_age > 3)
     ):
         events.append(
@@ -291,6 +297,14 @@ def analisar_sistema():
         "ONLINE",
         "INICIANDO",
         "DEGRADADO",
+        "OBSERVACAO",
+        "PAUSA_MERCADO",
+    }
+    operator_can_produce_analysis = heartbeat_status in {
+        "ONLINE",
+        "INICIANDO",
+        "DEGRADADO",
+        "OBSERVACAO",
     }
 
     if operator_expected_online and not operator_reports_online:
@@ -315,7 +329,7 @@ def analisar_sistema():
         )
 
     if (
-        operator_reports_online
+        operator_can_produce_analysis
         and (
             checks["analise_minutos"] is None
             or checks["analise_minutos"] > 45
@@ -330,7 +344,7 @@ def analisar_sistema():
         )
 
     if (
-        operator_reports_online
+        operator_can_produce_analysis
         and (
             checks["coleta_minutos"] is None
             or checks["coleta_minutos"] > 45

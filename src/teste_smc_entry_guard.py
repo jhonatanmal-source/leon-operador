@@ -1,9 +1,41 @@
 import unittest
 
-from smc_entry_guard import classify_operational_smc, validate_smc_entry
+from smc_entry_guard import (
+    classify_operational_smc,
+    infer_candidate_direction,
+    validate_smc_entry,
+)
 
 
 class SmcEntryGuardTests(unittest.TestCase):
+
+    def test_infers_candidate_from_matching_bos_and_choch(self):
+        self.assertEqual(
+            infer_candidate_direction(
+                "NEUTRO",
+                "BOS_BULLISH",
+                "CHOCH_BULLISH",
+            ),
+            "COMPRA",
+        )
+        self.assertEqual(
+            infer_candidate_direction(
+                "NEUTRO",
+                "BOS_BEARISH",
+                "CHOCH_BEARISH",
+            ),
+            "VENDA",
+        )
+
+    def test_does_not_infer_candidate_from_conflicting_structure(self):
+        self.assertEqual(
+            infer_candidate_direction(
+                "NEUTRO",
+                "BOS_BULLISH",
+                "CHOCH_BEARISH",
+            ),
+            "AGUARDAR",
+        )
 
     def test_blocks_yesterday_loss_pattern(self):
         result = validate_smc_entry(

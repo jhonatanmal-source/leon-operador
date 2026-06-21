@@ -125,6 +125,9 @@ def registrar_pre_operacao(
 
     registros = _ler_registros()
     smc_guard = validate_smc_entry(direcao, smc, bos, choch)
+    observation_reason = smc_guard["reason"]
+    if direcao == "AGUARDAR":
+        observation_reason = "NO_DIRECTIONAL_SETUP"
 
     if not smc_guard["approved"]:
         operacao = None
@@ -154,10 +157,10 @@ def registrar_pre_operacao(
             "brain_score": brain_score,
             "status": "OBSERVADO",
             "resultado": "SEM_ENTRADA",
-            "observacao": (
-                "Pre-operacao registrada sem entrada simulada. "
-                f"{smc_guard['reason']}."
-            ),
+                "observacao": (
+                    "Pre-operacao registrada sem entrada simulada. "
+                    f"{observation_reason}."
+                ),
         }
     else:
         metodo = obter_metodo()
