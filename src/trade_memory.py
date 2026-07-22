@@ -12,7 +12,7 @@ def salvar_memoria_trade(
 ):
 
     with open(
-        "C:/XAU_ELITE_AI/data/trade_memory.csv",
+        "/opt/leon/app/data/trade_memory.csv",
         "a",
         encoding="utf-8"
     ) as arquivo:

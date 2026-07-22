@@ -5,7 +5,7 @@
 from datetime import datetime
 import os
 
-PASTA = "C:/XAU_ELITE_AI/screenshots"
+PASTA = "/opt/leon/app/screenshots"
 
 def registrar_screenshot():
 

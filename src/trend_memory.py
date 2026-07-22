@@ -6,7 +6,7 @@ from collections import Counter
 
 def analisar_tendencias():
 
-    arquivo = "C:/XAU_ELITE_AI/data/trade_memory.csv"
+    arquivo = "/opt/leon/app/data/trade_memory.csv"
 
     tendencias = Counter()
 

@@ -4,7 +4,7 @@
 
 import os
 
-ARQUIVO = "C:/XAU_ELITE_AI/data/performance.csv"
+ARQUIVO = "/opt/leon/app/data/performance.csv"
 
 def registrar_performance(resultado):
 

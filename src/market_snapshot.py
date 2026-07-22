@@ -28,7 +28,7 @@ def salvar_snapshot():
         }
 
         with open(
-            "C:/XAU_ELITE_AI/data/market_snapshot.json",
+            "/opt/leon/app/data/market_snapshot.json",
             "w",
             encoding="utf-8"
         ) as arquivo:

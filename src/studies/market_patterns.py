@@ -6,7 +6,7 @@ from collections import Counter
 
 def analisar_padroes():
 
-    arquivo = "C:/XAU_ELITE_AI/data/trade_memory.csv"
+    arquivo = "/opt/leon/app/data/trade_memory.csv"
 
     ranking = Counter()
 
@@ -48,7 +48,7 @@ from collections import Counter
 
 def analisar_padroes():
 
-    arquivo = "C:/XAU_ELITE_AI/data/trade_memory.csv"
+    arquivo = "/opt/leon/app/data/trade_memory.csv"
 
     ranking = Counter()
 

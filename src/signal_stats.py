@@ -6,7 +6,7 @@ import os
 
 def analisar_sinais():
 
-    arquivo = "C:/XAU_ELITE_AI/data/signals.csv"
+    arquivo = "/opt/leon/app/data/signals.csv"
 
     if not os.path.exists(arquivo):
 

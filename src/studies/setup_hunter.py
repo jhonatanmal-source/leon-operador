@@ -6,7 +6,7 @@ from collections import Counter
 
 def cacar_setups():
 
-    arquivo = "C:/XAU_ELITE_AI/data/trade_memory.csv"
+    arquivo = "/opt/leon/app/data/trade_memory.csv"
 
     setups = Counter()
 

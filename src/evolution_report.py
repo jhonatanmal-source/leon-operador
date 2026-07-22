@@ -3,11 +3,18 @@
 # ===================================
 
 from datetime import datetime
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+REPORTS_DIR = BASE_DIR / "reports"
 
 def gerar_relatorio_evolucao():
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+
+    caminho = REPORTS_DIR / "EVOLUTION_REPORT.txt"
 
     with open(
-        "C:/XAU_ELITE_AI/reports/EVOLUTION_REPORT.txt",
+        caminho,
         "w",
         encoding="utf-8"
     ) as arquivo:
@@ -32,4 +39,4 @@ def gerar_relatorio_evolucao():
             "STATUS: ESTUDO NOTURNO EXECUTADO\n"
         )
 
-    print("RELATÓRIO GERADO")
+    print(f"RELATÓRIO GERADO: {caminho}")

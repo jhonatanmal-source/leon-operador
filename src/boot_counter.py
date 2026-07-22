@@ -4,7 +4,7 @@
 
 import os
 
-ARQUIVO = "C:/XAU_ELITE_AI/data/boot_count.txt"
+ARQUIVO = "/opt/leon/app/data/boot_count.txt"
 
 def contar_inicializacao():
 

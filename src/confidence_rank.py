@@ -4,7 +4,7 @@
 
 import os
 
-ARQUIVO = "C:/XAU_ELITE_AI/data/trade_memory.csv"
+ARQUIVO = "/opt/leon/app/data/trade_memory.csv"
 
 def analisar_confianca():
 

@@ -17,7 +17,7 @@ def registrar_journal():
     agora = datetime.now()
 
     with open(
-        "C:/XAU_ELITE_AI/logs/journal.txt",
+        "/opt/leon/app/logs/journal.txt",
         "a",
         encoding="utf-8"
     ) as arquivo:

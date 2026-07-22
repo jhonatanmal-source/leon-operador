@@ -4,8 +4,10 @@
 
 import os
 import csv
+from pathlib import Path
 
-ARQUIVO = "C:/XAU_ELITE_AI/data/brain_memory.csv"
+BASE_DIR = Path(__file__).resolve().parent.parent
+ARQUIVO = BASE_DIR / "data" / "brain_memory.csv"
 
 
 def evoluir_cerebro():

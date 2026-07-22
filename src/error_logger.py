@@ -5,8 +5,8 @@ def registrar_erro(erro):
 
     linha = f"{datetime.now()} | {erro}\n"
     caminhos = [
-        Path("C:/XAU_ELITE_AI/logs/errors.txt"),
-        Path("C:/XAU_ELITE_AI/logs/errors_fallback.txt"),
+        Path("/opt/leon/app/logs/errors.txt"),
+        Path("/opt/leon/app/logs/errors_fallback.txt"),
     ]
 
     for caminho in caminhos:

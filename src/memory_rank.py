@@ -6,7 +6,7 @@ import os
 
 def analisar_rank():
 
-    arquivo = "C:/XAU_ELITE_AI/data/trade_memory.csv"
+    arquivo = "/opt/leon/app/data/trade_memory.csv"
 
     if not os.path.exists(arquivo):
 

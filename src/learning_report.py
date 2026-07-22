@@ -11,9 +11,9 @@ def gerar_relatorio_aprendizado():
     print("===================================")
 
     arquivos = {
-        "Preços": "C:/XAU_ELITE_AI/data/price_history.csv",
-        "Candles": "C:/XAU_ELITE_AI/data/candle_history.csv",
-        "Sinais": "C:/XAU_ELITE_AI/data/signals.csv"
+        "Preços": "/opt/leon/app/data/price_history.csv",
+        "Candles": "/opt/leon/app/data/candle_history.csv",
+        "Sinais": "/opt/leon/app/data/signals.csv"
     }
 
     for nome, caminho in arquivos.items():

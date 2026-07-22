@@ -10,7 +10,7 @@ def mostrar_estatisticas():
     print("STATS ENGINE")
     print("===================================")
 
-    arquivo = "C:/XAU_ELITE_AI/data/leon_data.json"
+    arquivo = "/opt/leon/app/data/leon_data.json"
 
     if os.path.exists(arquivo):
 

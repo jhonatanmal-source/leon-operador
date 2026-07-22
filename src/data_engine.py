@@ -15,7 +15,7 @@ def salvar_execucao():
     }
 
     with open(
-        "C:/XAU_ELITE_AI/data/leon_data.json",
+        "/opt/leon/app/data/leon_data.json",
         "a",
         encoding="utf-8"
     ) as arquivo:

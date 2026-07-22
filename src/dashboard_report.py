@@ -19,7 +19,7 @@ def mostrar_dashboard():
 
     for arquivo in arquivos:
 
-        caminho = f"C:/XAU_ELITE_AI/data/{arquivo}"
+        caminho = f"/opt/leon/app/data/{arquivo}"
 
         if os.path.exists(caminho):
 

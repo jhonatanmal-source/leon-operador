@@ -11,10 +11,10 @@ def verificar_estrutura():
     print("===================================")
 
     pastas = [
-        "C:/XAU_ELITE_AI/logs",
-        "C:/XAU_ELITE_AI/data",
-        "C:/XAU_ELITE_AI/reports",
-        "C:/XAU_ELITE_AI/backups"
+        "/opt/leon/app/logs",
+        "/opt/leon/app/data",
+        "/opt/leon/app/reports",
+        "/opt/leon/app/backups"
     ]
 
     for pasta in pastas:

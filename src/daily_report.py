@@ -9,7 +9,7 @@ def gerar_relatorio_diario():
     agora = datetime.now()
 
     with open(
-        "C:/XAU_ELITE_AI/reports/daily_report.txt",
+        "/opt/leon/app/reports/daily_report.txt",
         "a",
         encoding="utf-8"
     ) as arquivo:

@@ -4,7 +4,7 @@
 
 import os
 
-ARQUIVO = "C:/XAU_ELITE_AI/data/brain_memory.csv"
+ARQUIVO = "/opt/leon/app/data/brain_memory.csv"
 
 def registrar_brain(
     brain_score,
