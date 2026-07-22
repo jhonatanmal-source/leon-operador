@@ -1,0 +1,43 @@
+Estamos trabalhando no projeto LEON XAU ELITE AI em /opt/leon/app.
+
+Primeiro, verifique se existe:
+
+tarefas/PLANO_CORRECAO_LEON.md
+tarefas/RELATORIO_CORRECAO_P1_P2_P3.md
+tarefas/RESUMO_SESSAO.md
+
+Não carregue nem analise o repositório inteiro.
+
+Execute somente:
+
+1. Baseline seguro da suíte de testes.
+2. Diagnóstico e correção do item A01 — openrouter_client.py.
+3. Testes específicos relacionados ao OpenRouter.
+4. Nenhuma inicialização do operador.
+5. Nenhuma ordem MT5.
+6. Conta REAL deve permanecer bloqueada.
+
+Antes de modificar, pesquise os consumidores de:
+- openrouter_client
+- OpenRouterClient
+- openrouter_brain
+
+Determine se openrouter_client.py deve ser:
+- adaptador para openrouter_brain.py; ou
+- removido com atualização dos imports.
+
+Não criar implementação falsa apenas para fazer testes passarem.
+
+Salve todo o resultado em:
+
+tarefas/STATUS_A01.md
+
+Ao terminar, apresente:
+- causa encontrada;
+- arquivos modificados;
+- testes executados;
+- resultado;
+- pendências;
+- evidência de que nenhuma ordem foi enviada.
+
+Execute apenas A01 e pare.

@@ -2,9 +2,9 @@
 # CANDLE READER
 # ===================================
 
-from candle_logger import registrar_candle
+from src.candle_logger import registrar_candle
 
-import MetaTrader5 as mt5
+import mt5linux_compat as mt5
 
 def ler_candle_m15():
 
@@ -12,7 +12,7 @@ def ler_candle_m15():
         print("ERRO MT5")
         return
 
-    simbolo = "XAUUSD"
+    simbolo = "Gold_Spot"
 
     mt5.symbol_select(simbolo, True)
 

@@ -930,7 +930,7 @@ def monitor_touched_zone(
     """Monitor a persisted zone candle by candle without requiring redetection."""
 
     try:
-        from .context_decision import audit_entry_confirmations, assess_operational_setup
+        from src.context_decision import audit_entry_confirmations, assess_operational_setup
     except ImportError:
         from context_decision import audit_entry_confirmations, assess_operational_setup
 
@@ -1307,7 +1307,7 @@ def validate_zone_for_execution(
     if zone.get("region_status") not in EXECUTABLE_REGION_STATES:
         return {"ok": False, "error": "REGION_NOT_CONFIRMED", "reason": f"Regiao em estado {zone.get('region_status')}; confirmacao obrigatoria."}
     try:
-        from .live_operational_contract import evaluate_live_confirmation_gate
+        from src.live_operational_contract import evaluate_live_confirmation_gate
     except ImportError:
         from live_operational_contract import evaluate_live_confirmation_gate
     confirmation_gate = evaluate_live_confirmation_gate(zone)

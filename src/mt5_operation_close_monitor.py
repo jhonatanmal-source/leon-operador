@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from pre_operation_engine import reconciliar_pre_operacao_mt5
+from src.pre_operation_engine import reconciliar_pre_operacao_mt5
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -68,7 +68,7 @@ def _result_from_deal(mt5, deal):
 
 def check_mt5_closed_operations():
     try:
-        import MetaTrader5 as mt5
+        import mt5linux_compat as mt5
     except ImportError:
         return {"ok": False, "error": "MT5_IMPORT_ERROR", "operations": []}
 

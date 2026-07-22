@@ -8,8 +8,12 @@ from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
 
-from risk_method_engine import obter_metodo
-from smc_entry_guard import validate_smc_entry
+from src.risk_method_engine import obter_metodo
+from src.smc_entry_guard import validate_smc_entry
+try:
+    from src.interest_zone_engine import validate_zone_for_execution
+except ImportError:
+    from interest_zone_engine import validate_zone_for_execution
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -41,6 +45,10 @@ CAMPOS = [
     "status",
     "resultado",
     "observacao",
+    "region_id",
+    "structural_gate_version",
+    "structural_gate_timestamp",
+    "structural_gate_result",
 ]
 
 
@@ -121,6 +129,8 @@ def registrar_pre_operacao(
     confianca,
     brain_score,
     context_mode="TENDENCIA",
+    region_id="",
+    bootstrap=False,
 ):
 
     registros = _ler_registros()
@@ -129,9 +139,26 @@ def registrar_pre_operacao(
     if direcao == "AGUARDAR":
         observation_reason = "NO_DIRECTIONAL_SETUP"
 
-    if not smc_guard["approved"]:
+    if not smc_guard["approved"] and not bootstrap:
         operacao = None
         status_setup = "SETUP FRACO"
+
+    structural_gate_ok = True
+    structural_gate_result = ""
+    region_id_str = str(region_id or "").strip()
+    if operacao is not None and direcao != "AGUARDAR" and region_id_str:
+        preop_for_gate = {
+            "region_id": region_id_str,
+            "ativo": ativo,
+        }
+        gate_result = validate_zone_for_execution(preop_for_gate)
+        if not gate_result.get("ok"):
+            structural_gate_ok = False
+            structural_gate_result = gate_result.get("error", "GATE_FAILED")
+            if structural_gate_result == "PRE_OPERATION_REGION_REQUIRED":
+                structural_gate_result = "NO_REGION_ID"
+        else:
+            structural_gate_result = "PASSED"
 
     if operacao is None or direcao == "AGUARDAR":
         metodo = obter_metodo()
@@ -157,10 +184,14 @@ def registrar_pre_operacao(
             "brain_score": brain_score,
             "status": "OBSERVADO",
             "resultado": "SEM_ENTRADA",
-                "observacao": (
-                    "Pre-operacao registrada sem entrada simulada. "
-                    f"{observation_reason}."
-                ),
+            "observacao": (
+                "Pre-operacao registrada sem entrada simulada. "
+                f"{observation_reason}."
+            ),
+            "region_id": region_id_str,
+            "structural_gate_version": "",
+            "structural_gate_timestamp": "",
+            "structural_gate_result": "",
         }
     else:
         metodo = obter_metodo()
@@ -201,12 +232,31 @@ def registrar_pre_operacao(
                     f"Plano nao aberto: alvo tecnico nao paga o risco. "
                     f"RR calculado 1:{rr}; piso de protecao 1:{rr_minimo}."
                 ),
+                "region_id": region_id_str,
+                "structural_gate_version": "",
+                "structural_gate_timestamp": "",
+                "structural_gate_result": "",
             }
         else:
+            if not structural_gate_ok:
+                status_final = "OBSERVADO"
+                resultado_final = structural_gate_result or "STRUCTURAL_GATE_FAILED"
+                observacao_final = (
+                    f"Plano nao aberto: gate estrutural recusou a regiao. "
+                    f"Motivo: {structural_gate_result}."
+                )
+            else:
+                status_final = "ABERTO"
+                resultado_final = "EM_SIMULACAO"
+                observacao_final = (
+                    "Simulacao com stop estrutural e alvos tecnicos de liquidez. "
+                    f"RR tecnico calculado: 1:{rr}."
+                )
+            agora = datetime.now().isoformat(timespec="seconds")
             registro = {
                 "id": _proximo_id(registros),
-                "data_abertura": datetime.now().isoformat(timespec="seconds"),
-                "data_fechamento": "",
+                "data_abertura": agora,
+                "data_fechamento": "" if status_final == "ABERTO" else agora,
                 "ativo": ativo,
                 "direcao": direcao,
                 "status_setup": status_setup,
@@ -223,13 +273,19 @@ def registrar_pre_operacao(
                 "choch": choch,
                 "confianca": confianca,
                 "brain_score": brain_score,
-                "status": "ABERTO",
-                "resultado": "EM_SIMULACAO",
+                "status": status_final,
+                "resultado": resultado_final,
                 "observacao": (
                     "Simulacao com stop estrutural e alvos tecnicos de liquidez. "
                     f"RR tecnico calculado: 1:{rr}."
                 ),
+                "region_id": region_id_str,
+                "structural_gate_version": "LEON_CAUSAL_CONTRACT_V2" if structural_gate_ok else "",
+                "structural_gate_timestamp": agora if structural_gate_ok else "",
+                "structural_gate_result": structural_gate_result,
             }
+            if not structural_gate_ok:
+                registro["observacao"] = observacao_final
 
     registros.append(registro)
     _salvar_registros(registros)

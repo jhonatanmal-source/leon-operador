@@ -4,19 +4,19 @@
 
 from datetime import datetime
 
-from candle_logger import registrar_candle
-from error_logger import registrar_erro
-from log_engine import registrar_log
-from price_logger import registrar_preco
+from src.candle_logger import registrar_candle
+from src.error_logger import registrar_erro
+from src.log_engine import registrar_log
+from src.price_logger import registrar_preco
 
 
-SIMBOLO_PADRAO = "XAUUSD"
+SIMBOLO_PADRAO = "Gold_Spot"
 
 
 def executar_coleta_manual(simbolo=SIMBOLO_PADRAO):
 
     try:
-        import MetaTrader5 as mt5
+        import mt5linux_compat as mt5
     except ImportError as erro:
         registrar_erro(f"COLLECTOR | MetaTrader5 nao instalado: {erro}")
         return {

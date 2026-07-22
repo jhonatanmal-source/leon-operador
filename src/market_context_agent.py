@@ -7,10 +7,10 @@ from collections import Counter, defaultdict
 from datetime import datetime, time
 from pathlib import Path
 
-from operator_status import obter_status_operadores
-from pre_operation_engine import resumo_pre_operacao
-from risk_control_agent import calcular_plano_risco
-from top_down_agent import ultima_leitura_top_down
+from src.operator_status import obter_status_operadores
+from src.pre_operation_engine import resumo_pre_operacao
+from src.risk_control_agent import calcular_plano_risco
+from src.top_down_agent import ultima_leitura_top_down
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent

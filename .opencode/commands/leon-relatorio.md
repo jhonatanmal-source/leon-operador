@@ -1,0 +1,25 @@
+---
+description: Gerar relatório consolidado sobre uma missão específica.
+---
+
+Gere um relatório consolidado sobre: $ARGUMENTS
+
+Estrutura:
+1. STATUS
+2. RESUMO EXECUTIVO
+3. AMBIENTE
+4. AÇÕES EXECUTADAS
+5. ARQUIVOS CRIADOS/ALTERADOS
+6. TESTES EXECUTADOS
+7. RESULTADOS
+8. ERROS ENCONTRADOS
+9. CORREÇÕES APLICADAS
+10. LIMITAÇÕES
+11. RISCOS
+12. SEGURANÇA
+13. CONFIRMAÇÃO DE CONTA REAL BLOQUEADA
+14. CONFIRMAÇÃO DE ZERO ORDENS
+15. PENDÊNCIAS
+16. PRÓXIMOS PASSOS
+
+Baseie tudo em evidência real.

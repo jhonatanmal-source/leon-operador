@@ -6,10 +6,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 
-ROOT_DIR = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT_DIR / "src"))
-
-import leon_operator
+import src.leon_operator as leon_operator
 
 
 class LeonOperatorResilienceTests(unittest.TestCase):

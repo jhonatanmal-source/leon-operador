@@ -6,7 +6,7 @@ import csv
 from datetime import datetime
 from pathlib import Path
 
-from operator_status import obter_status_operadores
+from src.operator_status import obter_status_operadores
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent

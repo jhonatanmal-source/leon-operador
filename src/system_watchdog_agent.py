@@ -6,7 +6,7 @@ import json
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from autonomy_guard import status_autonomia
+from src.autonomy_guard import status_autonomia
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent

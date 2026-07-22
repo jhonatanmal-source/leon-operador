@@ -3,10 +3,7 @@ import unittest
 from pathlib import Path
 
 
-ROOT_DIR = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT_DIR / "src"))
-
-from timeframe_policy import evaluate_timeframe_policy
+from src.timeframe_policy import evaluate_timeframe_policy
 
 
 class TimeframePolicyTests(unittest.TestCase):

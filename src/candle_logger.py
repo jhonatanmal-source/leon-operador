@@ -3,6 +3,10 @@
 # ===================================
 
 from datetime import datetime
+from pathlib import Path
+
+
+DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 
 def registrar_candle(
     simbolo,
@@ -13,9 +17,10 @@ def registrar_candle(
 ):
 
     agora = datetime.now()
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     with open(
-        "C:/XAU_ELITE_AI/data/candle_history.csv",
+        DATA_DIR / "candle_history.csv",
         "a",
         encoding="utf-8"
     ) as arquivo:

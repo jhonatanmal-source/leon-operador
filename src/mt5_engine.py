@@ -2,7 +2,7 @@
 # MT5 ENGINE
 # ===================================
 
-import MetaTrader5 as mt5
+import mt5linux_compat as mt5
 
 
 def conectar():

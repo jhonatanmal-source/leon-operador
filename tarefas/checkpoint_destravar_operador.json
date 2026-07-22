@@ -1,0 +1,81 @@
+{
+  "mission_id": "destravar-operador",
+  "started_at": "2026-07-22T09:34:00Z",
+  "updated_at": "2026-07-22T09:51:00Z",
+  "current_phase": "concluida",
+  "status": "concluida",
+  "completed_tasks": [
+    "Diagnóstico: 3 bloqueios de config identificados",
+    "Diagnóstico: símbolo MT5 era Gold_Spot, não XAUUSD",
+    "Diagnóstico: imports relativos quebrados em 22 arquivos",
+    "Fix config: [MT5] enabled=false → true",
+    "Fix config: [EXECUTION] enabled=false → true (demo_only mantido)",
+    "Fix config: [OPERATOR] demo_execution_enabled=false → true",
+    "Fix config: [AUTONOMY] enabled=false → true, scope=execution",
+    "Fix config: market=XAUUSD → Gold_Spot",
+    "Fix código: símbolo XAUUSD → Gold_Spot em 7+ módulos",
+    "Fix código: imports relativos convertidos para src.xxx em 22 arquivos",
+    "Fix código: auto-grant de autonomia ao iniciar operador",
+    "Fix código: PYTHONPATH no subprocesso de análise",
+    "Infra: criados diretórios C:/XAU_ELITE_AI/{data,reports,backups}",
+    "Verificação: coleta de dados OK (bid/ask/candle M15)",
+    "Verificação: análise leon.py executa sem erros",
+    "Verificação: autonomy ativa (24h), demo_execution pronta",
+    "Verificação: aprendizado diário rodou e Telegram enviado"
+  ],
+  "pending_tasks": [
+    "Aguardar operador acumular 20+ pre-operations fechadas para evoluir de BLOQUEADO para OBSERVACAO"
+  ],
+  "config_changed": {
+    "files": ["config.ini", "src/leon_config.py"],
+    "keys": {
+      "MT5.enabled": "false→true",
+      "EXECUTION.enabled": "false→true",
+      "OPERATOR.demo_execution_enabled": "false→true",
+      "AUTONOMY.enabled": "false→true",
+      "AUTONOMY.scope": "analysis→execution",
+      "LEON.market": "XAUUSD→Gold_Spot",
+      "OPERATOR.market_symbol": "XAUUSD→Gold_Spot"
+    }
+  },
+  "code_changed": {
+    "files": [
+      "src/leon_operator.py",
+      "src/leon.py",
+      "src/collector_operator.py",
+      "src/market_reader.py",
+      "src/candle_reader.py",
+      "src/trend_reader.py",
+      "src/momentum_reader.py",
+      "src/market_snapshot.py",
+      "src/candle_engine.py",
+      "src/mt5_candles.py",
+      "src/shadow_trade.py",
+      "src/leon_config.py",
+      "src/brain_context_memory.py",
+      "src/daily_operator_report.py",
+      "src/emotion_filter.py",
+      "src/institutional_analysis_engine.py",
+      "src/interest_zone_engine.py",
+      "src/leon_panel.py",
+      "src/market_context_agent.py",
+      "src/market_monitor.py",
+      "src/mt5_operation_close_monitor.py",
+      "src/mt5_order_executor.py",
+      "src/operation_close_alert.py",
+      "src/operation_readiness.py",
+      "src/operator_council.py",
+      "src/operator_status.py",
+      "src/pre_operation_engine.py",
+      "src/risk_control_agent.py",
+      "src/system_watchdog_agent.py",
+      "src/telegram_alert.py",
+      "src/telegram_engine.py"
+    ]
+  },
+  "risks": [
+    "context_decision.py não existe — import falha se código path for executado",
+    "replay modules não implementados — backtest histórico indisponível"
+  ],
+  "next_action": "Iniciar operador em loop: cd /opt/leon/app && PYTHONPATH=/opt/leon/app /opt/leon/venv/bin/python -m src.leon_operator"
+}

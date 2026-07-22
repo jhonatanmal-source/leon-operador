@@ -25,7 +25,7 @@ def load_execution_candles(
     h4_count=180,
 ):
     try:
-        import MetaTrader5 as mt5
+        import mt5linux_compat as mt5
     except ImportError:
         return {"ok": False, "error": "MT5_IMPORT_ERROR"}
 

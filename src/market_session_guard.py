@@ -41,7 +41,7 @@ def inspect_broker_session(
 
     try:
         if mt5_module is None:
-            import MetaTrader5 as mt5_module
+            import mt5linux_compat as mt5_module
     except ImportError as error:
         return {
             "open": False,
@@ -167,7 +167,7 @@ def restart_mt5_connection(
 ):
     try:
         if mt5_module is None:
-            import MetaTrader5 as mt5_module
+            import mt5linux_compat as mt5_module
     except ImportError as error:
         return {"ok": False, "error": "MT5_IMPORT_ERROR", "details": str(error)}
 

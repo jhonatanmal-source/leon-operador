@@ -3,11 +3,11 @@
 # ===================================
 
 import time
-import MetaTrader5 as mt5
+import mt5linux_compat as mt5
 import pandas as pd
 
-from bos_engine import analisar_bos
-from telegram_engine import enviar_mensagem
+from src.bos_engine import analisar_bos
+from src.telegram_engine import enviar_mensagem
 
 
 ultimo_bos = None

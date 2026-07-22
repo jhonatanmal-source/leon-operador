@@ -1,0 +1,189 @@
+CORREÇÃO FINAL B04.1 — NORMALIZAÇÃO CONSERVADORA DO LOTE
+
+Execute somente esta correção complementar do controle de risco.
+
+O relatório STATUS_B04_RISK.md contém uma afirmação incorreta:
+
+    round(lote_calculado, 2) é conservador e sempre arredonda para baixo
+
+Isso não é verdade. Por exemplo:
+
+    round(0.016, 2) == 0.02
+
+Nesse caso o lote aumenta e pode exceder o risco máximo permitido.
+
+OBJETIVO
+
+Garantir que o lote final nunca seja maior que o lote calculado pelo risco,
+exceto quando for aplicado min_lot e houver comprovação de que o risco do
+min_lot permanece dentro do máximo autorizado.
+
+REGRAS
+
+- Não iniciar o operador.
+- Não conectar ao MT5 real.
+- Não enviar ordens.
+- Não alterar estratégia, RR, SL ou TP.
+- Não usar round(..., 2) como normalização conservadora.
+- Não presumir que volume_step é sempre 0.01.
+- Falhar fechado quando as especificações do símbolo forem inválidas.
+- Conta REAL deve permanecer bloqueada.
+
+FASE 1 — ESPECIFICAÇÕES DO SÍMBOLO
+
+Mapear como risk_control_agent recebe ou obtém:
+
+- contract_size;
+- tick_size;
+- tick_value;
+- volume_min;
+- volume_max;
+- volume_step.
+
+Preferir especificações do símbolo resolvido, fornecidas explicitamente pelo
+pipeline ou por um snapshot validado.
+
+Não realizar conexão real ao MT5 nos testes.
+
+Caso a API pública atual não forneça essas informações, permitir injeção por
+parâmetro ou estrutura de especificação, preservando compatibilidade segura.
+
+FASE 2 — VALIDAÇÃO
+
+Bloquear quando houver:
+
+- volume_step ausente, zero, negativo, NaN ou infinito;
+- volume_min inválido;
+- volume_max inválido;
+- volume_min maior que volume_max;
+- contract_size zero, negativo ou não finito;
+- tick_size inválido quando necessário;
+- tick_value inválido quando necessário;
+- lote calculado NaN ou infinito.
+
+Usar códigos explícitos, por exemplo:
+
+- INVALID_VOLUME_STEP
+- INVALID_VOLUME_LIMITS
+- INVALID_CONTRACT_SIZE
+- INVALID_TICK_SPECIFICATION
+- INVALID_CALCULATED_LOT
+
+FASE 3 — NORMALIZAÇÃO CONSERVADORA
+
+Normalizar pelo passo do broker usando piso matemático equivalente a:
+
+    steps = math.floor((lote_calculado + tolerancia_numerica) / volume_step)
+    lote_normalizado = steps * volume_step
+
+Tratar precisão decimal sem produzir valores como:
+
+    0.019999999999
+
+Pode usar Decimal quando adequado.
+
+O lote normalizado deve satisfazer:
+
+    lote_normalizado <= lote_calculado
+
+salvo no caso de min_lot explicitamente analisado.
+
+Após normalizar, recalcular o risco efetivo do lote final e verificar:
+
+    risco_efetivo_percentual <= max_risk_percent
+
+Não confiar somente no cálculo anterior ao arredondamento.
+
+FASE 4 — MIN E MAX
+
+Se lote calculado for menor que volume_min/min_lot:
+
+1. calcular o risco real do lote mínimo;
+2. aprovar somente se estiver dentro do risco máximo;
+3. caso contrário bloquear com LOT_BELOW_MINIMUM_EXCEEDS_RISK.
+
+Se lote calculado for maior que volume_max/max_lot:
+
+- limitar para o máximo permitido;
+- recalcular o risco efetivo;
+- manter evidência da normalização.
+
+Usar o limite mais restritivo entre configuração e especificação do símbolo.
+
+FASE 5 — TESTES OBRIGATÓRIOS
+
+Adicionar testes explícitos:
+
+1. lote calculado 0.016 e step 0.01 → resultado 0.01, nunca 0.02;
+2. lote calculado 0.019 e step 0.01 → 0.01;
+3. lote calculado 0.020 e step 0.01 → 0.02;
+4. lote calculado 0.26 e step 0.1 → 0.2;
+5. lote calculado 1.9 e step 1.0 → 1.0;
+6. volume_step zero → bloqueado;
+7. volume_step negativo → bloqueado;
+8. volume_step NaN/inf → bloqueado;
+9. volume_min maior que volume_max → bloqueado;
+10. lote mínimo dentro do risco → permitido;
+11. lote mínimo excedendo risco → bloqueado;
+12. lote máximo aplicado → risco recalculado;
+13. lote final nunca maior que lote calculado, exceto min_lot aprovado;
+14. risco efetivo após normalização não excede máximo;
+15. precisão decimal estável;
+16. nenhuma chamada real ao MT5;
+17. nenhuma chamada a order_send;
+18. executor bloqueia lote inválido.
+
+FASE 6 — CONTRATO SIZE E TICKS
+
+Comprovar se a fórmula atual baseada em:
+
+    distancia_stop * contract_size
+
+é suficiente para o XAUUSD/Gold_Spot atual.
+
+Se tick_size e tick_value forem necessários para o contrato do broker, usar a
+fórmula canônica baseada nas especificações do símbolo.
+
+Não alterar a fórmula sem comprovar o contrato matemático.
+
+Documentar exemplos manuais com:
+
+- entrada;
+- stop;
+- distância;
+- saldo;
+- risco percentual;
+- contract size/tick specification;
+- lote bruto;
+- volume_step;
+- lote normalizado;
+- risco efetivo final.
+
+VALIDAÇÃO
+
+Execute:
+
+python -m pytest tests/test_risk_control_agent.py -q -vv
+python -m pytest tests/test_mt5_order_executor.py -q
+python -m pytest tests -q -k "risk or risco or executor"
+python -m pytest tests -q
+
+Atualize:
+
+tarefas/STATUS_B04_RISK.md
+
+Corrija a afirmação sobre round(..., 2) e inclua:
+
+- algoritmo final de normalização;
+- fonte de volume_step;
+- especificações utilizadas;
+- risco antes e depois da normalização;
+- testes novos;
+- evidência de que o lote nunca é arredondado para cima indevidamente;
+- evidência de fail-closed;
+- resultado completo da suíte.
+
+Não declarar APROVADO enquanto round(..., 2) puder aumentar o lote ou enquanto
+volume_step inválido puder produzir plano aprovado.
+
+Execute somente esta correção e pare.

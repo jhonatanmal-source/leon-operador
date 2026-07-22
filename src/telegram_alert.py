@@ -5,14 +5,14 @@
 import json
 from pathlib import Path
 
-from market_context_agent import revisar_contextos
-from operator_council import avaliar_conselho_operadores
-from operator_status import obter_status_operadores
-from operation_readiness import avaliar_prontidao_operacional
-from pre_operation_engine import resumo_pre_operacao
-from risk_control_agent import calcular_plano_risco, resumo_risco
-from telegram_engine import enviar_mensagem
-from top_down_agent import ultima_leitura_top_down
+from src.market_context_agent import revisar_contextos
+from src.operator_council import avaliar_conselho_operadores
+from src.operator_status import obter_status_operadores
+from src.operation_readiness import avaliar_prontidao_operacional
+from src.pre_operation_engine import resumo_pre_operacao
+from src.risk_control_agent import calcular_plano_risco, resumo_risco
+from src.telegram_engine import enviar_mensagem
+from src.top_down_agent import ultima_leitura_top_down
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent

@@ -23,6 +23,17 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
+_SRC_DIR = str(Path(__file__).resolve().parent)
+if _SRC_DIR not in sys.path:
+    sys.path.insert(0, _SRC_DIR)
+
+_PARENT_DIR = str(Path(_SRC_DIR).resolve().parent)
+if _PARENT_DIR not in sys.path:
+    sys.path.insert(0, _PARENT_DIR)
+
+from asset_detector import detectar_ativo
+ativo = detectar_ativo()
+
 from system_status import exibir_status
 
 from market_reader import ler_preco_xau
@@ -97,7 +108,7 @@ class Leon:
 
     def __init__(self):
 
-        self.market = "XAU/USD"
+        self.market = "Gold_Spot"
         self.status = "Observando Mercado"
 
     def iniciar(self):
@@ -138,7 +149,7 @@ class _CandlesLeves:
 
 def carregar_candles_para_bos(limite=20):
 
-    caminho = Path("C:/XAU_ELITE_AI/data/candle_history.csv")
+    caminho = Path(__file__).resolve().parent.parent / "data" / "candle_history.csv"
 
     if not caminho.exists():
         return _CandlesLeves([])
@@ -312,7 +323,7 @@ estrutura = analisar_estrutura(
 )
 
 mercado_operacional = load_execution_candles(
-    symbol="XAUUSD",
+    symbol=ativo,
     m15_count=220,
     m5_count=180,
 )
@@ -396,14 +407,14 @@ liquidez_alinhada = (
 print(f"LIQUIDEZ OK : {liquidez_alinhada}")
 
 enviar_alerta_bos(
-    "XAUUSD",
+    ativo,
     "OPERACIONAL",
     bos,
     smc_context.get("bos_event"),
 )
 
 enviar_alerta_choch(
-    "XAUUSD",
+    ativo,
     "OPERACIONAL",
     choch,
     smc_context.get("choch_event"),
@@ -587,7 +598,7 @@ analisar_brain()
 evoluir_cerebro()
 
 gerar_trade_plan(
-    "XAUUSD",
+    ativo,
     direcao,
     confianca,
     smc,
@@ -596,7 +607,7 @@ gerar_trade_plan(
 )
 
 salvar_trade_plan(
-    "XAUUSD",
+    ativo,
     direcao,
     smc,
     elliott,
@@ -604,7 +615,10 @@ salvar_trade_plan(
     confianca
 )
 
+from learning_bootstrap import modo_bootstrap_ativo, obter_limiares, registrar_entrada_simulada
+
 operacao = None
+modo_bootstrap = modo_bootstrap_ativo()
 if direcao != "AGUARDAR":
     operacao = calcular_entrada(
         direcao,
@@ -617,6 +631,32 @@ if direcao != "AGUARDAR":
     )
     if operacao is not None and lab_entry["approved"]:
         mark_lab_event(lab_event_signature)
+elif modo_bootstrap and direcao_candidata in ["COMPRA", "VENDA"] and int(brain_score or 0) >= obter_limiares()["auto_simulate_min_score"]:
+    fake_entry = 0.0
+    fake_stop = 0.0
+    fake_tp1 = 0.0
+    fake_tp2 = 0.0
+    if candles_m15:
+        recent = candles_m15[-8:]
+        fake_entry = float(candles_m15[-1]["close"])
+        if direcao_candidata == "COMPRA":
+            fake_stop = min(float(c["low"]) for c in recent)
+            risk = fake_entry - fake_stop
+            fake_tp1 = fake_entry + risk * 1.5
+            fake_tp2 = fake_entry + risk * 3
+        else:
+            fake_stop = max(float(c["high"]) for c in recent)
+            risk = fake_stop - fake_entry
+            fake_tp1 = fake_entry - risk * 1.5
+            fake_tp2 = fake_entry - risk * 3
+    fake_rr = round(
+        abs(fake_tp1 - fake_entry) / max(abs(fake_entry - fake_stop), 0.01), 2
+    )
+    operacao = [fake_entry, fake_stop, fake_tp1, fake_tp2, fake_rr]
+    registrar_entrada_simulada(
+        direcao_candidata, fake_entry, fake_stop, fake_tp2, brain_score, "BOOTSTRAP_AUTO_SIMULATE"
+    )
+    print(f"BOOTSTRAP: entrada simulada criada para {direcao_candidata} a {fake_entry:.2f}")
 explicar_trade(
     tendencia,
     estrutura,
@@ -649,7 +689,7 @@ print(f"M15   : {leitura_top_down['m15_gatilho']}")
 print(f"ALINHAMENTO: {leitura_top_down['alinhamento']}")
 
 registrar_pre_operacao(
-    "XAUUSD",
+    ativo,
     direcao if direcao != "AGUARDAR" else direcao_candidata,
     status_setup,
     operacao,
@@ -660,6 +700,7 @@ registrar_pre_operacao(
     confianca,
     brain_score,
     context_mode=timeframe_policy["mode"],
+    bootstrap=modo_bootstrap,
 )
 
 if status_setup in [
@@ -678,7 +719,7 @@ if status_setup in [
     if alerta:
 
         enviar_alerta_setup(
-            "XAUUSD",
+            ativo,
             status_setup,
             direcao,
             confianca,

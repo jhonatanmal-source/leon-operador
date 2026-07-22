@@ -17,44 +17,44 @@ os.environ.setdefault("OMP_NUM_THREADS", "1")
 os.environ.setdefault("MKL_NUM_THREADS", "1")
 os.environ.setdefault("NUMEXPR_NUM_THREADS", "1")
 
-from autonomy_guard import (
+from src.autonomy_guard import (
     conceder_autonomia,
     revogar_autonomia,
     status_autonomia,
 )
-from brain_context_memory import registrar_observacao_humana
-from collector_operator import executar_coleta_manual
-from daily_learning_report import gerar_relatorio_aprendizado_diario
-from leon_operator import (
+from src.brain_context_memory import registrar_observacao_humana
+from src.collector_operator import executar_coleta_manual
+from src.daily_learning_report import gerar_relatorio_aprendizado_diario
+from src.leon_operator import (
     executar_alerta_conflito,
     executar_alerta_dados_antigos,
     executar_analise_programada,
     executar_aprendizado_diario,
     executar_status_telegram,
 )
-from market_context_agent import revisar_contextos
-from institutional_analysis_engine import (
+from src.market_context_agent import revisar_contextos
+from src.institutional_analysis_engine import (
     analyze_elliott_context,
     analyze_smc_context,
 )
-from mt5_execution_refiner import load_execution_candles
-from mt5_monitor import get_mt5_monitor_status
-from mt5_order_executor import (
+from src.mt5_execution_refiner import load_execution_candles
+from src.mt5_monitor import get_mt5_monitor_status
+from src.mt5_order_executor import (
     executar_ordem_mt5_pre_operacao,
     liberar_nova_tentativa_mt5,
 )
-from operator_council import avaliar_conselho_operadores
-from operation_batch_review import latest_batch_status
-from operation_readiness import avaliar_prontidao_operacional
-from operator_status import obter_status_operadores
-from pre_operation_engine import resumo_pre_operacao
-from risk_control_agent import calcular_plano_risco, resumo_risco
-from risk_method_engine import desempenho_por_metodo
-from system_watchdog_agent import analisar_sistema
-from telegram_config import CHAT_ID, TELEGRAM_ENABLED, TOKEN
-from telegram_alert import enviar_relatorio_aprendizado_diario
-from telegram_alert import enviar_status_operadores
-from top_down_agent import ultima_leitura_top_down
+from src.operator_council import avaliar_conselho_operadores
+from src.operation_batch_review import latest_batch_status
+from src.operation_readiness import avaliar_prontidao_operacional
+from src.operator_status import obter_status_operadores
+from src.pre_operation_engine import resumo_pre_operacao
+from src.risk_control_agent import calcular_plano_risco, resumo_risco
+from src.risk_method_engine import desempenho_por_metodo
+from src.system_watchdog_agent import analisar_sistema
+from src.telegram_config import CHAT_ID, TELEGRAM_ENABLED, TOKEN
+from src.telegram_alert import enviar_relatorio_aprendizado_diario
+from src.telegram_alert import enviar_status_operadores
+from src.top_down_agent import ultima_leitura_top_down
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent

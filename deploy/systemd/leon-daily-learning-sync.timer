@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily LEON Learning Synchronization Timer
+Documentation=leon-daily-learning skill
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

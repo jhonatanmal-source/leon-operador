@@ -1,0 +1,220 @@
+CORREÇÃO A02 — INTEGRAR O GATE ESTRUTURAL AO PIPELINE REAL
+
+O diagnóstico complementar comprovou que:
+
+- src/live_operational_contract.py possui implementação real;
+- seus 11 testes unitários passam;
+- validate_zone_for_execution() não está conectado ao pipeline operacional;
+- mt5_order_executor.py não exige validação estrutural da região;
+- LEON_CAUSAL_CONTRACT_V2 e READY_TO_EXECUTE não existem no código de produção.
+
+Portanto, A02 ainda não está aprovado.
+
+OBJETIVO
+
+Conectar o gate estrutural canônico ao pipeline real sem duplicar lógica,
+sem criar bypass e sem acoplar incorretamente o executor ao estado mutável
+do interest_zone_engine.
+
+REGRAS OBRIGATÓRIAS
+
+- Não iniciar operador.
+- Não conectar ao MT5 real.
+- Não enviar ordens.
+- Usar mocks em todos os testes do executor.
+- Conta REAL deve permanecer bloqueada.
+- Não alterar estratégia SMC, Elliott, Fibonacci, ICT ou Killzones.
+- Não alterar SL, TP, RR, risco ou limite de trades.
+- Não criar lógica paralela de confirmação.
+- Não transformar CHOCH ou BOS isolado em autorização.
+- Não confiar apenas em status textual como CONFIRMADA.
+- Falhar fechado quando qualquer evidência estiver ausente ou inválida.
+- Não criar constante vazia apenas para dizer que LEON_CAUSAL_CONTRACT_V2 existe.
+
+FASE 1 — MAPEAR O CONTRATO DA PRE_OPERATION
+
+Leia:
+
+- src/live_operational_contract.py
+- src/interest_zone_engine.py
+- src/pre_operation_engine.py
+- src/mt5_order_executor.py
+- src/operator_council.py
+- testes correspondentes
+
+Identifique:
+
+1. Como a zona/região chega à PRE_OPERATION.
+2. Quais campos estruturais já são persistidos.
+3. Se existe snapshot imutável da região.
+4. Onde deve ser executado evaluate_live_confirmation_gate().
+5. Como o executor identifica a PRE_OPERATION aberta.
+6. Como impedir que uma validação antiga seja reutilizada após:
+   - expiração;
+   - invalidação;
+   - alteração da região;
+   - alteração da timeline.
+
+FASE 2 — ARQUITETURA DE INTEGRAÇÃO
+
+Implementar preferencialmente esta estrutura:
+
+1. evaluate_live_confirmation_gate(zone)
+   continua sendo a única função canônica de validação estrutural.
+
+2. Ao registrar ou aprovar a PRE_OPERATION:
+   - executar o gate sobre o snapshot da zona;
+   - recusar criação/aprovação quando gate.ok for False;
+   - persistir o resultado estrutural necessário;
+   - persistir identificação da zona;
+   - persistir timestamp da avaliação;
+   - persistir expires_at;
+   - persistir uma forma de comprovar que o snapshot não mudou.
+
+3. No mt5_order_executor:
+   - exigir a evidência estrutural vinculada à PRE_OPERATION;
+   - validar que ela pertence à mesma região/setup;
+   - validar que ainda não expirou;
+   - rejeitar evidência ausente, antiga, inconsistente ou inválida;
+   - somente depois continuar pelos demais guards.
+
+Não duplicar dentro do executor todas as regras de zona.
+O executor deve verificar o contrato/evidência produzido pela função canônica.
+
+Se a arquitetura atual não permite snapshot ou hash seguro, documentar e
+implementar a alternativa mínima fail-closed, sem inventar segurança falsa.
+
+FASE 3 — ESTADO OPERACIONAL
+
+Investigue se READY_TO_EXECUTE é necessário como estado persistido ou se o
+pipeline já representa isso por composição de guards.
+
+Não criar READY_TO_EXECUTE apenas como string decorativa.
+
+Caso seja implementado, ele só pode existir quando:
+
+- gate estrutural aprovado;
+- PRE_OPERATION válida;
+- conselho aprovado;
+- risco aprovado;
+- notícias liberadas;
+- limite diário disponível;
+- conta DEMO confirmada;
+- símbolo resolvido;
+- todos os demais guards aprovados.
+
+Ele não pode ser definido antecipadamente e não pode, sozinho, autorizar ordem.
+
+FASE 4 — LEON_CAUSAL_CONTRACT_V2
+
+Não criar implementação fictícia.
+
+Determine se:
+
+A. o nome deve ser formalizado como versão real do contrato existente; ou
+B. os testes/documentos estão desatualizados e devem referenciar o contrato
+   canônico atualmente implementado.
+
+Se formalizar:
+
+- definir em um único módulo canônico;
+- usar como versão de contrato, não como autorização;
+- persistir a versão na evidência/PRE_OPERATION;
+- rejeitar versão desconhecida no executor;
+- não duplicar regras.
+
+Se não formalizar, justificar no relatório e corrigir apenas referências
+desatualizadas.
+
+FASE 5 — TESTES OBRIGATÓRIOS
+
+Adicionar testes de integração para provar:
+
+1. Sem zona vinculada → bloqueado.
+2. Zona vazia → bloqueado.
+3. Sem confirmação estrutural → bloqueado.
+4. Confirmação UNRESOLVED → bloqueado.
+5. Timeline ausente → bloqueado.
+6. Timeline fora de ordem → bloqueado.
+7. Região invalidada → bloqueado.
+8. Janela expirada → bloqueado.
+9. Evidência estrutural ausente na PRE_OPERATION → bloqueado.
+10. Evidência pertencente a outra região → bloqueado.
+11. Evidência expirada → bloqueado.
+12. Snapshot alterado após validação → bloqueado.
+13. Gate válido, mas conselho negado → bloqueado.
+14. Gate válido, mas risco negado → bloqueado.
+15. Gate válido, mas notícia de alto impacto → bloqueado.
+16. Gate válido, mas limite diário atingido → bloqueado.
+17. Gate válido em conta REAL → bloqueado.
+18. Todos os requisitos válidos em DEMO → order_send mockado chamado uma vez.
+19. Exceção durante validação estrutural → bloqueado.
+20. Nenhum resultado GATE_PASSED isolado autoriza execução.
+
+O teste de sucesso deve usar order_send totalmente mockado.
+
+FASE 6 — TESTE DO LIMITE DIÁRIO
+
+Analise:
+
+test_mt5_order_executor.py::test_limite_diario_atingido
+
+Existe divergência entre:
+
+- DEMO_DAILY_LIMIT_REACHED
+- MAX_DEMO_ORDERS_DAY_REACHED
+
+Determine qual é o código canônico realmente utilizado.
+
+Não alterar produção apenas para fazer o teste passar.
+Atualize o teste se estiver desatualizado.
+Atualize produção somente se houver contrato oficial comprovando o contrário.
+
+VALIDAÇÃO
+
+Execute antes da alteração:
+
+python -m pytest tests/test_operational_contract.py -q
+python -m pytest tests/test_mt5_order_executor.py -q
+
+Depois execute:
+
+python -m pytest tests/test_operational_contract.py -q
+python -m pytest tests/test_mt5_order_executor.py -q
+python -m pytest tests -q -k "operational_contract or interest_zone or pre_operation or executor or causal"
+python -m pytest tests -q
+
+RELATÓRIO
+
+Atualize:
+
+tarefas/STATUS_A02.md
+
+Inclua:
+
+- causa raiz;
+- fluxo anterior;
+- fluxo depois;
+- ponto exato de integração;
+- campos adicionados à PRE_OPERATION;
+- forma de impedir evidência obsoleta;
+- arquivos modificados;
+- testes criados;
+- testes antes e depois;
+- evidência de fail-closed;
+- evidência de bloqueio REAL;
+- evidência de que order_send foi apenas mockado;
+- decisão sobre LEON_CAUSAL_CONTRACT_V2;
+- decisão sobre READY_TO_EXECUTE;
+- pendências.
+
+STATUS PERMITIDO:
+
+- APROVADO
+- APROVADO_COM_RESSALVAS
+- REPROVADO
+
+Não declarar APROVADO se o executor ainda puder prosseguir sem evidência
+estrutural válida da região.
+
+Execute somente esta correção A02 e pare.

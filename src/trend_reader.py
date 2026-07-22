@@ -2,7 +2,7 @@
 # TREND READER
 # ===================================
 
-import MetaTrader5 as mt5
+import mt5linux_compat as mt5
 
 def analisar_tendencia_real():
 
@@ -11,7 +11,7 @@ def analisar_tendencia_real():
         print("ERRO MT5")
         return "LATERAL"
 
-    simbolo = "XAUUSD"
+    simbolo = "Gold_Spot"
 
     mt5.symbol_select(simbolo, True)
 

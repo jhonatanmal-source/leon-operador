@@ -1,0 +1,115 @@
+Execute agora somente o item A02 — live_operational_contract.py.
+
+Antes de modificar:
+
+1. Leia:
+   - tarefas/STATUS_A01.md
+   - src/live_operational_contract.py
+   - todos os consumidores de live_operational_contract
+   - os módulos relacionados ao LEON_CAUSAL_CONTRACT_V2
+   - testes relacionados a contrato causal, confirmação, PRE_OPERATION, conselho e executor
+
+2. Pesquise no projeto por:
+   - live_operational_contract
+   - LEON_CAUSAL_CONTRACT_V2
+   - READY_TO_EXECUTE
+   - UNRESOLVED
+   - COMPLETE
+   - confirmation
+   - causal_contract
+
+Objetivo:
+
+Determinar se src/live_operational_contract.py é:
+- implementação ativa incompleta;
+- fachada/adaptador para o contrato canônico;
+- módulo legado que deve ser removido;
+- ou módulo que precisa ser restaurado com lógica real.
+
+REGRAS OBRIGATÓRIAS:
+
+- Não criar um segundo contrato operacional.
+- Não duplicar lógica já existente.
+- Não alterar estratégia SMC, Elliott, Fibonacci, ICT ou Killzones.
+- Não alterar SL, TP, RR, risco ou limite de três trades.
+- Não iniciar operador.
+- Não conectar ao MT5.
+- Não enviar ordens.
+- Conta REAL deve permanecer bloqueada.
+- Estados incompletos, ausentes, ambíguos ou UNRESOLVED devem falhar fechado.
+- CHOCH ou BOS isolado não pode autorizar entrada.
+- A autorização somente pode existir quando o contrato canônico estiver completo e todos os guards forem aprovados.
+
+Verifique obrigatoriamente:
+
+- região de interesse válida;
+- toque da zona;
+- confirmação estrutural COMPLETE;
+- ordem temporal observável;
+- reteste;
+- defesa;
+- continuação;
+- janela de entrada válida;
+- invalidação;
+- PRE_OPERATION válido;
+- conselho operacional aprovado;
+- risco aprovado;
+- bloqueio de notícias;
+- limite diário;
+- conta DEMO;
+- símbolo resolvido;
+- estado READY_TO_EXECUTE.
+
+TESTES MÍNIMOS:
+
+1. Contrato incompleto.
+2. Timeline ausente.
+3. Timeline fora de ordem.
+4. Confirmação UNRESOLVED.
+5. Confirmação parcial.
+6. Janela expirada.
+7. Zona invalidada.
+8. PRE_OPERATION expirado.
+9. Conselho negado.
+10. Risco negado.
+11. Notícias de alto impacto.
+12. Limite diário atingido.
+13. Conta REAL.
+14. Símbolo não resolvido.
+15. Contrato completo em DEMO.
+16. Compatibilidade com LEON_CAUSAL_CONTRACT_V2.
+17. Exceção interna deve bloquear execução.
+18. Nenhum caminho deve chamar order_send.
+
+Primeiro execute os testes relacionados antes da alteração e registre o baseline.
+
+Depois aplique somente a correção necessária e execute:
+
+python -m pytest tests -q -k "live_operational_contract or causal or confirmation or pre_operation or council"
+
+Depois execute a suíte completa:
+
+python -m pytest tests -q
+
+Não tente corrigir neste momento as falhas já registradas de mt5linux_compat ou risk_control_agent, salvo se forem consequência direta comprovada da alteração A02.
+
+Salve o relatório em:
+
+tarefas/STATUS_A02.md
+
+O relatório deve informar:
+
+- causa encontrada;
+- arquitetura encontrada;
+- decisão tomada;
+- arquivos modificados;
+- testes criados ou atualizados;
+- baseline antes;
+- resultado depois;
+- regressões;
+- evidência de fail-closed;
+- evidência de bloqueio de conta REAL;
+- evidência de que nenhuma ordem foi enviada;
+- pendências.
+
+Ao concluir, pare. Não execute A03.

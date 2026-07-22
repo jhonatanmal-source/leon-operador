@@ -185,7 +185,7 @@ def _recent_access_logs(limit=12):
 
 def _mt5_status():
     try:
-        import MetaTrader5 as mt5
+        import mt5linux_compat as mt5
     except ImportError:
         return {
             "status": "INDISPONÍVEL",

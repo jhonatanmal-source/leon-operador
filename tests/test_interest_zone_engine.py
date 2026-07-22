@@ -6,10 +6,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 
-ROOT_DIR = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT_DIR / "src"))
-
-from interest_zone_engine import (  # noqa: E402
+from src.interest_zone_engine import (
     InterestZoneStore,
     build_zone_from_context,
     monitor_zone,

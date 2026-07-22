@@ -2,8 +2,8 @@
 # MARKET READER
 # ===================================
 
-import MetaTrader5 as mt5
-from price_logger import registrar_preco
+import mt5linux_compat as mt5
+from src.price_logger import registrar_preco
 
 def ler_preco_xau():
 
@@ -12,7 +12,7 @@ def ler_preco_xau():
         print("ERRO MT5")
         return
 
-    simbolo = "XAUUSD"
+    simbolo = "Gold_Spot"
 
     mt5.symbol_select(simbolo, True)
 

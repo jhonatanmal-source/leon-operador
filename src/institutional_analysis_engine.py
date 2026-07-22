@@ -1,6 +1,6 @@
 from statistics import median
 
-from elliott_study_engine import validate_impulse_points
+from src.elliott_study_engine import validate_impulse_points
 
 
 def _closed_candles(candles):

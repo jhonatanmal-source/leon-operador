@@ -59,7 +59,7 @@ def register_shadow_trade(
     direction,
     missing_confirmations,
     event_signature,
-    symbol="XAUUSD",
+    symbol="Gold_Spot",
 ):
     if direction not in ["COMPRA", "VENDA"] or len(candles) < 10:
         return {"ok": False, "error": "INVALID_SHADOW_CONTEXT"}

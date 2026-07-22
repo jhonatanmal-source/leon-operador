@@ -3,10 +3,12 @@
 # ===================================
 
 import configparser
+import math
 from datetime import datetime
+from decimal import Decimal, ROUND_FLOOR
 from pathlib import Path
 
-from risk_method_engine import obter_metodo
+from src.risk_method_engine import obter_metodo
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -54,7 +56,7 @@ def _risk_config():
 def _obter_saldo_mt5():
 
     try:
-        import MetaTrader5 as mt5
+        import mt5linux_compat as mt5
 
         if not mt5.initialize():
             return None
@@ -77,12 +79,37 @@ def calcular_limite_perda_diaria(
     resultado_aberto,
     limite_percentual,
 ):
+    if not math.isfinite(saldo_atual):
+        return {
+            "ok": False,
+            "approved": False,
+            "error": "INVALID_STARTING_BALANCE",
+            "reason": "saldo_atual nao finito",
+        }
+
+    if not math.isfinite(resultado_realizado) or not math.isfinite(resultado_aberto):
+        return {
+            "ok": False,
+            "approved": False,
+            "error": "INVALID_RESULT",
+            "reason": "resultado nao finito",
+        }
+
+    if limite_percentual <= 0:
+        return {
+            "ok": False,
+            "approved": False,
+            "error": "INVALID_LOSS_LIMIT",
+            "reason": "limite_percentual deve ser positivo",
+        }
+
     saldo_inicio = saldo_atual - resultado_realizado
     if saldo_inicio <= 0:
         return {
             "ok": False,
             "approved": False,
             "error": "INVALID_STARTING_BALANCE",
+            "reason": "saldo_inicio nao positivo",
         }
 
     resultado_total = resultado_realizado + resultado_aberto
@@ -115,7 +142,7 @@ def avaliar_limite_perda_diaria():
     config = _risk_config()
 
     try:
-        import MetaTrader5 as mt5
+        import mt5linux_compat as mt5
     except ImportError:
         return {
             "ok": False,
@@ -171,7 +198,51 @@ def avaliar_limite_perda_diaria():
         mt5.shutdown()
 
 
-def calcular_plano_risco(pre_operacao, saldo=None):
+def _validar_especificacoes(esp):
+    if not isinstance(esp, dict):
+        return {"ok": False, "error": "INVALID_SPECIFICATION"}
+    erros = []
+    for campo, nome in [
+        ("contract_size", "INVALID_CONTRACT_SIZE"),
+        ("volume_step", "INVALID_VOLUME_STEP"),
+        ("volume_min", "INVALID_VOLUME_LIMITS"),
+        ("volume_max", "INVALID_VOLUME_LIMITS"),
+    ]:
+        valor = esp.get(campo)
+        if not isinstance(valor, (int, float)) or not math.isfinite(valor) or valor <= 0:
+            erros.append(nome)
+    for campo, nome in [("tick_size", "INVALID_TICK_SPECIFICATION"), ("tick_value", "INVALID_TICK_SPECIFICATION")]:
+        valor = esp.get(campo)
+        if valor is not None and (not isinstance(valor, (int, float)) or not math.isfinite(valor) or valor <= 0):
+            erros.append(nome)
+    if not erros and esp.get("volume_min", 0) > esp.get("volume_max", float("inf")):
+        erros.append("INVALID_VOLUME_LIMITS")
+    if erros:
+        return {"ok": False, "error": erros[0]}
+    return {"ok": True}
+
+
+def _normalizar_lote(lote_bruto, volume_step):
+    if not math.isfinite(lote_bruto) or lote_bruto < 0:
+        return None
+    if not math.isfinite(volume_step) or volume_step <= 0:
+        return None
+
+    lote_d = Decimal(str(lote_bruto))
+    step_d = Decimal(str(volume_step))
+
+    steps = (lote_d / step_d).to_integral_value(rounding=ROUND_FLOOR)
+    lote_normalizado = steps * step_d
+
+    lote_float = float(lote_normalizado)
+
+    if not math.isfinite(lote_float):
+        return None
+
+    return lote_float
+
+
+def calcular_plano_risco(pre_operacao, saldo=None, especificacoes=None):
 
     config = _risk_config()
     metodo = obter_metodo(pre_operacao.get("metodo_risco") or None)
@@ -181,6 +252,13 @@ def calcular_plano_risco(pre_operacao, saldo=None):
 
     if saldo is None:
         saldo = 1000.0
+
+    if not math.isfinite(saldo):
+        return {
+            "ok": False,
+            "error": "INVALID_BALANCE",
+            "enabled": config["enabled"],
+        }
 
     try:
         entrada = float(pre_operacao["entrada"])
@@ -192,12 +270,44 @@ def calcular_plano_risco(pre_operacao, saldo=None):
             "enabled": config["enabled"],
         }
 
+    if not math.isfinite(entrada) or not math.isfinite(stop):
+        return {
+            "ok": False,
+            "error": "INVALID_PRE_OPERATION_PRICE",
+            "enabled": config["enabled"],
+        }
+
     distancia_stop = abs(entrada - stop)
 
-    if distancia_stop <= 0:
+    if distancia_stop <= 0 or not math.isfinite(distancia_stop):
         return {
             "ok": False,
             "error": "INVALID_STOP_DISTANCE",
+            "enabled": config["enabled"],
+        }
+
+    esp = dict(especificacoes or {})
+    esp.setdefault("contract_size", CONTRACT_SIZE_XAU)
+    esp.setdefault("volume_step", 0.01)
+    esp.setdefault("volume_min", config["min_lot"])
+    esp.setdefault("volume_max", config["max_lot"])
+    validacao = _validar_especificacoes(esp)
+    if not validacao["ok"]:
+        return {
+            "ok": False,
+            "error": validacao["error"],
+            "enabled": config["enabled"],
+        }
+
+    contract_size = esp["contract_size"]
+    volume_step = esp["volume_step"]
+    volume_min = min(esp["volume_min"], config["min_lot"])
+    volume_max = min(esp["volume_max"], config["max_lot"])
+
+    if saldo <= 0:
+        return {
+            "ok": False,
+            "error": "INVALID_BALANCE",
             "enabled": config["enabled"],
         }
 
@@ -205,29 +315,56 @@ def calcular_plano_risco(pre_operacao, saldo=None):
         metodo["risk_percent"],
         config["max_risk_percent"],
     )
+    if not math.isfinite(risco_percentual) or risco_percentual <= 0:
+        return {
+            "ok": False,
+            "error": "INVALID_RISK_PERCENT",
+            "enabled": config["enabled"],
+        }
+
     context_mode = pre_operacao.get("context_mode") or "TENDENCIA"
     if context_mode == "CORRECAO":
         risco_percentual *= config["correction_risk_factor"]
     risco_valor = saldo * (risco_percentual / 100)
-    lote_calculado = risco_valor / (distancia_stop * CONTRACT_SIZE_XAU)
-    lote = round(lote_calculado, 2)
+    lote_bruto = risco_valor / (distancia_stop * contract_size)
+
+    lote_normalizado = _normalizar_lote(lote_bruto, volume_step)
+    if lote_normalizado is None:
+        return {
+            "ok": False,
+            "error": "INVALID_CALCULATED_LOT",
+            "enabled": config["enabled"],
+        }
+
+    lote = lote_normalizado
     lote_original = lote
 
-    if lote < config["min_lot"]:
-        lote = config["min_lot"]
+    if lote < volume_min:
+        risco_se_min_lot = volume_min * distancia_stop * contract_size
+        risco_se_min_lot_percent = (risco_se_min_lot / saldo) * 100
+        if risco_se_min_lot_percent > config["max_risk_percent"]:
+            return {
+                "ok": False,
+                "error": "LOT_BELOW_MINIMUM_EXCEEDS_RISK",
+                "enabled": config["enabled"],
+                "min_lot": volume_min,
+                "max_risk_percent": config["max_risk_percent"],
+                "estimated_risk_percent": round(risco_se_min_lot_percent, 4),
+            }
+        lote = volume_min
 
-    if lote > config["max_lot"]:
-        lote = config["max_lot"]
+    if lote > volume_max:
+        lote = volume_max
 
-    risco_estimado = round(distancia_stop * CONTRACT_SIZE_XAU * lote, 2)
-    risco_estimado_percent = round((risco_estimado / saldo) * 100, 3)
+    risco_efetivo = lote * distancia_stop * contract_size
+    risco_efetivo_percent = (risco_efetivo / saldo) * 100
     lote_capado = lote != lote_original
-    risco_acima_do_alvo = risco_estimado_percent > risco_percentual
+    risco_acima_do_alvo = risco_efetivo_percent > risco_percentual
 
     aprovado = (
         config["enabled"]
-        and risco_estimado_percent <= config["max_risk_percent"]
-        and lote <= config["max_lot"]
+        and risco_efetivo_percent <= config["max_risk_percent"]
+        and lote <= volume_max
     )
 
     return {
@@ -241,12 +378,15 @@ def calcular_plano_risco(pre_operacao, saldo=None):
         "rr_target": metodo["rr_target"],
         "risk_value": round(risco_valor, 2),
         "stop_distance": round(distancia_stop, 2),
-        "calculated_lot": round(lote_calculado, 4),
+        "calculated_lot": round(lote_bruto, 4),
         "lot": lote,
         "lot_capped": lote_capado,
-        "max_lot": config["max_lot"],
-        "estimated_risk": risco_estimado,
-        "estimated_risk_percent": risco_estimado_percent,
+        "volume_step": volume_step,
+        "volume_min": volume_min,
+        "volume_max": volume_max,
+        "contract_size": contract_size,
+        "estimated_risk": round(risco_efetivo, 2),
+        "estimated_risk_percent": round(risco_efetivo_percent, 4),
         "risk_above_target": risco_acima_do_alvo,
         "daily_loss_percent": config["daily_loss_percent"],
         "reason": (
@@ -261,7 +401,7 @@ def avaliar_orcamento_risco_aberto(risco_planejado_percentual):
     config = _risk_config()
 
     try:
-        import MetaTrader5 as mt5
+        import mt5linux_compat as mt5
     except ImportError:
         return {
             "ok": False,

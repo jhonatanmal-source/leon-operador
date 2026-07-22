@@ -1,0 +1,253 @@
+MISSÃO A03 — AUDITAR E CORRIGIR performance_engine.py
+
+Execute somente o item A03.
+
+Leia primeiro:
+
+- tarefas/STATUS_A01.md
+- tarefas/STATUS_A02.md
+- src/performance_engine.py
+- todos os consumidores de performance_engine
+- arquivos de memória de trades, replay, backtest e relatórios
+- testes relacionados a performance, métricas, resultados e trades
+
+Não altere A01 ou A02.
+Não tente corrigir agora as três falhas de risk_control_agent.py.
+Não iniciar operador.
+Não conectar ao MT5.
+Não enviar ordens.
+
+OBJETIVO
+
+Determinar se src/performance_engine.py:
+
+- possui lógica real;
+- contém valores fixos;
+- usa fonte de dados real;
+- mistura dados de replay, demo e produção;
+- calcula corretamente as métricas;
+- trata dados insuficientes sem inventar resultados.
+
+FASE 1 — DIAGNÓSTICO
+
+Pesquise no projeto por:
+
+- performance_engine
+- win_rate
+- profit_factor
+- expectancy
+- expectativa
+- drawdown
+- max_drawdown
+- resultado_r
+- pnl
+- trade_memory
+- trades_analisados
+- NECESSITA EVOLUÇÃO
+- 33.33
+- Brain Score
+- resultado_global
+
+Identifique:
+
+1. Todos os consumidores do módulo.
+2. Fonte real dos trades.
+3. Formato dos registros de entrada.
+4. Como vitória, derrota e breakeven são classificados.
+5. Se trades abertos são excluídos.
+6. Se registros inválidos são ignorados ou bloqueiam o cálculo.
+7. Se há mistura entre:
+   - replay;
+   - backtest;
+   - conta DEMO;
+   - resultado real;
+   - dados simulados.
+8. Se existem números fixos, retornos decorativos ou fallback enganoso.
+9. Se o relatório de “33 trades / 33,33%” veio de dados reais ou valor estático.
+
+Registre o baseline antes de qualquer alteração.
+
+FASE 2 — CONTRATO DE DADOS
+
+Defina um contrato claro para os registros aceitos.
+
+Cada trade válido deve possuir, quando necessário:
+
+- identificador;
+- horário de abertura;
+- horário de fechamento;
+- direção;
+- resultado;
+- resultado em R, quando disponível;
+- status fechado;
+- origem dos dados;
+- sessão ou Killzone, quando disponível.
+
+Não inventar campos ausentes.
+
+Quando uma métrica não puder ser calculada, retornar estado explícito:
+
+- INSUFFICIENT_DATA
+- NOT_AVAILABLE
+- INVALID_DATA_SOURCE
+
+Não usar zero para representar informação desconhecida.
+
+Diferenciar claramente:
+
+- zero real;
+- ausência de dados;
+- divisão impossível;
+- métrica não aplicável.
+
+FASE 3 — MÉTRICAS
+
+Implementar ou validar:
+
+1. Total de trades fechados válidos.
+2. Vitórias.
+3. Derrotas.
+4. Breakevens.
+5. Win rate.
+6. Loss rate.
+7. Resultado líquido em R.
+8. Média de R por trade.
+9. Média de R dos vencedores.
+10. Média de R dos perdedores.
+11. Expectativa matemática.
+12. Profit factor.
+13. Drawdown máximo.
+14. Sequência máxima de perdas.
+15. Sequência máxima de ganhos.
+16. Resultado por direção.
+17. Resultado por sessão/Killzone, somente quando o dado existir.
+18. Período inicial e final analisado.
+19. Quantidade de registros descartados e seus motivos.
+
+REGRAS MATEMÁTICAS
+
+- Win rate deve usar trades classificados, sem incluir breakeven como vitória.
+- Profit factor = soma dos ganhos absolutos / soma das perdas absolutas.
+- Sem perdas e com ganhos, não retornar divisão por zero; usar representação explícita adequada.
+- Expectativa deve ser reproduzível a partir dos trades.
+- Drawdown deve ser calculado sobre curva acumulada ordenada cronologicamente.
+- Entradas fora de ordem devem ser ordenadas por timestamp válido.
+- Na ausência de timestamps válidos, documentar a limitação.
+- NaN, infinito, strings inválidas e valores booleanos não podem contaminar resultados.
+
+FASE 4 — SEPARAÇÃO DE ORIGEM
+
+O relatório deve informar a origem das métricas:
+
+- DEMO
+- REPLAY
+- BACKTEST
+- SIMULATION
+- UNKNOWN
+
+Não apresentar resultado de replay como desempenho DEMO.
+Não apresentar resultado simulado como resultado operacional real.
+Não misturar fontes sem agrupamento explícito.
+
+FASE 5 — TESTES OBRIGATÓRIOS
+
+Criar ou atualizar testes para:
+
+1. Conjunto vazio.
+2. Um trade vencedor.
+3. Um trade perdedor.
+4. Um breakeven.
+5. Vitórias e derrotas combinadas.
+6. Profit factor sem perdas.
+7. Profit factor sem ganhos.
+8. Resultado líquido em R.
+9. Expectativa.
+10. Drawdown máximo.
+11. Sequência máxima de perdas.
+12. Sequência máxima de ganhos.
+13. Registros fora de ordem.
+14. Trade ainda aberto.
+15. Registro sem resultado.
+16. Resultado NaN.
+17. Resultado infinito.
+18. Resultado em formato inválido.
+19. Campo ausente.
+20. Dados de origens diferentes.
+21. Cálculo não deve alterar os dados originais.
+22. Resultado reproduzível em duas execuções.
+23. Zero real diferente de NOT_AVAILABLE.
+24. Nenhum valor fixo como “33 trades” ou “33.33%”.
+25. Nenhuma chamada ao MT5 ou order_send.
+
+FASE 6 — COMPATIBILIDADE
+
+Preserve a API pública atual sempre que possível.
+
+Se consumidores dependem de um formato antigo:
+
+- adicionar migração ou compatibilidade explícita;
+- não mascarar erros;
+- documentar campos antigos e novos;
+- atualizar consumidores e testes de forma coordenada.
+
+Não introduzir Brain Score, momentum ou indicadores como métrica de aprovação operacional.
+
+VALIDAÇÃO
+
+Antes da alteração:
+
+python -m pytest tests -q -k "performance"
+python -m pytest tests -q
+
+Depois da alteração:
+
+python -m pytest tests -q -k "performance or metric or drawdown or expectancy"
+python -m pytest tests -q
+
+Também execute busca por implementações suspeitas:
+
+grep -RInE "33\.33|33 trades|return True|return \{\}|return \[\]|TODO|FIXME|NotImplementedError|pass$" src/performance_engine.py src tests
+
+Analise cada resultado; não remova cegamente.
+
+RELATÓRIO
+
+Salvar em:
+
+tarefas/STATUS_A03.md
+
+O relatório deve conter:
+
+1. Causa encontrada.
+2. Estado anterior do módulo.
+3. Fontes de dados identificadas.
+4. Contrato de entrada.
+5. Fórmulas utilizadas.
+6. Tratamento de dados insuficientes.
+7. Separação por origem.
+8. Arquivos modificados.
+9. Testes adicionados.
+10. Baseline anterior.
+11. Resultado final.
+12. Exemplos calculados manualmente e comparados ao módulo.
+13. Evidência de ausência de valores fixos.
+14. Evidência de que dados simulados não são apresentados como DEMO.
+15. Evidência de que nenhuma conexão MT5 ou ordem foi realizada.
+16. Pendências.
+
+STATUS FINAL PERMITIDO:
+
+- APROVADO
+- APROVADO_COM_RESSALVAS
+- REPROVADO
+
+Não declarar APROVADO enquanto houver:
+
+- métrica fixa;
+- divisão incorreta;
+- mistura silenciosa de fontes;
+- zero enganoso para dado ausente;
+- cálculo baseado em trade aberto;
+- resultado não reproduzível.
+
+Execute somente A03 e pare.

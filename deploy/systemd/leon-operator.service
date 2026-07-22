@@ -1,0 +1,35 @@
+[Unit]
+Description=LEON XAU ELITE AI Operator Loop
+After=network-online.target leon-mt5.service
+
+[Service]
+Type=simple
+User=leon
+WorkingDirectory=/opt/leon/app
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONPATH=/opt/leon/app:/opt/leon/app/src
+ExecStart=/opt/leon/venv/bin/python -u /opt/leon/app/src/leon_operator.py
+Restart=on-failure
+RestartSec=30
+TimeoutStopSec=30
+KillSignal=SIGINT
+
+ProtectSystem=full
+ReadWritePaths=/opt/leon/app/data /opt/leon/app/logs
+PrivateTmp=true
+NoNewPrivileges=true
+CapabilityBoundingSet=
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectProc=invisible
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+PrivateDevices=true
+
+[Install]
+WantedBy=multi-user.target

@@ -54,7 +54,7 @@ def _recent_leon_orders(limit=5):
 
 def get_mt5_monitor_status(symbol="XAUUSD"):
     try:
-        import MetaTrader5 as mt5
+        import mt5linux_compat as mt5
     except ImportError:
         return {
             "connected": False,

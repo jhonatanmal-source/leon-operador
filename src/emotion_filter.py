@@ -1,4 +1,4 @@
-from emotion_engine import emotional_guard, get_emotional_state
+from src.emotion_engine import emotional_guard, get_emotional_state
 
 
 def controlar_emocao():

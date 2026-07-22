@@ -24,40 +24,40 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
-from autonomy_guard import (
+from src.autonomy_guard import (
     conceder_autonomia,
     revogar_autonomia,
     status_autonomia,
 )
-from brain_context_memory import registrar_contexto_cerebro
-from brain_memory import registrar_brain
-from collector_operator import executar_coleta_manual
-from daily_learning_report import gerar_relatorio_aprendizado_diario
-from daily_operator_report import gerar_relatorio_operador_diario
-from emotion_engine import register_emotional_event
-from error_logger import registrar_erro
-from log_engine import registrar_log
-from mt5_order_executor import (
+from src.brain_context_memory import registrar_contexto_cerebro
+from src.brain_memory import registrar_brain
+from src.collector_operator import executar_coleta_manual
+from src.daily_learning_report import gerar_relatorio_aprendizado_diario
+from src.daily_operator_report import gerar_relatorio_operador_diario
+from src.emotion_engine import register_emotional_event
+from src.error_logger import registrar_erro
+from src.log_engine import registrar_log
+from src.mt5_order_executor import (
     executar_ordem_mt5_pre_operacao,
     liberar_nova_tentativa_mt5,
 )
-from market_context_agent import registrar_contexto_mercado
-from market_session_guard import (
+from src.market_context_agent import registrar_contexto_mercado
+from src.market_session_guard import (
     inspect_broker_session,
     maintenance_is_due,
     mark_maintenance_done,
     register_session_status,
     restart_mt5_connection,
 )
-from pre_operation_engine import avaliar_pre_operacoes_abertas
-from pre_operation_engine import resumo_pre_operacao
-from performance_tracker import registrar_performance
-from setup_audit import generate_setup_audit
-from operation_report import registrar_relatorio_operacao
-from operation_close_alert import send_operation_close_alert
-from operation_batch_review import process_operation_batches
-from mt5_operation_close_monitor import check_mt5_closed_operations
-from telegram_alert import (
+from src.pre_operation_engine import avaliar_pre_operacoes_abertas
+from src.pre_operation_engine import resumo_pre_operacao
+from src.performance_tracker import registrar_performance
+from src.setup_audit import generate_setup_audit
+from src.operation_report import registrar_relatorio_operacao
+from src.operation_close_alert import send_operation_close_alert
+from src.operation_batch_review import process_operation_batches
+from src.mt5_operation_close_monitor import check_mt5_closed_operations
+from src.telegram_alert import (
     enviar_alerta_conflito_operadores,
     enviar_alerta_dados_antigos,
     enviar_alerta_operador_encerrado,
@@ -162,6 +162,13 @@ def _registrar_heartbeat(estado, detalhes=None):
         )
     except OSError as erro:
         registrar_erro(f"OPERATOR | falha ao gravar heartbeat: {erro}")
+
+
+def _iniciar_identidade_ciclo():
+    from datetime import timezone
+    ciclo = f"CYCLE-{int(datetime.now(timezone.utc).timestamp())}"
+    analise = f"ANALYSIS-{int(datetime.now(timezone.utc).timestamp())}"
+    return {"cycle_id": ciclo, "analysis_id": analise}
 
 
 def _enviar_erro_seguro(erro, contexto):
@@ -799,6 +806,7 @@ def executar_analise_programada(forcar=False):
         ambiente = os.environ.copy()
         ambiente["PYTHONIOENCODING"] = "utf-8"
         ambiente["PYTHONUTF8"] = "1"
+        ambiente["PYTHONPATH"] = str(ROOT_DIR)
 
         comando = [sys.executable, "-B", str(ROOT_DIR / "src" / "leon.py")]
         resultado = subprocess.run(
@@ -1108,6 +1116,20 @@ def executar_alerta_dados_antigos(forcar=False):
 def iniciar_operador():
 
     config = _carregar_operador_config()
+    autonomia = status_autonomia()
+    if not autonomia["active"] and autonomia.get("reason") in (
+        "AUTONOMY_DISABLED_IN_CONFIG",
+        "AUTONOMY_NOT_GRANTED",
+    ):
+        _auto_config = configparser.ConfigParser()
+        _auto_config.read(CONFIG_FILE, encoding="utf-8")
+        _auto_section = _auto_config["AUTONOMY"] if _auto_config.has_section("AUTONOMY") else {}
+        if str(_auto_section.get("enabled", "false")).lower() == "true":
+            _max_min = _auto_section.getint("max_minutes", fallback=1440)
+            conceder_autonomia(_max_min)
+            registrar_log(
+                f"PROFESSOR LEON | autonomia auto-concedida por {_max_min} min"
+            )
     autonomia = status_autonomia()
     autonomia_anterior_ativa = autonomia["active"]
 

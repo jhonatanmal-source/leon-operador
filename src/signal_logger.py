@@ -3,6 +3,10 @@
 # ===================================
 
 from datetime import datetime
+from pathlib import Path
+
+
+DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 
 def registrar_sinal(
     tendencia,
@@ -12,9 +16,10 @@ def registrar_sinal(
 ):
 
     agora = datetime.now()
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     with open(
-        "C:/XAU_ELITE_AI/data/signals.csv",
+        DATA_DIR / "signals.csv",
         "a",
         encoding="utf-8"
     ) as arquivo:

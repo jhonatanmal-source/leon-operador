@@ -1,4 +1,4 @@
-import MetaTrader5 as mt5
+import mt5linux_compat as mt5
 
 from candle_engine import obter_candles
 

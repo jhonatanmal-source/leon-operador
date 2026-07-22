@@ -1,0 +1,161 @@
+AUDITORIA MATEMÁTICA FINAL — A03
+
+Não altere outros módulos e não avance para C02.
+
+O relatório STATUS_A03.md contém contradições que precisam ser verificadas
+no código e nos testes.
+
+PROBLEMAS IDENTIFICADOS
+
+1. O relatório declara:
+
+   WIN_TP1 = 1 × RR
+   WIN_TP2 = 2 × RR
+
+   Mas o exemplo calcula WIN_TP1 com RR=2.0 como 4.0R.
+
+2. O relatório declara:
+
+   expectativa = sum(r_values) / total_decididos
+
+   Mas calcula 3.0 / 2 como 0.75, quando o resultado correto é 1.5.
+
+3. RR inválido é classificado sem contribuição R. Verifique se esses trades
+   entram incorretamente no denominador das métricas em R.
+
+4. Resultado desconhecido não pode permanecer como registro válido neutro.
+   Deve ser descartado ou marcado explicitamente como inválido.
+
+FASE 1 — VERIFICAR O CONTRATO DE RR
+
+Leia o código e os dados reais para determinar o significado de:
+
+- campo rr;
+- WIN_TP1;
+- WIN_TP2;
+- LOSS;
+- BREAK_EVEN.
+
+Não escolha uma fórmula apenas para satisfazer testes.
+
+Confirme se rr representa:
+
+- RR planejado do trade;
+- RR efetivamente realizado;
+- RR do TP1;
+- ou outro contrato.
+
+Documente a origem dessa interpretação.
+
+FASE 2 — CORRIGIR AS FÓRMULAS
+
+Defina explicitamente:
+
+- fórmula de resultado_em_r;
+- fórmula de media_r;
+- fórmula de expectativa;
+- denominador utilizado;
+- tratamento de breakeven;
+- tratamento de trade sem RR válido.
+
+As métricas em R devem usar somente registros que possuam R calculável.
+
+Adicionar ao resultado:
+
+- total_decididos;
+- total_com_r_valido;
+- total_sem_r_valido;
+- cobertura_r_percentual.
+
+Se não houver R válido suficiente:
+
+- retornar INSUFFICIENT_DATA ou NOT_AVAILABLE;
+- não retornar zero enganoso.
+
+FASE 3 — CASOS MANUAIS OBRIGATÓRIOS
+
+Criar testes com os valores esperados escritos explicitamente.
+
+CENÁRIO A:
+
+- WIN_TP1
+- rr = 2.0
+- LOSS
+- rr = 1.0
+
+Caso WIN_TP1 seja 1 × RR, o esperado é:
+
+- r_values = [2.0, -1.0]
+- resultado_em_r = 1.0
+- media_r = 0.5
+- expectativa = 0.5
+- profit_factor = 2.0
+
+CENÁRIO B:
+
+- WIN_TP2
+- rr = 2.0
+- LOSS
+- rr = 1.0
+
+Caso WIN_TP2 seja 2 × RR, o esperado é:
+
+- r_values = [4.0, -1.0]
+- resultado_em_r = 3.0
+- media_r = 1.5
+- expectativa = 1.5
+- profit_factor = 4.0
+
+Se o contrato real do projeto for diferente, apresente a fórmula comprovada
+e ajuste os valores esperados de forma consistente.
+
+FASE 4 — RR INVÁLIDO
+
+Adicionar testes comprovando:
+
+1. Trade decidido sem RR não altera resultado_em_r.
+2. Trade decidido sem RR não entra no denominador de media_r.
+3. Trade decidido sem RR não entra no denominador de expectativa em R.
+4. Ele continua podendo entrar no win_rate, se o resultado for válido.
+5. total_sem_r_valido é incrementado.
+6. cobertura_r_percentual é informada.
+
+FASE 5 — RESULTADO DESCONHECIDO
+
+Adicionar teste comprovando que um resultado como:
+
+UNKNOWN_RESULT
+
+é:
+
+- descartado;
+- registrado em discarded_details;
+- excluído de wins, losses, breakevens e total_decididos;
+- excluído de todas as métricas em R.
+
+VALIDAÇÃO
+
+Execute:
+
+python -m pytest tests/test_performance_engine.py -q
+python -m pytest tests -q -k "performance or expectancy or drawdown"
+python -m pytest tests -q
+
+Atualize:
+
+tarefas/STATUS_A03.md
+
+Corrija obrigatoriamente:
+
+- tabela de fórmulas;
+- exemplo manual;
+- valores de expectativa;
+- semântica de WIN_TP1 e WIN_TP2;
+- denominadores;
+- tratamento de RR inválido;
+- tratamento de resultado desconhecido.
+
+Não declarar APROVADO enquanto código, testes, fórmulas e exemplos não
+produzirem exatamente os mesmos resultados.
+
+Execute somente esta auditoria matemática e pare.

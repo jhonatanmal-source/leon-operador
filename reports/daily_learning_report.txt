@@ -573,3 +573,50 @@ Aprendizado do LEON
 - O LEON acumulou contexto para comparar SMC, Elliott e confianca nos proximos ciclos.
 =================================
 
+=================================
+LEON DAILY LEARNING REPORT
+=================================
+Data: 2026-07-22
+
+Resumo do dia
+- Precos coletados: 0
+- Candles coletados: 0
+- Sinais registrados: 0
+- Contextos cerebrais: 2
+- Registros analisados: 0
+- Planos gerados: 0
+- Direcao dominante: SEM DADOS
+- Qualidade dominante: SEM DADOS
+- Confianca dominante: SEM DADOS
+
+Ultima coleta
+- Ativo: SEM DADOS
+- Bid: SEM DADOS
+- Ask: SEM DADOS
+- Candle close: SEM DADOS
+
+Ultima leitura estrutural
+- Tendencia: SEM DADOS
+- Score: SEM DADOS
+- Sinal: SEM DADOS
+
+Leitura SMC + Elliott
+- SMC dominante: SEM DADOS
+- Elliott dominante: SEM DADOS
+- Brain Score medio dos planos: 0.00
+
+Ultimo contexto do cerebro
+- Origem: operator
+- Tipo: coleta_programada
+- Alinhamento: SEM DADOS
+- Observacao: Snapshot automatico apos coleta.
+
+Memoria geral do cerebro
+- Acertos registrados: 0
+- Erros registrados: 0
+- Taxa historica de acerto: 0.00%
+
+Aprendizado do LEON
+- Hoje nao houve dados suficientes para aprendizado operacional.
+=================================
+

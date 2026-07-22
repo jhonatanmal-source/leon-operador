@@ -4,7 +4,7 @@ import time
 
 import requests
 
-from telegram_config import (
+from src.telegram_config import (
     CHAT_ID,
     TELEGRAM_DEDUPE_SECONDS,
     TELEGRAM_ENABLED,

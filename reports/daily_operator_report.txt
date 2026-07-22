@@ -1,22 +1,22 @@
 LEON | RELATORIO OPERACIONAL DIARIO
 =================================
-Data: 2026-06-19
-Inicio do operador: 2026-06-19 00:21:21.602581
+Data: 2026-07-22
+Inicio do operador: SEM REGISTRO
 
 Resumo
-- Checkpoints enviados: 22
-- Estudos realizados: 253
+- Checkpoints enviados: 0
+- Estudos realizados: 1
 - Setups A+: 0
-- Setups bloqueados/observados: 253
+- Setups bloqueados/observados: 1
 
 Decisoes por operacao
 - Entrar: 0
 - Bloquear: 0
-- Observar: 251
+- Observar: 0
 
 Bloqueios
 - Alvo tecnico nao pagou o risco: 0
-- Brain Score abaixo do minimo atual (60): 0
+- Brain Score abaixo do minimo atual (70): 0
 - Bloqueios de score por regra antiga: 0
 - Preco fora da zona: 0
 

@@ -1,0 +1,287 @@
+MISSÃO B04.1 — CORRIGIR E AMPLIAR TESTES DO risk_control_agent
+
+Execute somente a etapa B04.1, concentrada em:
+
+- src/risk_control_agent.py
+- src/risk_method_engine.py
+- consumidores diretos do controle de risco
+- tests/test_risk_control_agent.py
+- testes relacionados a risco e dimensionamento
+
+Não execute ainda a cobertura completa de leon.py.
+Não altere A01, A02, A03 ou C02.
+Não iniciar operador.
+Não conectar ao MT5.
+Não enviar ordens.
+Não alterar estratégia operacional, SL técnico, TP técnico ou RR oficial.
+
+ESTADO ATUAL
+
+A suíte possui:
+
+166 passed, 3 failed
+
+As três falhas estão em:
+
+- test_stop_zero
+- test_stop_negativo
+- test_resultado_nao_finito
+
+OBJETIVO
+
+Determinar se:
+
+1. Os testes estão desatualizados ou com asserções invertidas;
+2. A produção aceita indevidamente stop zero ou negativo;
+3. A produção permite NaN ou infinito;
+4. Existe incompatibilidade entre risk_control_agent.py e
+   risk_method_engine.py;
+5. Algum consumidor interpreta um plano inválido como aprovado.
+
+Não modificar produção apenas para satisfazer testes.
+Não modificar testes apenas para fazer a suíte ficar verde.
+Primeiro definir e comprovar o contrato correto.
+
+FASE 0 — BASELINE
+
+Execute:
+
+python -m pytest tests/test_risk_control_agent.py -q -vv
+python -m pytest tests -q -k "risk or risco"
+python -m pytest tests -q
+
+Registre para cada falha:
+
+- entrada;
+- resultado real;
+- resultado esperado;
+- stack trace;
+- função responsável;
+- contrato atual do código.
+
+Também execute:
+
+python -m compileall -q src
+python -m pytest tests --collect-only -q
+
+FASE 1 — CONTRATO DE SEGURANÇA
+
+O controle de risco deve falhar fechado quando houver:
+
+- stop igual a zero;
+- stop negativo;
+- distância de stop não finita;
+- entrada NaN ou infinita;
+- saldo/equity NaN ou infinito;
+- risco percentual NaN ou infinito;
+- volume NaN ou infinito;
+- divisão por zero;
+- valor booleano usado como número;
+- símbolo ou especificação indisponível;
+- lote calculado abaixo ou acima dos limites permitidos sem normalização segura.
+
+Defina claramente o retorno canônico de falha, incluindo:
+
+- approved ou ok;
+- código de erro;
+- motivo;
+- lote;
+- risco calculado;
+- dados de entrada relevantes, sem segredo.
+
+Nenhum resultado inválido pode ser transformado silenciosamente em:
+
+- lote mínimo;
+- lote zero aprovado;
+- plano de risco válido;
+- autorização de execução.
+
+FASE 2 — STOP ZERO E NEGATIVO
+
+Investigue a semântica dos argumentos recebidos.
+
+Determine se o módulo recebe:
+
+- preço absoluto do stop;
+- distância do stop;
+- quantidade de pontos;
+- ou diferença já calculada.
+
+Se recebe preço absoluto, um preço menor que a entrada pode ser válido para
+compra, enquanto um preço maior pode ser válido para venda.
+
+Se recebe distância, zero e negativo devem ser sempre inválidos.
+
+Não assuma a semântica apenas pelo nome da variável.
+Comprove pelos consumidores e pelos testes existentes.
+
+Adicionar testes separados para:
+
+1. Distância de stop zero.
+2. Distância de stop negativa.
+3. Stop correto para compra.
+4. Stop no lado incorreto para compra.
+5. Stop correto para venda.
+6. Stop no lado incorreto para venda.
+7. Entrada igual ao stop.
+8. Preços válidos muito próximos.
+9. Valores extremamente grandes.
+
+FASE 3 — NÚMEROS NÃO FINITOS
+
+Usar validação explícita com comportamento equivalente a:
+
+math.isfinite(valor)
+
+Aplicar antes de qualquer cálculo relevante.
+
+Cobrir:
+
+- float("nan")
+- float("inf")
+- float("-inf")
+- strings "nan" e "inf", caso a API aceite strings
+- Decimal não finito, caso utilizado
+- None
+- string vazia
+- booleanos True e False
+
+Valores não finitos devem retornar falha explícita, sem exceção não tratada e
+sem plano parcialmente aprovado.
+
+FASE 4 — DIMENSIONAMENTO DO LOTE
+
+Validar:
+
+- saldo/equity válido;
+- risco percentual permitido;
+- distância de stop válida;
+- contract size;
+- tick size;
+- tick value;
+- volume mínimo;
+- volume máximo;
+- volume step;
+- arredondamento conservador;
+- exposição existente;
+- limite de perda diária;
+- limite máximo de operações.
+
+O arredondamento não pode aumentar o risco acima do permitido.
+
+Se o lote calculado for inferior ao mínimo e o lote mínimo exceder o risco
+permitido, bloquear em vez de forçar o lote mínimo.
+
+FASE 5 — INTEGRAÇÃO COM O EXECUTOR
+
+Verificar como mt5_order_executor.py consome o resultado do controle de risco.
+
+Comprovar que:
+
+- exceção no risco bloqueia execução;
+- approved=False bloqueia execução;
+- resultado ausente bloqueia execução;
+- lote inválido bloqueia execução;
+- NaN/inf bloqueia execução;
+- nenhum código de erro é interpretado como sucesso;
+- order_send não é chamado quando risco falha.
+
+Todos os testes devem usar mocks.
+
+FASE 6 — TESTES OBRIGATÓRIOS
+
+Além dos casos anteriores, adicionar ou validar:
+
+1. Saldo zero.
+2. Saldo negativo.
+3. Risco percentual zero.
+4. Risco percentual negativo.
+5. Risco acima do máximo configurado.
+6. Lote abaixo do mínimo.
+7. Lote acima do máximo.
+8. Volume step inválido.
+9. Contract size zero.
+10. Tick value zero.
+11. Tick size zero.
+12. Resultado reproduzível.
+13. Dados de entrada não são modificados.
+14. Exceção interna resulta em bloqueio.
+15. Nenhuma chamada real ao MT5.
+16. Nenhuma chamada a order_send.
+17. Integração com executor bloqueia risco inválido.
+18. Conta REAL continua bloqueada independentemente do risco.
+19. Plano válido DEMO chega somente ao próximo guard mockado.
+20. Nenhum fallback inventa um lote seguro.
+
+FASE 7 — CORREÇÃO DOS TRÊS TESTES
+
+Para cada teste atualmente falhando, documente uma destas decisões:
+
+A. PRODUÇÃO INCORRETA
+- corrigir produção;
+- preservar o teste ou tornar a asserção mais precisa.
+
+B. TESTE INCORRETO
+- atualizar o teste;
+- demonstrar o contrato de produção correto com consumidores e exemplos.
+
+C. AMBOS INCONSISTENTES
+- formalizar o contrato;
+- corrigir produção e teste de forma coordenada.
+
+Não aceitar como justificativa apenas “a asserção estava invertida”.
+
+VALIDAÇÃO FINAL
+
+Execute:
+
+python -m pytest tests/test_risk_control_agent.py -q -vv
+python -m pytest tests -q -k "risk or risco or executor"
+python -m pytest tests/test_mt5_order_executor.py -q
+python -m pytest tests --collect-only -q
+python -m compileall -q src
+python -m pytest tests -q
+
+O resultado esperado é:
+
+- zero falhas no risk_control_agent;
+- zero regressões nos testes do executor;
+- zero erros de coleta;
+- nenhuma ordem real;
+- nenhuma conexão MT5 real.
+
+RELATÓRIO
+
+Salvar em:
+
+tarefas/STATUS_B04_RISK.md
+
+O relatório deve conter:
+
+1. Causa de cada uma das três falhas.
+2. Contrato correto de stop.
+3. Contrato correto de números finitos.
+4. Decisão produção versus teste.
+5. Arquivos modificados.
+6. Testes criados.
+7. Baseline antes.
+8. Resultado final.
+9. Casos de stop para compra e venda.
+10. Casos NaN e infinito.
+11. Regras de arredondamento do lote.
+12. Evidência de fail-closed.
+13. Evidência de que order_send não foi chamado.
+14. Evidência de que conta REAL permanece bloqueada.
+15. Regressões encontradas.
+16. Pendências.
+
+STATUS PERMITIDO:
+
+- APROVADO
+- APROVADO_COM_RESSALVAS
+- REPROVADO
+
+Não declarar APROVADO enquanto qualquer entrada não finita, stop inválido ou
+lote inválido puder produzir plano aprovado.
+
+Execute somente B04.1 e pare.

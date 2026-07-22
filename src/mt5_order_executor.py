@@ -7,27 +7,28 @@ import csv
 from datetime import datetime
 from pathlib import Path
 
-from error_logger import registrar_erro
-from log_engine import registrar_log
-from brain_context_memory import registrar_contexto_cerebro
-from operator_council import avaliar_conselho_operadores
-from operation_report import registrar_relatorio_operacao
-from pre_operation_engine import invalidar_pre_operacao
-from risk_control_agent import (
+from src.error_logger import registrar_erro
+from src.log_engine import registrar_log
+from src.brain_context_memory import registrar_contexto_cerebro
+from src.operator_council import avaliar_conselho_operadores
+from src.operation_report import registrar_relatorio_operacao
+from src.pre_operation_engine import invalidar_pre_operacao
+from src.risk_control_agent import (
     avaliar_limite_perda_diaria,
     avaliar_orcamento_risco_aberto,
     calcular_plano_risco,
 )
-from telegram_engine import enviar_foto, enviar_mensagem
-from telegram_alert import enviar_erro_sistema
-from mt5_window_snapshot import capturar_print_mt5
-from trade_chart_snapshot import gerar_print_entrada
-from market_context_agent import identificar_sessao
-from news_shield import avaliar_news_shield
-from smc_entry_guard import validate_smc_entry
-from top_down_agent import ultima_leitura_top_down
-from autonomy_guard import status_autonomia
-from timeframe_policy import evaluate_timeframe_policy
+from src.telegram_engine import enviar_foto, enviar_mensagem
+from src.telegram_alert import enviar_erro_sistema
+from src.mt5_window_snapshot import capturar_print_mt5
+from src.trade_chart_snapshot import gerar_print_entrada
+from src.market_context_agent import identificar_sessao
+from src.news_shield import avaliar_news_shield
+from src.smc_entry_guard import validate_smc_entry
+from src.top_down_agent import ultima_leitura_top_down
+from src.autonomy_guard import status_autonomia
+from src.timeframe_policy import evaluate_timeframe_policy
+from src.interest_zone_engine import validate_zone_for_execution
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -123,6 +124,106 @@ def _risk_gate_config():
             fallback=70,
         ),
     }
+
+
+def _validar_lote_executor(plano_risco, config, symbol_info=None):
+    import math
+
+    lot = plano_risco.get("lot")
+    risk_percent = plano_risco.get("estimated_risk_percent")
+
+    if lot is None:
+        return {"ok": False, "error": "INVALID_LOT", "reason": "lot is None"}
+
+    if isinstance(lot, bool):
+        return {"ok": False, "error": "INVALID_LOT", "reason": "lot is bool"}
+
+    if isinstance(lot, str):
+        return {"ok": False, "error": "INVALID_LOT", "reason": "lot is string"}
+
+    try:
+        lot_float = float(lot)
+    except (TypeError, ValueError):
+        return {"ok": False, "error": "INVALID_LOT", "reason": "lot not numeric"}
+
+    if not math.isfinite(lot_float):
+        return {"ok": False, "error": "INVALID_LOT", "reason": "lot not finite"}
+
+    if lot_float <= 0:
+        return {"ok": False, "error": "INVALID_LOT", "reason": "lot <= 0"}
+
+    volume_step = 0.01
+    volume_min = 0.01
+    volume_max = config.get("lot", 0.01)
+
+    if symbol_info is not None:
+        vs = getattr(symbol_info, "volume_step", None)
+        if vs is not None:
+            try:
+                volume_step = float(vs)
+            except (TypeError, ValueError):
+                pass
+        vmin = getattr(symbol_info, "volume_min", None)
+        if vmin is not None:
+            try:
+                volume_min = float(vmin)
+            except (TypeError, ValueError):
+                pass
+        vmax = getattr(symbol_info, "volume_max", None)
+        if vmax is not None:
+            try:
+                volume_max = float(vmax)
+            except (TypeError, ValueError):
+                pass
+
+    if volume_step > 0:
+        remainder = lot_float / volume_step
+        steps_rounded = round(remainder)
+        if abs(remainder - steps_rounded) > 1e-9:
+            return {
+                "ok": False,
+                "error": "INVALID_LOT_STEP_MISMATCH",
+                "reason": f"lot {lot_float} not aligned to step {volume_step}",
+            }
+
+    if lot_float < volume_min:
+        return {
+            "ok": False,
+            "error": "INVALID_LOT",
+            "reason": f"lot {lot_float} < volume_min {volume_min}",
+        }
+
+    if lot_float > volume_max:
+        return {
+            "ok": False,
+            "error": "INVALID_LOT",
+            "reason": f"lot {lot_float} > volume_max {volume_max}",
+        }
+
+    if risk_percent is not None:
+        try:
+            risk_float = float(risk_percent)
+        except (TypeError, ValueError):
+            return {
+                "ok": False,
+                "error": "INVALID_RISK",
+                "reason": "estimated_risk_percent not numeric",
+            }
+        if not math.isfinite(risk_float):
+            return {
+                "ok": False,
+                "error": "INVALID_RISK",
+                "reason": "estimated_risk_percent not finite",
+            }
+        max_risk = config.get("max_risk_percent", 1.0)
+        if risk_float > max_risk:
+            return {
+                "ok": False,
+                "error": "INVALID_RISK",
+                "reason": f"risk {risk_float}% > max {max_risk}%",
+            }
+
+    return {"ok": True}
 
 
 def _garantir_memoria():
@@ -591,6 +692,10 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
 
     pre_operation_id = pre_operacao.get("id")
 
+    structural_gate = validate_zone_for_execution(pre_operacao)
+    if not structural_gate.get("ok"):
+        return _bloqueio(structural_gate.get("error", "STRUCTURAL_GATE_FAILED"), structural_gate)
+
     news_shield = avaliar_news_shield()
     if not news_shield.get("approved"):
         registrar_relatorio_operacao(
@@ -705,7 +810,7 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
     mt5_inicializado = False
 
     try:
-        import MetaTrader5 as mt5
+        import mt5linux_compat as mt5
 
         if not mt5.initialize():
             return _bloqueio("MT5_INITIALIZE_FAILED", str(mt5.last_error()))
@@ -734,6 +839,12 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
         if tick is None:
             mt5.shutdown()
             return _bloqueio("MT5_TICK_NOT_AVAILABLE", ativo)
+
+        symbol_info = mt5.symbol_info(ativo)
+
+        if symbol_info is None:
+            mt5.shutdown()
+            return _bloqueio("MT5_SYMBOL_INFO_NOT_AVAILABLE", ativo)
 
         spread = abs(tick.ask - tick.bid)
 
@@ -861,9 +972,40 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
         pre_operacao_execucao = dict(pre_operacao)
         pre_operacao_execucao["entrada"] = price
         pre_operacao_execucao["context_mode"] = timeframe_policy["mode"]
+
+        especificacoes = {
+            "contract_size": float(
+                getattr(symbol_info, "trade_contract_size", 0) or 0
+            ),
+            "volume_step": float(
+                getattr(symbol_info, "volume_step", 0) or 0
+            ),
+            "volume_min": float(
+                getattr(symbol_info, "volume_min", 0) or 0
+            ),
+            "volume_max": float(
+                getattr(symbol_info, "volume_max", 0) or 0
+            ),
+            "tick_size": float(
+                getattr(symbol_info, "trade_tick_size", 0) or 0
+            ),
+            "tick_value": float(
+                getattr(symbol_info, "trade_tick_value", 0) or 0
+            ),
+            "symbol_logic": ativo,
+            "symbol_resolved": ativo,
+            "account_currency": getattr(
+                getattr(account, "currency", None), "currency", ""
+            ),
+            "calculation_mode": getattr(
+                symbol_info, "trade_calc_mode", ""
+            ),
+        }
+
         plano_risco = calcular_plano_risco(
             pre_operacao_execucao,
             saldo=saldo_conta,
+            especificacoes=especificacoes,
         )
 
         if not plano_risco.get("approved"):
@@ -894,6 +1036,18 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
             )
 
         lote = plano_risco["lot"]
+
+        validacao_lote = _validar_lote_executor(plano_risco, config, symbol_info)
+        if not validacao_lote.get("ok"):
+            mt5.shutdown()
+            return _bloqueio(
+                validacao_lote["error"],
+                {
+                    "lot": lote,
+                    "reason": validacao_lote.get("reason"),
+                    "risk_plan": plano_risco,
+                },
+            )
 
         if lote > config["lot"]:
             mt5.shutdown()

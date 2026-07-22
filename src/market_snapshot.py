@@ -4,7 +4,7 @@
 
 import json
 from datetime import datetime
-import MetaTrader5 as mt5
+import mt5linux_compat as mt5
 
 def salvar_snapshot():
 
@@ -12,7 +12,7 @@ def salvar_snapshot():
         print("ERRO MT5")
         return
 
-    simbolo = "XAUUSD"
+    simbolo = "Gold_Spot"
 
     mt5.symbol_select(simbolo, True)
 

@@ -5,10 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 
-ROOT_DIR = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT_DIR / "src"))
-
-import lab_entry_policy
+import src.lab_entry_policy as lab_entry_policy
 
 
 def shadow(result, missing="FIBONACCI_ONDA_2_OU_4,CAPTURA_LIQUIDEZ"):

@@ -7,7 +7,7 @@ import csv
 from datetime import date, datetime
 from pathlib import Path
 
-from operation_report import registros_operacao_do_dia
+from src.operation_report import registros_operacao_do_dia
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent

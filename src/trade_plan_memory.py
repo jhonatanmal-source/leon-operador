@@ -4,8 +4,10 @@
 
 import os
 from datetime import datetime
+from pathlib import Path
 
-ARQUIVO = "C:/XAU_ELITE_AI/data/trade_plan_memory.csv"
+DATA_DIR = Path(__file__).resolve().parents[1] / "data"
+ARQUIVO = DATA_DIR / "trade_plan_memory.csv"
 
 def salvar_trade_plan(
     ativo,
@@ -16,10 +18,13 @@ def salvar_trade_plan(
     confianca
 ):
 
-    if not os.path.exists(ARQUIVO):
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    arquivo = DATA_DIR / ARQUIVO.name
+
+    if not os.path.exists(arquivo):
 
         with open(
-            ARQUIVO,
+            arquivo,
             "w",
             encoding="utf-8"
         ) as f:
@@ -29,7 +34,7 @@ def salvar_trade_plan(
             )
 
     with open(
-        ARQUIVO,
+        arquivo,
         "a",
         encoding="utf-8"
     ) as f:

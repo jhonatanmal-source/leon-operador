@@ -1,0 +1,191 @@
+CORREÇÃO FINAL B04-RISK — ESPECIFICAÇÕES REAIS E DEFESA DO EXECUTOR
+
+Execute somente esta correção complementar.
+
+O controle de risco possui 211 testes aprovados, mas ainda precisamos
+comprovar a integração das especificações reais do símbolo e fortalecer
+o executor contra lotes não finitos.
+
+Não alterar estratégia, SMC, Elliott, Fibonacci, ICT, Killzones, SL, TP ou RR.
+Não iniciar o operador.
+Não enviar ordens reais.
+Não conectar a conta REAL.
+Todos os testes MT5 devem usar mocks.
+
+FASE 1 — ESPECIFICAÇÕES DO SÍMBOLO NO PIPELINE
+
+Mapeie onde mt5_order_executor.py obtém o symbol_info do símbolo resolvido.
+
+No caminho real de execução, construir explicitamente as especificações
+utilizadas pelo risk_control_agent:
+
+- contract_size a partir de trade_contract_size;
+- volume_min;
+- volume_max;
+- volume_step;
+- tick_size a partir de trade_tick_size;
+- tick_value preferencialmente trade_tick_value_loss ou equivalente validado;
+- símbolo lógico;
+- símbolo resolvido;
+- moeda da conta, quando disponível;
+- modo de cálculo do símbolo, quando disponível.
+
+Passar essa estrutura explicitamente para:
+
+calcular_plano_risco(..., especificacoes=especificacoes)
+
+Não permitir que o pipeline de produção use silenciosamente defaults fixos
+quando symbol_info estiver disponível.
+
+Se symbol_info estiver ausente, incompleto ou inválido, bloquear com código
+explícito, sem usar contract_size=100 ou volume_step=0.01 como fallback.
+
+Defaults podem permanecer apenas para compatibilidade unitária claramente
+documentada, desde que nenhum fluxo de produção os utilize.
+
+FASE 2 — DEFESA INDEPENDENTE NO EXECUTOR
+
+Antes de usar o lote retornado pelo controle de risco, validar:
+
+- não é None;
+- não é bool;
+- é int, float ou Decimal aceitável;
+- é finito;
+- é maior que zero;
+- respeita volume_min;
+- respeita volume_max;
+- está alinhado ao volume_step;
+- não excede o limite da configuração;
+- risco efetivo informado é finito;
+- risco efetivo não excede o máximo permitido.
+
+Exemplo de comportamento obrigatório:
+
+- lot=nan → INVALID_LOT;
+- lot=inf → INVALID_LOT;
+- lot=-inf → INVALID_LOT;
+- lot=True → INVALID_LOT;
+- lot="0.01" → bloquear ou normalizar apenas por contrato explicitamente
+  definido; não converter silenciosamente;
+- lot=0 → INVALID_LOT;
+- lot negativo → INVALID_LOT;
+- lote fora do step → INVALID_LOT_STEP_MISMATCH.
+
+Nenhum desses casos pode alcançar order_send.
+
+FASE 3 — NORMALIZAÇÃO MATEMATICAMENTE CONSERVADORA
+
+Substituir ou fortalecer:
+
+math.floor(lote_bruto / volume_step + 1e-12)
+
+Preferir Decimal criado a partir de strings:
+
+from decimal import Decimal, ROUND_FLOOR
+
+steps = (
+    Decimal(str(lote_bruto)) / Decimal(str(volume_step))
+).to_integral_value(rounding=ROUND_FLOOR)
+
+lote_normalizado = steps * Decimal(str(volume_step))
+
+Depois converter somente no limite da integração, quando necessário.
+
+Adicionar pós-condições:
+
+- lote normalizado nunca maior que lote bruto, salvo min_lot aprovado;
+- lote alinhado ao volume_step;
+- lote finito;
+- risco efetivo recalculado;
+- risco efetivo dentro do máximo.
+
+FASE 4 — FÓRMULA MONETÁRIA
+
+Comprovar em código e testes se:
+
+distancia_stop * contract_size * lote
+
+é correta para o símbolo Gold_Spot e para a moeda atual da conta.
+
+Não assumir que todo símbolo chamado XAUUSD possui exatamente o mesmo modo
+de cálculo.
+
+Caso a conta não esteja na moeda de cotação ou o modo de cálculo exija
+conversão, usar uma fonte canônica como order_calc_profit mockada ou
+tick_size/tick_value validado.
+
+Não realizar consulta real nos testes.
+
+Documentar:
+
+- moeda da conta;
+- moeda base e moeda de lucro do símbolo, quando disponíveis;
+- contract_size;
+- modo de cálculo;
+- fórmula escolhida;
+- motivo técnico.
+
+FASE 5 — TESTES DE INTEGRAÇÃO
+
+Adicionar testes para:
+
+1. Executor passa contract_size real ao risk_control_agent.
+2. Executor passa volume_step real.
+3. Executor passa volume_min e volume_max reais.
+4. Símbolo com step=0.1 produz lote normalizado por 0.1.
+5. Alterar o step do mock altera o lote calculado.
+6. symbol_info ausente bloqueia.
+7. contract_size ausente bloqueia.
+8. volume_step ausente bloqueia.
+9. lot=nan retornado pelo risco bloqueia order_send.
+10. lot=inf bloqueia order_send.
+11. lot=-inf bloqueia order_send.
+12. lot=True bloqueia order_send.
+13. lot fora do step bloqueia order_send.
+14. risco efetivo NaN bloqueia.
+15. risco efetivo acima do máximo bloqueia.
+16. lote e risco válidos chegam ao próximo guard.
+17. conta REAL permanece bloqueada.
+18. nenhuma ordem real é enviada.
+19. nenhuma conexão MT5 real é feita.
+20. comportamento de Gold_Spot com contract_size=100 e step=0.01.
+21. comportamento com especificação de broker diferente.
+22. limite numérico imediatamente abaixo de um step nunca sobe.
+23. limite exatamente sobre o step permanece no step.
+24. Decimal não produz artefatos de precisão.
+
+FASE 6 — VALIDAÇÃO
+
+Executar:
+
+python -m pytest tests/test_risk_control_agent.py -q
+python -m pytest tests/test_mt5_order_executor.py -q
+python -m pytest tests -q -k "risk or risco or executor"
+python -m pytest tests --collect-only -q
+python -m compileall -q src
+python -m pytest tests -q
+
+Atualizar:
+
+tarefas/STATUS_B04_RISK.md
+
+Incluir:
+
+- origem real de cada especificação;
+- ponto em que elas são passadas ao controle de risco;
+- evidência de que defaults não são usados no pipeline real;
+- defesa de NaN/inf/bool no executor;
+- algoritmo Decimal;
+- fórmula monetária comprovada;
+- testes antes e depois;
+- evidência de que order_send foi somente mockado;
+- resultado completo da suíte.
+
+Não declarar APROVADO enquanto:
+
+- o executor aceitar NaN ou infinito;
+- o pipeline usar especificações fixas silenciosamente;
+- o lote puder ser promovido ao próximo step por tolerância numérica;
+- especificações inválidas permitirem continuar.
+
+Execute somente esta correção e pare.

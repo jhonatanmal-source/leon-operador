@@ -1,15 +1,9 @@
-import sys
 import unittest
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 import requests
 
-
-ROOT_DIR = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT_DIR / "src"))
-
-import telegram_engine
+import src.telegram_engine as telegram_engine
 
 
 class TelegramRetryTests(unittest.TestCase):

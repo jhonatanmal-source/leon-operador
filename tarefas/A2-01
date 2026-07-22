@@ -1,0 +1,67 @@
+Faça uma auditoria somente leitura complementar do item A02.
+
+Não altere nenhum arquivo de produção e não execute o operador.
+
+Objetivo:
+comprovar onde cada guarda do fluxo operacional é validado, sem exigir que
+live_operational_contract.py duplique responsabilidades de outros módulos.
+
+Mapeie a cadeia real desde:
+
+interest_zone_engine.py
+→ live_operational_contract.py
+→ PRE_OPERATION
+→ conselho operacional
+→ risco
+→ news shield
+→ limite diário
+→ classificação DEMO/REAL
+→ resolução do símbolo
+→ mt5_order_executor.py
+→ order_send
+
+Para cada requisito, informe:
+
+| Requisito | Arquivo/função responsável | Estado de aprovação | Evidência |
+|---|---|---|---|
+| Zona válida | | | |
+| Confirmação COMPLETE | | | |
+| Timeline observável e ordenada | | | |
+| Reteste/defesa/continuação | | | |
+| Janela válida | | | |
+| PRE_OPERATION válido | | | |
+| Conselho aprovado | | | |
+| Risco aprovado | | | |
+| Notícias liberadas | | | |
+| Limite diário disponível | | | |
+| Conta DEMO | | | |
+| Conta REAL bloqueada | | | |
+| Símbolo resolvido | | | |
+| READY_TO_EXECUTE | | | |
+| order_send após todos os guards | | | |
+
+Verifique também:
+
+1. Onde LEON_CAUSAL_CONTRACT_V2 está definido e consumido.
+2. Se live_operational_contract.py é somente um gate estrutural da zona.
+3. Se algum consumidor interpreta GATE_PASSED como autorização final de ordem.
+4. Se exceções e dados ausentes falham fechado.
+5. Se test_daily_limit_not_relevant e test_demo_account_allowed realmente
+   testam integração ou apenas confirmam que esses campos não pertencem ao gate.
+6. Se existe qualquer caminho até order_send sem PRE_OPERATION, conselho,
+   risco, notícias e bloqueio de conta REAL.
+
+Execute apenas testes de integração existentes relacionados ao fluxo.
+Não crie lógica nova nesta etapa.
+
+Acrescente o resultado ao final de:
+
+tarefas/STATUS_A02.md
+
+Use um destes resultados:
+
+- APROVADO: cadeia completa comprovada e responsabilidades corretamente separadas.
+- APROVADO_COM_RESSALVAS: gate estrutural aprovado, mas faltam testes de integração.
+- REPROVADO: existe bypass, duplicação ou autorização prematura.
+
+Ao terminar, pare.

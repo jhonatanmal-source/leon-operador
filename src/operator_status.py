@@ -7,9 +7,9 @@ import csv
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from autonomy_guard import status_autonomia
-from emotion_engine import get_emotional_state
-from telegram_config import CHAT_ID, TELEGRAM_ENABLED, TOKEN
+from src.autonomy_guard import status_autonomia
+from src.emotion_engine import get_emotional_state
+from src.telegram_config import CHAT_ID, TELEGRAM_ENABLED, TOKEN
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent

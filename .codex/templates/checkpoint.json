@@ -1,0 +1,20 @@
+{
+  "mission_id": "",
+  "mission_title": "",
+  "started_at": "",
+  "updated_at": "",
+  "current_phase": "",
+  "completed_steps": [],
+  "pending_steps": [],
+  "files_created": [],
+  "files_modified": [],
+  "tests_executed": [],
+  "test_results": "",
+  "blockers": [],
+  "warnings": [],
+  "next_action": "",
+  "repository_commit": "",
+  "dirty_files": [],
+  "selected_skills": [],
+  "rollback_reference": ""
+}

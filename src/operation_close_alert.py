@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from telegram_engine import enviar_mensagem
+from src.telegram_engine import enviar_mensagem
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent

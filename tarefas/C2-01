@@ -1,0 +1,218 @@
+MISSÃO C02 — CORRIGIR E VALIDAR telegram_config
+
+Execute somente o item C02.
+
+Leia primeiro:
+
+- tarefas/STATUS_A01.md
+- tarefas/STATUS_A02.md
+- tarefas/STATUS_A03.md
+- src/telegram_engine.py
+- todos os módulos relacionados ao Telegram
+- arquivos de configuração e exemplos de ambiente
+- testes relacionados ao Telegram
+
+Não alterar A01, A02 ou A03.
+Não iniciar o operador.
+Não conectar ao MT5.
+Não enviar ordens.
+Não enviar mensagens reais pelo Telegram.
+
+OBJETIVO
+
+Resolver definitivamente o import de telegram_config e garantir que a
+configuração do Telegram seja local ao projeto, segura, testável e
+independente do diretório atual de execução.
+
+FASE 1 — DIAGNÓSTICO
+
+Pesquise por:
+
+- telegram_config
+- telegram_engine
+- TELEGRAM_TOKEN
+- TELEGRAM_BOT_TOKEN
+- TELEGRAM_CHAT_ID
+- BOT_TOKEN
+- CHAT_ID
+- sendMessage
+- api.telegram.org
+
+Determine:
+
+1. Onde telegram_config é importado.
+2. Se o arquivo existe.
+3. Se o import depende de sys.path ou do diretório atual.
+4. Se tokens ou chat IDs estão escritos no código.
+5. Se há mais de uma fonte de configuração.
+6. Se o módulo envia mensagens durante importação.
+7. Se falha de Telegram pode interromper análise, operador ou executor.
+
+FASE 2 — CONFIGURAÇÃO CANÔNICA
+
+Implementar uma única fonte canônica de configuração.
+
+Preferência:
+
+- variáveis de ambiente para segredos;
+- módulo local apenas para leitura, validação e normalização;
+- arquivo .env somente local e ignorado pelo Git;
+- .env.example sem credenciais reais.
+
+Usar nomes canônicos documentados, por exemplo:
+
+- TELEGRAM_BOT_TOKEN
+- TELEGRAM_CHAT_ID
+- TELEGRAM_ENABLED
+
+Não registrar token completo em logs.
+Não salvar token ou chat ID real no repositório.
+Não imprimir URL contendo token.
+
+FASE 3 — IMPORTS
+
+Todos os imports devem funcionar como pacote:
+
+python -c "import src.telegram_engine"
+
+Não usar dependência frágil do tipo:
+
+sys.path.append(...)
+from telegram_config import ...
+
+Preferir import absoluto ou relativo consistente com a arquitetura do projeto.
+
+O import deve funcionar mesmo quando o comando for executado fora da raiz,
+desde que o pacote esteja corretamente disponível.
+
+FASE 4 — FAIL-SAFE
+
+Telegram é canal de notificação e não pode liberar execução.
+
+Quando estiver:
+
+- desabilitado;
+- sem token;
+- sem chat ID;
+- com timeout;
+- com erro HTTP;
+- com resposta inválida;
+
+o sistema deve:
+
+- retornar resultado explícito;
+- registrar erro sanitizado;
+- não expor segredo;
+- não liberar guard operacional;
+- não causar envio de ordem;
+- não derrubar desnecessariamente a análise principal.
+
+Defina estados claros, por exemplo:
+
+- TELEGRAM_DISABLED
+- TELEGRAM_NOT_CONFIGURED
+- TELEGRAM_SEND_FAILED
+- TELEGRAM_SENT
+
+Não simular sucesso quando a mensagem não for enviada.
+
+FASE 5 — COMPATIBILIDADE
+
+Preservar o formato atual das mensagens do LEON.
+
+Não reintroduzir:
+
+- Brain Score;
+- momentum;
+- indicadores extras;
+- alteração da estratégia;
+- mudanças no conteúdo operacional além do necessário para configuração.
+
+FASE 6 — TESTES OBRIGATÓRIOS
+
+Criar ou atualizar testes para:
+
+1. Import de src.telegram_engine.
+2. Telegram desabilitado.
+3. Token ausente.
+4. Chat ID ausente.
+5. Configuração válida.
+6. Timeout.
+7. Erro HTTP.
+8. Resposta inválida.
+9. Sucesso com chamada HTTP mockada.
+10. Token não aparece nos logs.
+11. Token não aparece em mensagens de erro.
+12. Nenhum envio durante import.
+13. Nenhuma chamada real à internet.
+14. Nenhuma chamada ao MT5.
+15. Nenhuma chamada a order_send.
+16. Falha no Telegram não autoriza execução.
+17. Execução a partir de diretório diferente.
+18. Compatibilidade com chamadas existentes.
+
+Todas as chamadas HTTP devem ser mockadas.
+
+FASE 7 — SEGREDOS E GIT
+
+Verifique:
+
+- .gitignore
+- arquivos .env
+- arquivos config
+- histórico atual do working tree
+
+Procure padrões de token sem exibir o valor completo no relatório.
+
+Caso encontre segredo real:
+
+- não copiar para o relatório;
+- informar apenas o arquivo e o tipo;
+- remover do arquivo versionado;
+- recomendar rotação da credencial.
+
+Não alterar histórico Git nesta missão.
+
+VALIDAÇÃO
+
+Antes:
+
+python -m pytest tests -q -k "telegram"
+python -c "import src.telegram_engine"
+
+Depois:
+
+python -m pytest tests -q -k "telegram"
+python -c "import src.telegram_engine"
+python -m pytest tests -q
+
+Também executar busca sanitizada por configuração duplicada e imports frágeis.
+
+RELATÓRIO
+
+Salvar em:
+
+tarefas/STATUS_C02.md
+
+Informar:
+
+1. Causa do import quebrado.
+2. Arquitetura anterior.
+3. Arquitetura final.
+4. Variáveis de ambiente canônicas.
+5. Arquivos modificados.
+6. Testes adicionados.
+7. Baseline anterior.
+8. Resultado final.
+9. Evidência de que nenhuma mensagem real foi enviada.
+10. Evidência de que nenhum segredo foi exposto.
+11. Evidência de que falha do Telegram não libera execução.
+12. Pendências.
+
+STATUS PERMITIDO:
+
+- APROVADO
+- APROVADO_COM_RESSALVAS
+- REPROVADO
+
+Execute somente C02 e pare.

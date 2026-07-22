@@ -2,11 +2,11 @@
 # OPERATOR COUNCIL
 # ===================================
 
-from operation_readiness import avaliar_prontidao_operacional
-from operator_status import obter_status_operadores
-from pre_operation_engine import resumo_pre_operacao
-from risk_control_agent import calcular_plano_risco, resumo_risco
-from top_down_agent import ultima_leitura_top_down
+from src.operation_readiness import avaliar_prontidao_operacional
+from src.operator_status import obter_status_operadores
+from src.pre_operation_engine import resumo_pre_operacao
+from src.risk_control_agent import calcular_plano_risco, resumo_risco
+from src.top_down_agent import ultima_leitura_top_down
 
 
 def _voto(nome, estado, decisao, motivo):

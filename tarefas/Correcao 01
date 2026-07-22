@@ -1,0 +1,507 @@
+# MISSÃO — CORREÇÃO E VALIDAÇÃO DO LEON XAU ELITE AI
+
+Atue como engenheiro de software sênior responsável pela correção do LEON XAU ELITE AI.
+
+O objetivo desta missão é eliminar módulos incompletos, corrigir imports quebrados, restaurar a coleta completa dos testes e aumentar a cobertura dos componentes críticos, sem alterar a estratégia operacional oficial.
+
+## RESTRIÇÕES OBRIGATÓRIAS
+
+Não alterar:
+
+* Estratégia SMC, Elliott, Fibonacci, ICT ou Killzones.
+* Regras de entrada, saída, SL, TP ou RR.
+* Limite máximo de três operações por dia.
+* Bloqueio de notícias de alto impacto.
+* Classificação de conta DEMO ou REAL.
+* Bloqueio absoluto de execução em conta REAL.
+* Contrato causal canônico `LEON_CAUSAL_CONTRACT_V2`.
+* Executor oficial `mt5_order_executor.py`.
+* Regras de PRE_OPERATION, conselho operacional e guards.
+* Formato das mensagens do Telegram, salvo para corrigir import.
+* Dados históricos ou arquivos de memória operacional existentes.
+
+Não inserir lógica falsa, dados simulados ou retornos fixos apenas para satisfazer testes.
+
+A execução deve permanecer exclusivamente em ambiente DEMO.
+
+---
+
+# FASE 0 — BASELINE E SEGURANÇA
+
+Antes de editar qualquer arquivo:
+
+1. Criar uma branch ou checkpoint de segurança.
+2. Registrar o estado atual do repositório.
+3. Executar:
+
+```bash
+python -m pytest tests -q
+```
+
+4. Registrar separadamente:
+
+   * testes aprovados;
+   * testes com falha;
+   * erros durante coleta;
+   * testes ignorados ou xfailed;
+   * duração da suíte.
+
+5. Verificar imports dos seguintes módulos:
+
+```bash
+python -c "import src.openrouter_client"
+python -c "import src.live_operational_contract"
+python -c "import src.performance_engine"
+python -c "import src.mt5_order_executor"
+python -c "import src.leon"
+```
+
+Não iniciar o operador e não enviar ordens ao MT5.
+
+---
+
+# FASE 1 — A01: OPENROUTER CLIENT
+
+## Problema
+
+O arquivo `src/openrouter_client.py` está ausente, incompleto ou incompatível com os consumidores existentes.
+
+## Procedimento
+
+1. Pesquisar todas as referências a:
+
+```text
+openrouter_client
+OpenRouterClient
+openrouter_brain
+```
+
+2. Determinar se `openrouter_client.py` ainda faz parte do contrato atual ou se foi substituído por `openrouter_brain.py`.
+
+3. Escolher apenas uma solução:
+
+### Solução A — Compatibilidade
+
+Caso módulos ativos ainda importem `openrouter_client`, implementar um adaptador fino para o cliente canônico atual.
+
+O adaptador não pode duplicar:
+
+* configuração;
+* autenticação;
+* retry;
+* seleção de modelo;
+* fallback;
+* tratamento de erros.
+
+### Solução B — Remoção
+
+Caso seja legado, atualizar os imports dos consumidores e remover o módulo com segurança.
+
+4. Nunca registrar ou expor chaves de API.
+
+5. Implementar testes para:
+
+* importação;
+* configuração ausente;
+* erro HTTP;
+* timeout;
+* resposta inválida;
+* resposta válida;
+* nenhum vazamento de segredo nos logs.
+
+## Critério de aprovação
+
+* Nenhum import quebrado.
+* Um único caminho canônico para OpenRouter.
+* Nenhuma lógica duplicada.
+* Testes novos aprovados.
+
+---
+
+# FASE 2 — A02: LIVE OPERATIONAL CONTRACT
+
+## Problema
+
+`src/live_operational_contract.py` possui lógica vazia, parcial ou apenas estrutural.
+
+## Regra central
+
+Este módulo não pode criar um segundo contrato operacional.
+
+Ele deve consumir ou representar corretamente o contrato canônico:
+
+```text
+LEON_CAUSAL_CONTRACT_V2
+```
+
+## Verificações obrigatórias
+
+Validar, sem modificar a estratégia:
+
+* região de interesse válida;
+* toque na zona;
+* confirmação estrutural completa;
+* ordem temporal observável;
+* reteste;
+* defesa;
+* continuação;
+* janela de entrada;
+* invalidação;
+* PRE_OPERATION válido;
+* conselho operacional;
+* risco;
+* bloqueio de notícias;
+* limite diário;
+* conta DEMO;
+* símbolo resolvido;
+* estado `READY_TO_EXECUTE`.
+
+Estados incompletos, ambíguos ou `UNRESOLVED` não podem liberar execução.
+
+Não transformar a existência de CHOCH ou BOS isolado em autorização de entrada.
+
+## Testes mínimos
+
+Criar testes para:
+
+1. Contrato incompleto.
+2. Timeline ausente.
+3. Timeline fora de ordem.
+4. Confirmação `UNRESOLVED`.
+5. Janela de entrada expirada.
+6. Zona invalidada.
+7. PRE_OPERATION expirado.
+8. Conta REAL.
+9. Notícias de alto impacto.
+10. Limite de trades atingido.
+11. Contrato completo e conta DEMO.
+12. Compatibilidade com `LEON_CAUSAL_CONTRACT_V2`.
+
+## Critério de aprovação
+
+* Nenhum caminho paralelo ao contrato canônico.
+* Nenhuma liberação com evidência incompleta.
+* Conta REAL sempre bloqueada.
+* Testes aprovados.
+
+---
+
+# FASE 3 — A03: PERFORMANCE ENGINE
+
+## Problema
+
+`src/performance_engine.py` possui lógica falsa, incompleta ou baseada em valores fixos.
+
+## Implementação esperada
+
+O módulo deve calcular métricas exclusivamente a partir de registros reais e válidos.
+
+As fontes devem ser identificadas no próprio projeto, por exemplo:
+
+* memória de trades;
+* resultados fechados;
+* replay;
+* relatórios persistidos.
+
+Não inventar trades e não usar valores padrão como se fossem resultados reais.
+
+## Métricas mínimas
+
+Quando houver dados suficientes:
+
+* total de trades;
+* vitórias;
+* derrotas;
+* breakeven;
+* win rate;
+* resultado em R;
+* média de R;
+* expectativa;
+* profit factor;
+* drawdown máximo;
+* sequência máxima de perdas;
+* resultado por direção;
+* resultado por sessão ou Killzone, quando o dado existir.
+
+Quando um campo não estiver disponível, retornar estado explícito como:
+
+```text
+INSUFFICIENT_DATA
+NOT_AVAILABLE
+```
+
+Não retornar zero de forma enganosa.
+
+## Testes mínimos
+
+* conjunto vazio;
+* um trade vencedor;
+* um trade perdedor;
+* breakeven;
+* profit factor sem perdas;
+* drawdown;
+* sequência de perdas;
+* registros inválidos;
+* campos ausentes;
+* divisão por zero;
+* ordenação temporal;
+* dados reais sem mutação.
+
+## Critério de aprovação
+
+* Nenhuma métrica fixa.
+* Nenhum dado inventado.
+* Resultados reproduzíveis.
+* Tratamento correto de dados insuficientes.
+* Testes aprovados.
+
+---
+
+# FASE 4 — C02: TELEGRAM CONFIG
+
+## Problema
+
+Import de `telegram_config` quebrado ou dependente de path externo.
+
+## Procedimento
+
+1. Identificar todos os imports.
+2. Determinar o local canônico da configuração.
+3. Transformar o import em caminho absoluto de pacote.
+4. Separar configuração de segredo.
+5. Ler token e chat ID por variável de ambiente ou configuração segura.
+6. Não inserir credenciais no repositório.
+7. Preservar o comportamento atual das mensagens.
+
+## Testes
+
+* import sem Telegram configurado;
+* configuração ausente;
+* token ausente;
+* modo desabilitado;
+* inicialização válida;
+* nenhum segredo nos logs.
+
+---
+
+# FASE 5 — B03: ERROS DE COLETA
+
+Analisar os três testes que não coletam.
+
+Referências esperadas:
+
+```text
+src.backtest
+contextual_memory
+src.live_causal_confirmation
+```
+
+Para cada referência, classificar como:
+
+* módulo ativo ausente;
+* módulo renomeado;
+* módulo movido;
+* teste legado;
+* import incorreto;
+* funcionalidade substituída.
+
+Não criar arquivos vazios ou módulos fictícios.
+
+## Decisão
+
+* Se o contrato ainda for usado pela produção: criar ou restaurar implementação real.
+* Se foi substituído: migrar o teste para o módulo canônico.
+* Se o teste estiver obsoleto: removê-lo com justificativa documentada.
+
+## Critério de aprovação
+
+```bash
+python -m pytest tests --collect-only -q
+```
+
+Deve finalizar sem erro de coleta.
+
+---
+
+# FASE 6 — B04: COBERTURA CRÍTICA
+
+Criar testes prioritariamente nesta ordem:
+
+1. `src/mt5_order_executor.py`
+2. `src/risk_control_agent.py`
+3. `src/leon.py`
+
+## Regras dos testes
+
+* Utilizar mocks para MT5.
+* Proibir chamadas reais de `order_send`.
+* Proibir inicialização operacional real.
+* Proibir alteração de conta.
+* Proibir escrita destrutiva em memória de produção.
+* Testar sucesso e falha.
+* Testar bloqueios e fail-closed.
+
+## Casos obrigatórios do executor
+
+* conta REAL;
+* conta DEMO;
+* MT5 desconectado;
+* símbolo indisponível;
+* volume inválido;
+* SL inválido;
+* TP inválido;
+* RR insuficiente;
+* notícias;
+* limite diário;
+* PRE_OPERATION inválido;
+* conselho negado;
+* contrato causal incompleto;
+* resposta rejeitada pelo broker;
+* timeout;
+* ordem aprovada com `order_send` mockado.
+
+## Casos obrigatórios de risco
+
+* risco normal;
+* saldo inválido;
+* stop zero;
+* stop negativo;
+* lote mínimo;
+* lote máximo;
+* limite diário;
+* perda diária;
+* exposição existente;
+* resultado não finito.
+
+## Casos obrigatórios de `leon.py`
+
+* inicialização;
+* dependência indisponível;
+* análise sem zona;
+* zona sem confirmação;
+* setup bloqueado;
+* setup completo;
+* notícias;
+* conta REAL;
+* conta DEMO;
+* exceção interna;
+* estado degradado;
+* nenhuma ordem enviada acidentalmente.
+
+---
+
+# FASE 7 — C01: LIMPEZA DE TESTES EM SRC
+
+Localizar:
+
+```text
+src/teste_*.py
+src/test_*.py
+```
+
+Para cada arquivo:
+
+* mover para `tests/`, quando for teste válido;
+* converter import para pacote;
+* remover somente quando estiver comprovadamente obsoleto;
+* registrar motivo da remoção.
+
+Não apagar arquivos sem análise.
+
+---
+
+# VALIDAÇÃO FINAL
+
+Executar:
+
+```bash
+python -m pytest tests --collect-only -q
+python -m pytest tests -q
+python -m pytest tests -q --disable-warnings
+```
+
+Executar também os testes críticos de forma isolada:
+
+```bash
+python -m pytest tests -q -k "openrouter or operational_contract or performance"
+python -m pytest tests -q -k "executor or risk or leon"
+python -m pytest tests -q -k "telegram"
+```
+
+Realizar busca por implementações temporárias:
+
+```text
+TODO
+FIXME
+pass
+NotImplementedError
+mock permanente
+valor fixo
+return True
+return {}
+return []
+```
+
+A presença desses padrões deve ser analisada; não remover cegamente.
+
+---
+
+# RELATÓRIO OBRIGATÓRIO
+
+Salvar o relatório em:
+
+```text
+tarefas/RELATORIO_CORRECAO_P1_P2_P3.md
+```
+
+O relatório deve conter:
+
+1. Status geral.
+2. Baseline anterior.
+3. Resultado final.
+4. Arquivos alterados.
+5. Arquivos criados.
+6. Arquivos removidos.
+7. Motivo de cada mudança.
+8. Testes adicionados.
+9. Testes aprovados.
+10. Testes com falha.
+11. Erros de coleta restantes.
+12. Cobertura antes e depois.
+13. Riscos encontrados.
+14. Evidências de que nenhuma ordem real foi enviada.
+15. Evidências de que conta REAL permanece bloqueada.
+16. Pendências não resolvidas.
+17. Próxima ação recomendada.
+
+Ao final, apresentar uma tabela:
+
+| ID  | Status | Solução aplicada | Testes | Evidência |
+| --- | ------ | ---------------- | ------ | --------- |
+| A01 |        |                  |        |           |
+| A02 |        |                  |        |           |
+| A03 |        |                  |        |           |
+| B03 |        |                  |        |           |
+| B04 |        |                  |        |           |
+| C01 |        |                  |        |           |
+| C02 |        |                  |        |           |
+
+## STATUS FINAL PERMITIDO
+
+Utilizar apenas um:
+
+```text
+APROVADO
+APROVADO_COM_RESSALVAS
+REPROVADO
+```
+
+Não declarar `APROVADO` enquanto houver:
+
+* erro de coleta;
+* teste crítico falhando;
+* lógica falsa;
+* módulo vazio;
+* risco de ordem real;
+* bypass do contrato causal;
+* segredo exposto.

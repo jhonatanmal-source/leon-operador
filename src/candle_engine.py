@@ -2,12 +2,12 @@
 # CANDLE ENGINE
 # ===================================
 
-import MetaTrader5 as mt5
+import mt5linux_compat as mt5
 import pandas as pd
 
 
 def obter_candles(
-    simbolo="XAUUSD",
+    simbolo="Gold_Spot",
     timeframe=mt5.TIMEFRAME_M15,
     quantidade=100
 ):

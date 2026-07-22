@@ -2,7 +2,7 @@
 # LEON CONFIG
 # ===================================
 
-MARKET = "XAUUSD"
+MARKET = "Gold_Spot"
 
 TIMEFRAME_MAIN = "M15"
 TIMEFRAME_CONTEXT = "H4"

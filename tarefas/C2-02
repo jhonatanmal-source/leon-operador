@@ -1,0 +1,209 @@
+CORREÇÃO FINAL C02 — REMOVER MUTACÃO GLOBAL DE sys.path
+
+O relatório C02 identificou corretamente o import quebrado, mas a solução
+adotada em src/__init__.py não é aceitável como arquitetura final:
+
+    sys.path.insert(0, src_dir)
+
+Essa alteração global pode provocar colisões, módulos duplicados, dependência
+da ordem de importação e diferenças entre ambiente de teste e produção.
+
+Execute somente esta correção complementar do C02.
+
+OBJETIVO
+
+Remover toda alteração de sys.path de src/__init__.py e usar imports reais
+de pacote, sem perder compatibilidade necessária.
+
+REGRAS
+
+- Não iniciar o operador.
+- Não conectar ao MT5.
+- Não enviar mensagem real ao Telegram.
+- Não enviar ordens.
+- Não expor ou alterar credenciais reais.
+- Todas as chamadas HTTP devem continuar mockadas.
+- Não alterar estratégia, risco ou pipeline operacional.
+- Não usar sys.path.append ou sys.path.insert como solução.
+- Não adicionar aliases artificiais em sys.modules.
+- Não copiar telegram_config.py para outro local.
+
+FASE 1 — REMOVER O CONTORNO
+
+Restaurar src/__init__.py para não alterar sys.path.
+
+Ele pode ficar vazio ou conter apenas metadados seguros do pacote.
+
+Remover:
+
+    sys.path.insert(...)
+    sys.path.append(...)
+
+FASE 2 — IMPORTS CANÔNICOS
+
+Alterar os imports internos do pacote para imports relativos.
+
+Exemplo:
+
+    from .telegram_config import carregar_configuracao
+
+em vez de:
+
+    from telegram_config import carregar_configuracao
+
+Aplicar pelo menos em:
+
+- src/telegram_engine.py
+- src/operator_status.py
+- src/leon_panel.py
+
+Verificar também todos os demais consumidores de telegram_config.
+
+Se operator_status.py ou leon_panel.py possuírem outros imports de módulos
+irmãos, como:
+
+    from autonomy_guard import ...
+    from operator_status import ...
+
+migrar esses imports internos necessários para o formato relativo:
+
+    from .autonomy_guard import ...
+
+Não fazer migração cega do repositório inteiro. Alterar apenas os módulos
+necessários para que os três imports como pacote sejam autossuficientes.
+
+FASE 3 — EXECUÇÃO LEGADA
+
+Não preservar bare imports por meio de alteração global do sys.path.
+
+O modo oficial deve ser:
+
+    import src.telegram_engine
+
+ou:
+
+    python -m src.nome_do_modulo
+
+Atualizar testes que utilizem:
+
+    sys.path.insert(...)
+    import telegram_engine
+
+para utilizarem:
+
+    import src.telegram_engine
+
+Se existir algum script de entrada que execute arquivos internos diretamente,
+documentar e ajustar o script para usar python -m, em vez de inserir src/ no
+sys.path.
+
+FASE 4 — EVITAR IDENTIDADE DUPLA
+
+Criar teste provando que o pacote não carrega simultaneamente:
+
+- telegram_config
+- src.telegram_config
+
+Após importar src.telegram_engine, verificar que a configuração foi carregada
+pela identidade canônica src.telegram_config.
+
+Não aceitar dois objetos de módulo apontando para o mesmo arquivo.
+
+FASE 5 — TESTE EM DIRETÓRIO DIFERENTE
+
+Criar teste por subprocesso executado fora da raiz do projeto.
+
+O teste deve:
+
+1. usar o diretório raiz do projeto no PYTHONPATH;
+2. mudar o cwd para um diretório temporário;
+3. executar:
+
+    python -c "import src.telegram_engine"
+
+4. confirmar código de saída zero;
+5. confirmar que nenhuma mensagem HTTP foi enviada durante o import.
+
+Testar também:
+
+    python -c "import src.operator_status"
+    python -c "import src.leon_panel"
+
+Caso leon_panel dependa de biblioteca gráfica indisponível no ambiente,
+distinguir corretamente erro de dependência opcional de erro de import interno.
+
+FASE 6 — CONFIGURAÇÃO
+
+Manter as variáveis existentes por compatibilidade:
+
+- LEON_TELEGRAM_TOKEN
+- LEON_TELEGRAM_CHAT_ID
+- LEON_TELEGRAM_ENABLED
+
+Os fallbacks legados podem permanecer documentados.
+
+Esclarecer no relatório que existem múltiplas camadas de carregamento:
+
+1. variáveis de ambiente;
+2. .env local;
+3. config.ini local.
+
+Isso é uma cadeia de precedência, não uma única fonte física.
+
+Confirmar que:
+
+- .env não está rastreado;
+- config.ini não está rastreado;
+- nenhum segredo aparece em logs;
+- nenhuma credencial é impressa no relatório.
+
+Não exibir valores reais durante a verificação.
+
+FASE 7 — TESTES
+
+Executar:
+
+python -c "import src.telegram_engine"
+python -c "import src.operator_status"
+python -c "import src.leon_panel"
+
+python -m pytest tests/test_telegram_engine.py -q
+python -m pytest tests -q -k "telegram"
+python -m pytest tests -q
+
+Adicionar testes para:
+
+1. src/__init__.py não modifica sys.path.
+2. src.telegram_engine usa src.telegram_config.
+3. telegram_config não é carregado como módulo de topo.
+4. Import funciona em cwd diferente.
+5. Import não realiza HTTP.
+6. Import não realiza MT5.
+7. Import não chama order_send.
+8. Testes não inserem src/ diretamente em sys.path.
+9. Configuração continua funcionando por variáveis de ambiente.
+10. Falhas continuam retornando códigos explícitos e sanitizados.
+
+RELATÓRIO
+
+Atualizar:
+
+tarefas/STATUS_C02.md
+
+Informar:
+
+- por que sys.path.insert foi removido;
+- imports relativos aplicados;
+- módulos alterados;
+- compatibilidade preservada;
+- resultado dos imports em diretório diferente;
+- evidência de identidade única do módulo;
+- testes antes e depois;
+- evidência de ausência de HTTP real;
+- evidência de ausência de MT5 e order_send;
+- pendências.
+
+Não declarar APROVADO enquanto src/__init__.py modificar sys.path ou enquanto
+os módulos dependerem desse efeito colateral para serem importados.
+
+Execute somente esta correção C02 e pare.
