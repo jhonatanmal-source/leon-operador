@@ -57,6 +57,8 @@ from src.operation_report import registrar_relatorio_operacao
 from src.operation_close_alert import send_operation_close_alert
 from src.operation_batch_review import process_operation_batches
 from src.mt5_operation_close_monitor import check_mt5_closed_operations
+from src.smc_study_engine import analyze_smc_context
+from src.elliott_study_engine import study_elliott_context
 from src.telegram_alert import (
     enviar_alerta_conflito_operadores,
     enviar_alerta_dados_antigos,
@@ -79,6 +81,7 @@ COLLECTOR_STATE_FILE = DATA_DIR / "collector_state.txt"
 ANALYSIS_STATE_FILE = DATA_DIR / "analysis_state.txt"
 DEMO_EXECUTION_STATE_FILE = DATA_DIR / "demo_execution_state.txt"
 OPERATOR_HEARTBEAT_FILE = DATA_DIR / "operator_heartbeat.json"
+STUDY_STATE_FILE = DATA_DIR / "study_state.txt"
 
 
 def _ler_inteiro_config(secao, chave, padrao, minimo=1):
@@ -221,6 +224,8 @@ def _carregar_operador_config():
             "telegram_status_on_start": False,
             "demo_execution_enabled": False,
             "demo_execution_interval_minutes": 15,
+            "study_enabled": True,
+            "study_interval_minutes": 30,
             "market_session_enabled": True,
             "market_symbol": "XAUUSD",
             "market_tick_stale_seconds": 180,
@@ -283,6 +288,15 @@ def _carregar_operador_config():
             "demo_execution_interval_minutes",
             15,
         ),
+        "study_enabled": operador.get(
+            "study_enabled",
+            "true",
+        ).lower() == "true",
+        "study_interval_minutes": _ler_inteiro_config(
+            operador,
+            "study_interval_minutes",
+            30,
+        ),
         "market_session_enabled": operador.get(
             "market_session_enabled",
             "true",
@@ -318,6 +332,7 @@ def _resetar_ciclo_apos_reabertura():
         COLLECTOR_STATE_FILE,
         ANALYSIS_STATE_FILE,
         DEMO_EXECUTION_STATE_FILE,
+        STUDY_STATE_FILE,
         STALE_DATA_STATE_FILE,
     ):
         try:
@@ -527,6 +542,33 @@ def _deve_executar_demo(agora, intervalo_minutos):
 
     segundos = (agora - ultima_execucao).total_seconds()
 
+    return segundos >= intervalo_minutos * 60
+
+
+def _ler_ultimo_estudo():
+    if not STUDY_STATE_FILE.exists():
+        return None
+    conteudo = _ler_texto_estado(STUDY_STATE_FILE)
+    if not conteudo:
+        return None
+    try:
+        return datetime.fromisoformat(conteudo)
+    except ValueError:
+        return None
+
+
+def _salvar_estudo(agora):
+    _escrever_texto_atomico(
+        STUDY_STATE_FILE,
+        agora.isoformat(timespec="seconds"),
+    )
+
+
+def _deve_estudar(agora, intervalo_minutos):
+    ultimo_estudo = _ler_ultimo_estudo()
+    if ultimo_estudo is None:
+        return True
+    segundos = (agora - ultimo_estudo).total_seconds()
     return segundos >= intervalo_minutos * 60
 
 
@@ -1035,6 +1077,105 @@ def executar_ordem_demo_programada(forcar=False):
     return resultado
 
 
+def executar_estudo_continuo(forcar=False):
+
+    agora = datetime.now()
+    config = _carregar_operador_config()
+
+    if (
+        not forcar
+        and not _deve_estudar(
+            agora,
+            config["study_interval_minutes"],
+        )
+    ):
+        return {
+            "ok": False,
+            "error": "STUDY_INTERVAL_WAIT",
+        }
+
+    try:
+        import csv
+
+        candle_arquivo = DATA_DIR / "candle_history.csv"
+        if not candle_arquivo.exists():
+            registrar_log(
+                "OPERATOR | estudo continuo: candle_history.csv nao encontrado"
+            )
+            return {"ok": False, "error": "CANDLE_FILE_MISSING"}
+
+        candles = []
+        with open(candle_arquivo, "r", encoding="utf-8") as f:
+            leitor = csv.reader(f, delimiter=";")
+            for linha in leitor:
+                if len(linha) >= 6:
+                    try:
+                        candles.append({
+                            "time": linha[0],
+                            "symbol": linha[1],
+                            "open": float(linha[2]),
+                            "high": float(linha[3]),
+                            "low": float(linha[4]),
+                            "close": float(linha[5]),
+                        })
+                    except (ValueError, IndexError):
+                        continue
+
+        if len(candles) < 5:
+            registrar_log(
+                "OPERATOR | estudo continuo: dados insuficientes "
+                f"({len(candles)} candles)"
+            )
+            return {"ok": False, "error": "INSUFFICIENT_DATA"}
+
+        market_data = {"candles": candles}
+
+        estudo_smc = analyze_smc_context(market_data)
+        estudo_elliott = study_elliott_context(market_data)
+
+        from src.brain_context_memory import registrar_contexto_cerebro
+
+        resumo = {
+            "smc_liquidity": estudo_smc.get("liquidity", {}).get("ok"),
+            "smc_bos": estudo_smc.get("bos", {}).get("context"),
+            "smc_choch": estudo_smc.get("choch", {}).get("context"),
+            "elliott_wave": estudo_elliott.get("wave_context", {}).get("ok"),
+            "elliott_impulse": estudo_elliott.get("impulse", {}).get("ok"),
+            "elliott_abc": estudo_elliott.get("abc_correction", {}).get("ok"),
+        }
+
+        registrar_contexto_cerebro(
+            "estudo_continuo",
+            resumo,
+        )
+
+        _salvar_estudo(agora)
+
+        registrar_log(
+            "OPERATOR | estudo continuo concluido: "
+            f"SMC_bos={resumo['smc_bos']}, "
+            f"Elliott_wave={resumo['elliott_wave']}, "
+            f"candles={len(candles)}"
+        )
+
+        return {
+            "ok": True,
+            "smc": estudo_smc,
+            "elliott": estudo_elliott,
+            "candles_count": len(candles),
+        }
+
+    except Exception as erro:
+        registrar_erro(
+            f"OPERATOR | excecao no estudo continuo: {erro}"
+        )
+        return {
+            "ok": False,
+            "error": "STUDY_EXCEPTION",
+            "details": str(erro),
+        }
+
+
 def executar_alerta_conflito(forcar=False):
 
     assinatura = _assinatura_conflito()
@@ -1159,6 +1300,8 @@ def iniciar_operador():
     print(f"Horario: {config['daily_learning_time']}")
     print(f"Status Telegram: {config['telegram_status_enabled']}")
     print(f"Execucao demo: {config['demo_execution_enabled']}")
+    print(f"Estudo continuo: {config['study_enabled']}")
+    print(f"Intervalo estudo: {config['study_interval_minutes']} min")
     print(f"Sessao pela corretora: {config['market_session_enabled']}")
     print(f"Simbolo monitorado: {config['market_symbol']}")
     if autonomia["active"]:
@@ -1244,6 +1387,12 @@ def iniciar_operador():
                 resultados["analysis"] = _executar_tarefa_segura(
                     "analise_programada",
                     executar_analise_programada,
+                )
+
+            if config["study_enabled"]:
+                resultados["study"] = _executar_tarefa_segura(
+                    "estudo_continuo",
+                    executar_estudo_continuo,
                 )
 
             if config["demo_execution_enabled"] and autonomia["active"]:
