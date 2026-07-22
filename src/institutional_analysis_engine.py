@@ -357,8 +357,9 @@ def detect_liquidity_event(candles, lookback=20):
 
 
 def _event_pair(events):
+    # Primeiro: tenta par CHOCH+BOS (reversao)
     for bos in reversed(events):
-        if not bos["type"].startswith("BOS_") or not bos["displacement"]:
+        if not bos["type"].startswith("BOS_"):
             continue
         expected_choch = f"CHOCH_{bos['direction']}"
         choch = next(
@@ -371,6 +372,10 @@ def _event_pair(events):
         )
         if choch:
             return choch, bos
+    # Segundo: se nao achou par, aceita BOS sozinho (tendencia)
+    for bos in reversed(events):
+        if bos["type"].startswith("BOS_"):
+            return None, bos
     return None, None
 
 
@@ -424,10 +429,13 @@ def analyze_smc_context(candles):
         poi_score += 10
 
     confirmed = (
-        fvg is not None
-        and fvg["type"] == expected_fvg
-        and not fvg["mitigated"]
-        and poi_score >= 50
+        poi_score >= 35
+        and (
+            (choch_event is not None and bos_event is not None)
+            or (bos_event is not None and liquidity_aligned)
+            or (fvg is not None and fvg["type"] == expected_fvg and not fvg["mitigated"])
+            or (bos_event is not None and _structure_bias(pivots) == direction)
+        )
     )
 
     return {
@@ -435,7 +443,7 @@ def analyze_smc_context(candles):
         "smc": direction if confirmed else "NEUTRO",
         "bos": bos_event["type"],
         "bos_event": bos_event,
-        "choch": choch_event["type"],
+        "choch": choch_event["type"] if choch_event else "SEM_CHOCH",
         "choch_event": choch_event,
         "fvg": fvg["type"] if fvg else "SEM_FVG_CONFIRMADO",
         "fvg_zone": fvg,

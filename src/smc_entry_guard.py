@@ -54,19 +54,46 @@ def validate_smc_entry(direction, smc, bos, choch):
             "reason": "INVALID_ORDER_DIRECTION",
         }
 
-    checks = {
-        "smc": smc == expected["smc"],
-        "bos": bos == expected["bos"],
-        "choch": choch == expected["choch"],
-    }
-    missing = [name.upper() for name, valid in checks.items() if not valid]
+    smc_ok = smc == expected["smc"]
+    bos_ok = bos == expected["bos"]
+    choch_ok = choch == expected["choch"]
+
+    if smc_ok and bos_ok and choch_ok:
+        return {
+            "approved": True,
+            "reason": "SMC_STRUCTURE_CONFIRMED_CHOCH_BOS",
+            "expected": expected,
+            "received": {
+                "smc": smc,
+                "bos": bos,
+                "choch": choch,
+            },
+        }
+
+    if smc_ok and bos_ok:
+        return {
+            "approved": True,
+            "reason": "SMC_STRUCTURE_CONFIRMED_BOS",
+            "expected": expected,
+            "received": {
+                "smc": smc,
+                "bos": bos,
+                "choch": choch,
+            },
+        }
+
+    missing = []
+    if not smc_ok:
+        missing.append("SMC")
+    if not bos_ok:
+        missing.append("BOS")
+    if not choch_ok:
+        missing.append("CHOCH")
 
     return {
-        "approved": not missing,
+        "approved": False,
         "reason": (
-            "SMC_STRUCTURE_CONFIRMED"
-            if not missing
-            else f"SMC_STRUCTURE_NOT_CONFIRMED:{','.join(missing)}"
+            f"SMC_STRUCTURE_NOT_CONFIRMED:{','.join(missing)}"
         ),
         "expected": expected,
         "received": {
