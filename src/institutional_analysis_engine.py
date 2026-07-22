@@ -237,7 +237,7 @@ def _displacement(candles, index):
     baseline = median(recent_bodies) if recent_bodies else 0
     return (
         candle_range > 0
-        and body / candle_range >= 0.6
+        and body / candle_range >= 0.35
         and (baseline == 0 or body >= baseline * 1.15)
     )
 
