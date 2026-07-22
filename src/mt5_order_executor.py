@@ -720,13 +720,13 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
         return _bloqueio("SMC_STRUCTURE_NOT_CONFIRMED", smc_guard)
 
     sessao = identificar_sessao()
-    if sessao == "FORA_DAS_SESSOES":
+    if sessao == "MANUTENCAO":
         registrar_relatorio_operacao(
             pre_operacao,
             decisao="BLOQUEAR",
-            motivo="OUTSIDE_ACTIVE_SESSIONS",
+            motivo="MAINTENANCE_BREAK",
         )
-        return _bloqueio("OUTSIDE_ACTIVE_SESSIONS", sessao)
+        return _bloqueio("MAINTENANCE_BREAK", sessao)
 
     top_down = ultima_leitura_top_down()
     timeframe_policy = evaluate_timeframe_policy(

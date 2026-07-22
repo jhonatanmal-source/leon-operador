@@ -56,11 +56,7 @@ def validate_setup_a_plus(context):
         "fvg_do_deslocamento": context.get("fvg") == expected_fvg,
         "poi_qualificado": float(context.get("poi_score", 0)) >= 70,
         "top_down_alinhado": context.get("top_down") == "ALINHADO",
-        "sessao_permitida": context.get("session") in [
-            "LONDRES",
-            "NY_ABERTURA",
-            "NY_TARDE",
-        ],
+        "sessao_permitida": context.get("session") != "MANUTENCAO",
         "rr_minimo": float(context.get("rr", 0)) >= 2,
         "sem_noticia_alto_impacto": not bool(context.get("high_impact_news")),
         "nao_lateral": context.get("market_state") != "LATERAL",
@@ -138,8 +134,8 @@ def score_operational_context(context):
     if context.get("top_down") == "ALINHADO":
         score += 10
 
-    if context.get("session") not in ["LONDRES", "NY_ABERTURA", "NY_TARDE"]:
-        score -= 20
+    if context.get("session") == "MANUTENCAO":
+        score -= 50
 
     if float(context.get("rr", 0)) >= 3:
         score += 15

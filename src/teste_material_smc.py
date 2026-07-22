@@ -28,7 +28,7 @@ class MaterialSmcTests(unittest.TestCase):
             "fvg": "FVG_BEARISH",
             "poi_score": 45,
             "top_down": "MISTO",
-            "session": "FORA_DAS_SESSOES",
+            "session": "ASIA",
             "rr": 3,
             "high_impact_news": False,
             "market_state": "TENDENCIA",

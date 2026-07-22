@@ -57,23 +57,34 @@ def _garantir_arquivo():
 
 
 def identificar_sessao(agora=None):
+    """Identifica a sessao Forex atual baseado no horario BRT (UTC-3).
 
+    Forex opera 24h de domingo 22:00 GMT ate sexta 22:00 GMT.
+    Sessões baseadas nos killzones ICT para XAU/USD:
+
+    BRT (UTC-3)   | GMT         | Sessao          | Liquidez
+    20:00-04:00   | 23:00-08:00 | ASIA (Tokyo)    | Baixa
+    04:00-09:00   | 07:00-12:00 | LONDRES         | Alta
+    09:00-13:00   | 12:00-16:00 | OVERLAP_LONDRES_NY | MAXIMA
+    13:00-19:00   | 16:00-22:00 | NY              | Alta
+    19:00-20:00   | 22:00-23:00 | MANUTENCAO      | Break diario
+    """
     agora = agora or datetime.now()
     hora = agora.time()
-
-    if time(0, 0) <= hora < time(4, 0):
-        return "ASIA"
 
     if time(4, 0) <= hora < time(9, 0):
         return "LONDRES"
 
     if time(9, 0) <= hora < time(13, 0):
-        return "NY_ABERTURA"
+        return "OVERLAP_LONDRES_NY"
 
-    if time(13, 0) <= hora < time(17, 0):
-        return "NY_TARDE"
+    if time(13, 0) <= hora < time(19, 0):
+        return "NY"
 
-    return "FORA_DAS_SESSOES"
+    if time(19, 0) <= hora < time(20, 0):
+        return "MANUTENCAO"
+
+    return "ASIA"  # 20:00 - 04:00 BRT
 
 
 def _ler_contextos():
