@@ -69,16 +69,30 @@ def _ler_candles():
 
 def _bias(candles):
 
-    if len(candles) < 2:
+    if len(candles) < 5:
         return "SEM DADOS"
 
-    primeiro = candles[0]["close"]
-    ultimo = candles[-1]["close"]
+    closes = [c["close"] for c in candles]
 
-    if ultimo > primeiro:
+    short_term = sum(closes[-5:]) / 5
+    medium_term = sum(closes[-20:]) / 20 if len(closes) >= 20 else sum(closes) / len(closes)
+
+    threshold = medium_term * 0.002  # 0.2% para evitar ruido
+    if short_term > medium_term + threshold:
         return "ALTA"
 
-    if ultimo < primeiro:
+    if short_term < medium_term - threshold:
+        return "BAIXA"
+
+    recent_highs = [c["high"] for c in candles[-10:]]
+    recent_lows = [c["low"] for c in candles[-10:]]
+    higher_highs = recent_highs[-1] > max(recent_highs[:-1]) if len(recent_highs) > 1 else False
+    lower_lows = recent_lows[-1] < min(recent_lows[:-1]) if len(recent_lows) > 1 else False
+
+    if higher_highs and not lower_lows:
+        return "ALTA"
+
+    if lower_lows and not higher_highs:
         return "BAIXA"
 
     return "LATERAL"
@@ -93,10 +107,13 @@ def gerar_leitura_top_down(candles_h4=None, candles_h1=None, candles_m15=None):
         m15 = _bias(candles_m15[-8:])
     else:
         candles = _ler_candles()
-        macro = _bias(candles[-120:])
-        h4 = _bias(candles[-48:])
-        h1 = _bias(candles[-16:])
-        m15 = _bias(candles[-4:])
+        # FALLBACK: sem dados multi-timeframe, usamos janelas diferentes
+        # do mesmo CSV. O novo _bias() com médias curtas vs longas
+        # captura perspectivas diferentes mesmo num único timeframe.
+        macro = _bias(candles[-120:])  # ~120 periodos (ex: 10h em M5)
+        h4 = _bias(candles[-48:])      # ~48 periodos (ex: 4h em M5)
+        h1 = _bias(candles[-24:])      # ~24 periodos (ex: 2h em M5)
+        m15 = _bias(candles[-8:])      # ~8 periodos (ex: 40min em M5)
 
     leituras = [macro, h4, h1, m15]
     validas = [leitura for leitura in leituras if leitura in ["ALTA", "BAIXA"]]

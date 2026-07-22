@@ -158,6 +158,10 @@ def _recommendations(batch_number, analyses):
                 adjustment = 0
                 reason = "Amostra ainda sem vantagem clara."
 
+            applied = (
+                result["total"] >= 10
+                and action in ("AUMENTAR_CONFIANCA_RECOMENDADA", "REDUZIR_CONFIANCA_RECOMENDADA")
+            )
             recommendations.append({
                 "batch": batch_number,
                 "dimension": dimension,
@@ -167,7 +171,7 @@ def _recommendations(batch_number, analyses):
                 "action": action,
                 "suggested_adjustment": adjustment,
                 "reason": reason,
-                "applied_automatically": False,
+                "applied_automatically": applied,
             })
 
     return recommendations
@@ -236,10 +240,14 @@ def _format_report(review):
     else:
         lines.append("- Sem amostra minima para ajuste de confianca.")
 
+    applied_count = sum(1 for r in review["recommendations"] if r.get("applied_automatically"))
+    if applied_count > 0:
+        lines.append(f"- {applied_count} recomendacao(oes) foram aplicadas automaticamente.")
+    else:
+        lines.append("- Nenhuma recomendacao foi aplicada automaticamente.")
     lines.extend([
         "",
         "Protecao",
-        "- Nenhuma recomendacao foi aplicada automaticamente.",
         "- Risco, BOS, CHOCH, setup e regras operacionais permanecem inalterados.",
         "=================================",
     ])

@@ -1,34 +1,38 @@
 LEON | REVISAO DE 20 OPERACOES
 =================================
 Bloco: 1
-Periodo: 2026-06-16T21:09:18 ate 2026-06-17T09:27:53
+Periodo: 2026-07-22T13:43:23 ate 2026-07-22T14:38:47
 Operacoes: 20
-Vitorias: 13
-Derrotas: 7
-Taxa de acerto: 65.0%
-RR medio: 1:2.66
-Resultado liquido simulado: 8.58R
+Vitorias: 1
+Derrotas: 19
+Taxa de acerto: 5.0%
+RR medio: 1:3.0
+Resultado liquido simulado: -17.5R
 
 Melhores contextos
-- direcao=VENDA | 100.0% em 4 operacoes
-- elliott=ONDA C | 100.0% em 4 operacoes
-- sessao=LONDRES | 100.0% em 3 operacoes
-- top_down=ALINHADO | 100.0% em 3 operacoes
-- rr=RR_3_OU_MAIS | 81.82% em 11 operacoes
+- top_down=MISTO | 10.0% em 10 operacoes
+- sessao=NY_TARDE | 6.25% em 16 operacoes
+- direcao=COMPRA | 5.0% em 20 operacoes
+- smc=NEUTRO | 5.0% em 20 operacoes
+- elliott=CORRECAO | 5.0% em 20 operacoes
 
 Contextos para revisar
-- bos=BOS_BULLISH | 33.33% em 3 operacoes
-- bos=BOS_BEARISH | 33.33% em 3 operacoes
-- choch=CHOCH_BULLISH | 33.33% em 3 operacoes
-- rr=RR_2_A_3 | 44.44% em 9 operacoes
-- direcao=COMPRA | 56.25% em 16 operacoes
+- top_down=ALINHADO | 0.0% em 10 operacoes
+- sessao=NY_ABERTURA | 0.0% em 4 operacoes
+- direcao=COMPRA | 5.0% em 20 operacoes
+- smc=NEUTRO | 5.0% em 20 operacoes
+- elliott=CORRECAO | 5.0% em 20 operacoes
 
 Recomendacoes de confianca
-- MANTER_EM_OBSERVACAO: direcao=COMPRA (56.25%, amostra 16, ajuste sugerido +0)
-- MANTER_EM_OBSERVACAO: elliott=ONDA 3 (56.25%, amostra 16, ajuste sugerido +0)
-- MANTER_EM_OBSERVACAO: setup=SETUP MODERADO (65.0%, amostra 20, ajuste sugerido +0)
-- AUMENTAR_CONFIANCA_RECOMENDADA: rr=RR_3_OU_MAIS (81.82%, amostra 11, ajuste sugerido +5)
-- MANTER_EM_OBSERVACAO: rr=RR_2_A_3 (44.44%, amostra 9, ajuste sugerido +0)
+- REDUZIR_CONFIANCA_RECOMENDADA: sessao=NY_TARDE (6.25%, amostra 16, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: top_down=MISTO (10.0%, amostra 10, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: top_down=ALINHADO (0.0%, amostra 10, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: direcao=COMPRA (5.0%, amostra 20, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: elliott=CORRECAO (5.0%, amostra 20, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: setup=SETUP FRACO (5.0%, amostra 20, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: bos=BOS_BULLISH (5.0%, amostra 20, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: choch=CHOCH_BULLISH (5.0%, amostra 20, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: rr=RR_3_OU_MAIS (5.0%, amostra 20, ajuste sugerido -5)
 
 Protecao
 - Nenhuma recomendacao foi aplicada automaticamente.

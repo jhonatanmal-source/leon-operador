@@ -11,3 +11,5 @@ Cada arquivo `YYYY-MM-DD.md` contém os aprendizados do dia.
 | Data | Resumo |
 |------|--------|
 | 2026-07-22 | Correção P1 MT5, startup operador, autonomia scope, rpyc |
+| 2026-07-22 | Implementação detecção correções ABC Elliott no operacional |
+| 2026-07-22 | Expansão multigrau M15 — micro-correções ABC |

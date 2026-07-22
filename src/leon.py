@@ -56,7 +56,7 @@ from setup_reputation import avaliar_setup
 from decision_guard import validar_decisao
 
 from brain_engine import analisar_cerebro
-from confidence_engine import calcular_confianca
+from confidence_engine import calcular_confianca, calcular_confianca_ajustada
 
 from trade_memory import salvar_memoria_trade
 from brain_memory import registrar_brain
@@ -343,6 +343,11 @@ if mercado_operacional.get("ok"):
         else tendencia
     )
     elliott_context = analyze_elliott_context(candles_h1, tendencia_elliott)
+    # --- Análise multigrau M15: micro-correções dentro da estrutura H1 ---
+    tendencia_m15 = (
+        elliott_context.get("direction") or tendencia_elliott
+    )
+    elliott_m15_context = analyze_elliott_context(candles_m15, tendencia_m15)
     evaluate_shadow_trades(candles_m15)
 else:
     candles_m15 = []
@@ -367,12 +372,19 @@ else:
         "invalidation": None,
         "alternative": "SEM_DADOS",
     }
+    elliott_m15_context = {
+        "label": "SEM_DADOS",
+        "phase": "INDEFINIDA",
+        "valid": False,
+        "confidence": 0,
+    }
 
 smc = smc_context["smc"]
 bos = smc_context["bos"]
 choch = smc_context["choch"]
 fvg = smc_context["fvg"]
 elliott = elliott_context["label"]
+elliott_m15 = elliott_m15_context.get("label", "SEM_DADOS")
 
 print()
 print("===================================")
@@ -400,6 +412,24 @@ fibonacci_setup = elliott_context.get("fibonacci_setup") or {}
 print(f"FIBONACCI   : {fibonacci_setup.get('reason', 'SEM_DADOS')}")
 print(f"RETRACAO    : {fibonacci_setup.get('retracement')}")
 print(f"PROJECAO    : {fibonacci_setup.get('projection')}")
+
+# --- Exibição M15 (micro-estrutura) ---
+print()
+print("===================================")
+print("ELLIOTT M15 (MICRO ESTRUTURA)")
+print("===================================")
+print(f"CONTAGEM    : {elliott_m15}")
+print(f"FASE        : {elliott_m15_context['phase']}")
+print(f"VALIDA      : {elliott_m15_context['valid']}")
+print(f"CONFIANCA   : {elliott_m15_context['confidence']}")
+if elliott_m15_context.get("correction_detected"):
+    abc_m15 = elliott_m15_context.get("abc_detection") or {}
+    print(f"ABC M15     : {abc_m15.get('subtype', '')}")
+    print(f"C em        : ${abc_m15.get('c_price', 0)}")
+elif elliott_m15_context.get("fibonacci_setup", {}).get("valid"):
+    fib_m15 = elliott_m15_context["fibonacci_setup"]
+    print(f"FIB M15     : {fib_m15.get('target_wave', '')} (conf {elliott_m15_context['confidence']})")
+
 liquidez_alinhada = (
     smc_context["liquidity"].get("direction")
     == smc_context.get("direction")
@@ -446,7 +476,14 @@ brain_score = analisar_cerebro(
     qualidade,
     reputacao
 )
-confianca = calcular_confianca(brain_score)
+brain_score_ajustado, confianca = calcular_confianca_ajustada(
+    brain_score,
+    smc=smc,
+    elliott=elliott,
+)
+if brain_score_ajustado != brain_score:
+    brain_score = brain_score_ajustado
+    print(f"CONFIANCA AJUSTADA: brain_score {brain_score_ajustado} → confianca {confianca}")
 
 direcao_candidata = infer_candidate_direction(
     smc_context.get("direction"),

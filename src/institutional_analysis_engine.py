@@ -2,6 +2,170 @@ from statistics import median
 
 from src.elliott_study_engine import validate_impulse_points
 
+# ─── Detecção de Correção ABC ────────────────────────────────────────────────
+
+
+def _abc_quad(pivots, direction):
+    """Extrai 4 pivots alternados (w0, a, b, c) para formar uma correção ABC.
+
+    w0 → a = onda A
+    a  → b = onda B
+    b  → c = onda C
+
+    Para direction='ALTA' (correção baixista): espera HIGH, LOW, HIGH, LOW.
+    Para direction='BAIXA' (correção altista):  espera LOW, HIGH, LOW, HIGH.
+
+    Retorna (w0_price, a_price, b_price, c_price) ou None.
+    """
+    if direction == "ALTA":
+        expected = ["HIGH", "LOW", "HIGH", "LOW"]
+    elif direction == "BAIXA":
+        expected = ["LOW", "HIGH", "LOW", "HIGH"]
+    else:
+        return None
+
+    if len(pivots) < 4:
+        return None
+
+    types = [p["type"] for p in pivots]
+
+    # Procura o padrão nos últimos pivots primeiro (mais recentes)
+    for start in range(len(types) - 3, -1, -1):
+        if types[start:start + 4] == expected:
+            prices = [pivots[start + i]["price"] for i in range(4)]
+            return tuple(prices)
+
+    return None
+
+
+def _abc_subtype(w0, a, b, c, direction):
+    """Classifica o subtipo de correção ABC com base nos 4 preços (w0, a, b, c).
+
+    w0 = início da onda A
+    a  = fim da onda A / início da onda B
+    b  = fim da onda B / início da onda C
+    c  = fim da onda C
+    """
+    wave_a = abs(a - w0)
+    wave_b = abs(b - a)
+    wave_c = abs(c - b)
+
+    if wave_a == 0:
+        return "INDEFINIDO"
+
+    b_retrace = wave_b / wave_a
+    c_ratio = wave_c / wave_a
+
+    # --- Zigzag: onda C estende além de A, B retrace moderado ---
+    if 0.382 <= b_retrace <= 0.886 and c_ratio >= 1.0:
+        return "ZIGZAG"
+
+    # --- Flat: B retrace profundo (quase até a origem de A), C ≈ A ---
+    if b_retrace >= 0.886 and 0.886 <= c_ratio <= 1.15:
+        return "FLAT"
+
+    # --- Flat estendido: B retrace profundo, C um pouco além de A ---
+    if b_retrace >= 0.886 and 1.15 < c_ratio <= 1.382:
+        return "FLAT_ESTENDIDO"
+
+    # --- Range / correção curta: C não alcança extensão de A ---
+    if c_ratio < 0.886:
+        return "RANGE"
+
+    return "INDEFINIDO"
+
+
+def detect_abc_correction(pivots, direction):
+    """Detecta estrutura de correção ABC (3 ondas) nos pivots.
+
+    Retorna um dict com:
+        valid          — bool
+        subtype        — ZIGZAG | FLAT | FLAT_ESTENDIDO | RANGE | INDEFINIDO
+        w0_price       — preço de início da onda A
+        a_price        — preço fim da onda A / início da onda B
+        b_price        — preço fim da onda B / início da onda C
+        c_price        — preço fim da onda C
+        b_retrace      — retracement de B em relação a A (ratio)
+        c_extension    — extensão de C em relação a A (ratio)
+        confidence     — 0..100
+        reason         — string descritiva
+        invalidation   — preço que invalida a contagem
+    """
+    result = {
+        "valid": False,
+        "subtype": "",
+        "w0_price": None,
+        "a_price": None,
+        "b_price": None,
+        "c_price": None,
+        "b_retrace": None,
+        "c_extension": None,
+        "confidence": 0,
+        "reason": "SEM_ABC_DETECTADO",
+        "invalidation": None,
+    }
+
+    quad = _abc_quad(pivots, direction)
+    if quad is None:
+        return result
+
+    w0, a, b, c = quad
+    wave_a = abs(a - w0)
+
+    if wave_a == 0:
+        return result
+
+    wave_b = abs(b - a)
+    wave_c = abs(c - b)
+    b_retrace = wave_b / wave_a
+    c_extension = wave_c / wave_a
+
+    subtype = _abc_subtype(w0, a, b, c, direction)
+    if subtype == "INDEFINIDO":
+        result.update({
+            "valid": False,
+            "subtype": subtype,
+            "w0_price": w0,
+            "a_price": a,
+            "b_price": b,
+            "c_price": c,
+            "b_retrace": round(b_retrace, 4),
+            "c_extension": round(c_extension, 4),
+            "confidence": 20,
+            "reason": "ABC_SEM_CLAREZA_DE_SUBTIPO",
+            "invalidation": b,
+        })
+        return result
+
+    # Calcula confiança baseada na clareza estrutural
+    confidence = 45  # base para qualquer ABC detectado
+    if subtype == "ZIGZAG":
+        confidence = 55
+        if 1.272 <= c_extension <= 1.618:
+            confidence = 65  # proporção áurea ideal
+    elif subtype == "FLAT":
+        confidence = 50
+        if 0.95 <= c_extension <= 1.05:
+            confidence = 60  # flat perfeito
+
+    result.update({
+        "valid": True,
+        "subtype": subtype,
+        "w0_price": w0,
+        "a_price": a,
+        "b_price": b,
+        "c_price": c,
+        "b_retrace": round(b_retrace, 4),
+        "c_extension": round(c_extension, 4),
+        "confidence": confidence,
+        "reason": f"ABC_{subtype}_DETECTADO",
+        "invalidation": b,  # perda de B invalida contagem ABC
+    })
+    return result
+
+
+# ─── Fim Detecção de Correção ABC ────────────────────────────────────────────
+
 
 def _closed_candles(candles):
     return candles[:-1] if len(candles) > 1 else candles
@@ -74,7 +238,7 @@ def _displacement(candles, index):
     return (
         candle_range > 0
         and body / candle_range >= 0.6
-        and (baseline == 0 or body >= baseline * 1.35)
+        and (baseline == 0 or body >= baseline * 1.15)
     )
 
 
@@ -263,7 +427,7 @@ def analyze_smc_context(candles):
         fvg is not None
         and fvg["type"] == expected_fvg
         and not fvg["mitigated"]
-        and poi_score >= 70
+        and poi_score >= 50
     )
 
     return {
@@ -377,6 +541,14 @@ def analyze_elliott_context(candles, trend):
         "alternative": "CORRECAO_COMPLEXA",
         "pivots": pivots,
         "fibonacci_setup": analyze_fibonacci_wave_setup(pivots, direction),
+        # --- Campos para InterestZone (mapeamento direto) ---
+        "scenario_present": False,
+        "scenario_type": "",
+        "possible_wave_c": False,
+        "impulse_possible": False,
+        "correction_possible": False,
+        "correction_detected": False,
+        "correction_subtype": "",
     }
     if direction is None or len(points) < 4:
         return result
@@ -390,6 +562,9 @@ def analyze_elliott_context(candles, trend):
             "confidence": 80,
             "invalidation": points[-1],
             "alternative": "CONTAGEM_INVALIDA_SE_PERDER_ORIGEM_DA_CORRECAO",
+            "scenario_present": True,
+            "scenario_type": fibonacci_setup["target_wave"],
+            "impulse_possible": True,
         })
         return result
 
@@ -405,6 +580,9 @@ def analyze_elliott_context(candles, trend):
                 "invalidation": points[-2],
                 "validation": validation,
                 "alternative": "TRUNCAMENTO_OU_CORRECAO_INICIANDO",
+                "scenario_present": True,
+                "scenario_type": "IMPULSO_COMPLETO",
+                "impulse_possible": True,
             })
             return result
 
@@ -416,13 +594,38 @@ def analyze_elliott_context(candles, trend):
             "confidence": 70,
             "invalidation": points[-2],
             "alternative": "PERNA_C_DE_ZIGUE_ZAGUE",
+            "scenario_present": True,
+            "scenario_type": "IMPULSO_EM_DESENVOLVIMENTO",
+            "impulse_possible": True,
         })
         return result
 
+    # --- Tenta detecção estruturada de ABC antes do fallback genérico ---
+    abc = detect_abc_correction(pivots, direction)
+    if abc["valid"]:
+        result.update({
+            "label": f"ABC_{abc['subtype']}",
+            "phase": f"CORRECAO_{abc['subtype']}",
+            "valid": True,
+            "confidence": abc["confidence"],
+            "invalidation": abc["invalidation"],
+            "alternative": "IMPULSO_PODE_ESTAR_SE_FORMANDO",
+            "abc_detection": abc,
+            "scenario_present": True,
+            "scenario_type": f"ABC_{abc['subtype']}",
+            "possible_wave_c": True,
+            "correction_possible": True,
+            "correction_detected": True,
+            "correction_subtype": abc["subtype"],
+        })
+        return result
+
+    # --- Fallback genérico: padrão corretivo não identificado ---
     result.update({
         "label": "CORRECAO",
         "phase": "ABC_OU_COMBINACAO",
         "confidence": 35,
         "invalidation": points[-1] if points else None,
+        "correction_possible": True,
     })
     return result

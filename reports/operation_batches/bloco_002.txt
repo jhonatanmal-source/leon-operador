@@ -1,0 +1,40 @@
+LEON | REVISAO DE 20 OPERACOES
+=================================
+Bloco: 2
+Periodo: 2026-07-22T14:38:47 ate 2026-07-22T16:24:30
+Operacoes: 20
+Vitorias: 0
+Derrotas: 20
+Taxa de acerto: 0.0%
+RR medio: 1:3.0
+Resultado liquido simulado: -20.0R
+
+Melhores contextos
+- direcao=COMPRA | 0.0% em 20 operacoes
+- smc=NEUTRO | 0.0% em 20 operacoes
+- setup=SETUP FRACO | 0.0% em 20 operacoes
+- bos=BOS_BULLISH | 0.0% em 20 operacoes
+- choch=CHOCH_BULLISH | 0.0% em 20 operacoes
+
+Contextos para revisar
+- direcao=COMPRA | 0.0% em 20 operacoes
+- smc=NEUTRO | 0.0% em 20 operacoes
+- setup=SETUP FRACO | 0.0% em 20 operacoes
+- bos=BOS_BULLISH | 0.0% em 20 operacoes
+- choch=CHOCH_BULLISH | 0.0% em 20 operacoes
+
+Recomendacoes de confianca
+- REDUZIR_CONFIANCA_RECOMENDADA: sessao=NY_TARDE (0.0%, amostra 19, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: top_down=MISTO (0.0%, amostra 19, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: direcao=COMPRA (0.0%, amostra 20, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: elliott=ONDA 5 CONCLUIDA (0.0%, amostra 12, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: elliott=CORRECAO (0.0%, amostra 8, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: setup=SETUP FRACO (0.0%, amostra 20, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: bos=BOS_BULLISH (0.0%, amostra 20, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: choch=CHOCH_BULLISH (0.0%, amostra 20, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: rr=RR_3_OU_MAIS (0.0%, amostra 20, ajuste sugerido -5)
+
+Protecao
+- Nenhuma recomendacao foi aplicada automaticamente.
+- Risco, BOS, CHOCH, setup e regras operacionais permanecem inalterados.
+=================================
