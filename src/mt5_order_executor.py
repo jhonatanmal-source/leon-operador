@@ -28,7 +28,7 @@ from src.smc_entry_guard import validate_smc_entry
 from src.top_down_agent import ultima_leitura_top_down
 from src.autonomy_guard import status_autonomia
 from src.timeframe_policy import evaluate_timeframe_policy
-from src.interest_zone_engine import validate_zone_for_execution
+from src.interest_zone_engine import validate_zone_for_execution, InterestZoneStore
 
 # _mt5_exec is resolved dynamically inside executar_ordem_mt5_pre_operacao()
 # to allow test mocking. It is not imported at module level.
@@ -664,6 +664,24 @@ def _rr_no_preco_execucao(direcao, preco_execucao, stop, take_profit):
     }
 
 
+def _is_lab_learning_zone(pre_operacao: dict, *, store: InterestZoneStore | None = None) -> bool:
+    """Check if the pre-operation's zone is a LABORATORIO (learning) zone.
+
+    When ``learning_lab_enabled`` and ``demo_only`` are both active, pre-ops
+    created by the bootstrap Rota de Laboratório carry a zone with
+    ``zone_source="LABORATORIO"``.  Those pre-ops are allowed to bypass
+    structural alignment guards (SMC, timeframe policy) so the system can
+    learn by operating in demo with minimal risk.
+    """
+    region_id = str(pre_operacao.get("region_id") or "").strip()
+    if not region_id:
+        return False
+    zone = (store or InterestZoneStore()).get(region_id)
+    if zone is None:
+        return False
+    return str(zone.get("zone_source", "")).upper() == "LABORATORIO"
+
+
 def executar_ordem_mt5_pre_operacao(forcar=False):
 
     config = _execution_config()
@@ -699,6 +717,25 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
     if not structural_gate.get("ok"):
         return _bloqueio(structural_gate.get("error", "STRUCTURAL_GATE_FAILED"), structural_gate)
 
+    # ── Modo LAB_LEARNING ────────────────────────────────────────────────
+    # Pre-ops com zona de laboratorio (zone_source=LABORATORIO) podem pular
+    # guards de alinhamento estrutural (SMC guard, timeframe_policy) para
+    # que o sistema aprenda operando em demo com risco minimo (lote 0.01).
+    # Todos os guards de SEGURANCA permanecem ativos (conta real, daily
+    # loss, noticias, conselho, limite diario, spread maximo).
+    lab_learning_mode = (
+        config["demo_only"]
+        and config["learning_lab_enabled"]
+        and _is_lab_learning_zone(pre_operacao)
+    )
+    if lab_learning_mode:
+        registrar_log(
+            f"MT5 ORDER | LAB_LEARNING: pre-op {pre_operation_id} "
+            "usando zona de laboratorio — guards de alinhamento "
+            "substituidos por regras do laboratorio."
+        )
+
+    # ── News Shield (sempre ativo) ───────────────────────────────────────
     news_shield = avaliar_news_shield()
     if not news_shield.get("approved"):
         registrar_relatorio_operacao(
@@ -708,19 +745,28 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
         )
         return _bloqueio("HIGH_IMPACT_NEWS_WINDOW", news_shield)
 
-    smc_guard = validate_smc_entry(
-        pre_operacao.get("direcao"),
-        pre_operacao.get("smc"),
-        pre_operacao.get("bos"),
-        pre_operacao.get("choch"),
-    )
-    if not smc_guard["approved"]:
-        registrar_relatorio_operacao(
-            pre_operacao,
-            decisao="BLOQUEAR",
-            motivo="SMC_STRUCTURE_NOT_CONFIRMED",
+    # ── SMC Guard ────────────────────────────────────────────────────────
+    # Pulado em modo LAB_LEARNING — a zona de laboratorio substitui a
+    # necessidade de confirmacao SMC para fins de aprendizado em demo.
+    if not lab_learning_mode:
+        smc_guard = validate_smc_entry(
+            pre_operacao.get("direcao"),
+            pre_operacao.get("smc"),
+            pre_operacao.get("bos"),
+            pre_operacao.get("choch"),
         )
-        return _bloqueio("SMC_STRUCTURE_NOT_CONFIRMED", smc_guard)
+        if not smc_guard["approved"]:
+            registrar_relatorio_operacao(
+                pre_operacao,
+                decisao="BLOQUEAR",
+                motivo="SMC_STRUCTURE_NOT_CONFIRMED",
+            )
+            return _bloqueio("SMC_STRUCTURE_NOT_CONFIRMED", smc_guard)
+    else:
+        registrar_log(
+            f"MT5 ORDER | LAB_LEARNING: SMC guard skipped para "
+            f"pre-op {pre_operation_id} (zona de laboratorio)"
+        )
 
     sessao = identificar_sessao()
     if sessao == "MANUTENCAO":
@@ -731,24 +777,40 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
         )
         return _bloqueio("MAINTENANCE_BREAK", sessao)
 
+    # ── Timeframe Policy (Top-Down) ──────────────────────────────────────
+    # Pulado em modo LAB_LEARNING — o laboratorio nao exige alinhamento
+    # top-down completo para operacoes de aprendizado em demo.
     top_down = ultima_leitura_top_down()
-    timeframe_policy = evaluate_timeframe_policy(
-        top_down,
-        pre_operacao.get("direcao"),
-    )
-    if not timeframe_policy["approved"]:
-        detalhes = {
-            "direction": pre_operacao.get("direcao"),
-            "alignment": top_down.get("alinhamento"),
-            "m15_trigger": top_down.get("m15_gatilho"),
-            "policy": timeframe_policy,
-        }
-        registrar_relatorio_operacao(
-            pre_operacao,
-            decisao="BLOQUEAR",
-            motivo="TOP_DOWN_M15_NOT_ALIGNED",
+    if lab_learning_mode:
+        registrar_log(
+            f"MT5 ORDER | LAB_LEARNING: timeframe_policy skipped para "
+            f"pre-op {pre_operation_id} (zona de laboratorio)"
         )
-        return _bloqueio("TOP_DOWN_M15_NOT_ALIGNED", detalhes)
+        # Cria um timeframe_policy ficticio apenas para log/rrastro
+        timeframe_policy = {
+            "approved": True,
+            "mode": "LAB_LEARNING",
+            "risk_factor": 0.5,
+            "reason": "LABORATORIO: aprendizado em demo sem alinhamento top-down",
+        }
+    else:
+        timeframe_policy = evaluate_timeframe_policy(
+            top_down,
+            pre_operacao.get("direcao"),
+        )
+        if not timeframe_policy["approved"]:
+            detalhes = {
+                "direction": pre_operacao.get("direcao"),
+                "alignment": top_down.get("alinhamento"),
+                "m15_trigger": top_down.get("m15_gatilho"),
+                "policy": timeframe_policy,
+            }
+            registrar_relatorio_operacao(
+                pre_operacao,
+                decisao="BLOQUEAR",
+                motivo="TOP_DOWN_M15_NOT_ALIGNED",
+            )
+            return _bloqueio("TOP_DOWN_M15_NOT_ALIGNED", detalhes)
 
     try:
         brain_score = float(pre_operacao.get("brain_score") or 0)
