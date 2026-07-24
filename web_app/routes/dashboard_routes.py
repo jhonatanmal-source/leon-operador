@@ -1,10 +1,39 @@
-from flask import Blueprint, render_template
+import json
+from flask import Blueprint, render_template, jsonify
 
 from web_app.database.db import get_connection
 from web_app.services.auth_service import current_user, login_required
 
 
 dashboard_bp = Blueprint("dashboard", __name__)
+
+
+@dashboard_bp.get("/lab_progress")
+@login_required
+def lab_progress():
+    """Retorna progresso do laboratorio de estudo em JSON."""
+    try:
+        from src.lab_entry_policy import shadow_evidence, _progressive_min_closed
+        from src.learning_bootstrap import metrica_bias
+
+        evidence = shadow_evidence()
+        bias = metrica_bias()
+        effective_min_closed = _progressive_min_closed(evidence["winrate"])
+
+        return jsonify({
+            "shadow": evidence,
+            "effective_min_closed": effective_min_closed,
+            "progress_pct": round(
+                evidence["closed"] / effective_min_closed * 100, 1
+            ) if effective_min_closed else 0,
+            "bias": bias,
+            "lab_ready": (
+                evidence["closed"] >= effective_min_closed
+                and evidence["winrate"] >= 50
+            ),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @dashboard_bp.get("/")

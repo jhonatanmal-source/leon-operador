@@ -1283,6 +1283,125 @@ class InterestZoneStore:
                 temporary.unlink(missing_ok=True)
 
 
+def create_lab_zone(
+    symbol: str,
+    direction: str,
+    entry_price: float,
+    stop_price: float,
+    tp1_price: float,
+    tp2_price: float,
+    brain_score: int | float,
+    pre_operation_id: str = "",
+    *,
+    store: InterestZoneStore | None = None,
+) -> dict[str, Any] | None:
+    """Create a temporary zone for laboratory (bootstrap) operation.
+
+    The zone uses the current price as region bounds (tight band around
+    entry) and contains all fields required by *validate_zone_for_execution*
+    and *evaluate_live_confirmation_gate* so that the structural gate passes
+    for demo-only , lab-approved entries.
+
+    **Safety** — the zone carries ``zone_source=\"LABORATORIO\"`` so other
+    system components can distinguish it from production SMC zones.
+    """
+    if not symbol or not direction:
+        return None
+    if direction not in ("COMPRA", "VENDA", "BUY", "SELL", "BULLISH", "BEARISH"):
+        return None
+    entry = float(entry_price)
+    low = min(entry, float(stop_price)) if stop_price else entry - 10.0
+    high = max(entry, float(stop_price)) if stop_price else entry + 10.0
+    if high <= low:
+        high = low + 20.0
+
+    now = _utc_now()
+    region_type = "DEMANDA" if direction in ("COMPRA", "BUY", "BULLISH") else "OFERTA"
+    canon_dir = "BULLISH" if direction in ("COMPRA", "BUY", "BULLISH") else "BEARISH"
+    rid = _region_id(symbol, f"LAB_{region_type}", canon_dir, "M15", low, high)
+
+    zone = {
+        "region_id": rid,
+        "cycle_id": f"lab-{now[:19]}",
+        "analysis_id": "lab-bootstrap",
+        "pre_operation_id": pre_operation_id,
+        "symbol": symbol.upper(),
+        "created_at": now,
+        "updated_at": now,
+        "source_candle_timestamp": now,
+        "region_low": low,
+        "region_high": high,
+        "region_mid": (low + high) / 2,
+        "region_type": region_type,
+        "region_direction": canon_dir,
+        "source_timeframe": "M15",
+        "source_module": "interest_zone_engine",
+        "source_reason": "Zona de laboratorio para bootstrap demo.",
+        "current_price": entry,
+        "detected_price": entry,
+        "created_before_touch": True,
+        "invalidation_price": low if canon_dir == "BULLISH" else high,
+        "target_prices": [float(tp1_price) if tp1_price else entry, float(tp2_price) if tp2_price else entry],
+        "region_status": "CONFIRMADA",
+        "region_valid": True,
+        "region_invalidated": False,
+        "monitoring_enabled": True,
+        "monitoring_state": "AGUARDANDO_ENTRADA",
+        "state_machine_state": "AGUARDANDO_ENTRADA",
+        "zone_source": "LABORATORIO",
+        "confluences": ["BOOTSTRAP_LAB"],
+        "structural_confirmations": [
+            {
+                "type": "LAB_APPROVED",
+                "source": "learning_bootstrap",
+                "brain_score": int(brain_score),
+                "confirmed_at": now,
+            }
+        ],
+        "valid_confirmations": [
+            {
+                "type": "LAB_ENTRY",
+                "source": "learning_bootstrap",
+                "brain_score": int(brain_score),
+                "confirmed_at": now,
+            }
+        ],
+        "monitor_timeline": [
+            {
+                "event": "ZONE_CREATED",
+                "source": "learning_bootstrap",
+                "timestamp": now,
+                "price": entry,
+            }
+        ],
+        "event_history": [
+            {
+                "event": "LAB_ZONE_CREATED",
+                "source": "learning_bootstrap",
+                "timestamp": now,
+            }
+        ],
+        "expires_at": "",
+        "provenance_version": PROVENANCE_VERSION,
+        "provenance_hash": "",
+        "smc_sources": ["learning_bootstrap"],
+        "strategy_version": "1.0.0-laboratorio",
+        "kilzone_name": "",
+        "killzone_start": "",
+        "killzone_end": "",
+        "inside_killzone": False,
+        "near_killzone": False,
+        "session_context": "LAB",
+    }
+
+    active_store = store or InterestZoneStore()
+    try:
+        stored = active_store.upsert(zone)
+        return stored
+    except Exception:
+        return None
+
+
 def validate_zone_for_execution(
     pre_operation: dict[str, Any],
     *,

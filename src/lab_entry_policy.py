@@ -35,8 +35,24 @@ def _config():
             == "true"
         ),
         "min_closed": int(section.get("lab_shadow_min_closed", 2)),
-        "min_winrate": float(section.get("lab_shadow_min_winrate", 70)),
+        "min_winrate": float(section.get("lab_shadow_min_winrate", 50)),
     }
+
+
+def _progressive_min_closed(winrate):
+    """Calcula meta progressiva de shadows fechados baseada na winrate.
+
+    Quanto melhor a winrate, menos evidencia é exigida (confiança acumulada).
+    Quanto pior a winrate, mais evidencia é exigida.
+    """
+    if winrate >= 70:
+        return 5
+    elif winrate >= 60:
+        return 10
+    elif winrate >= 50:
+        return 20
+    else:
+        return 30
 
 
 def _read_shadow_rows():
@@ -128,6 +144,7 @@ def evaluate_lab_entry(
 ):
     config = _config()
     evidence = shadow_evidence(rows)
+    effective_min_closed = _progressive_min_closed(evidence["winrate"])
     missing = set(missing_confirmations)
     only_allowed_missing = (
         bool(missing)
@@ -140,7 +157,7 @@ def evaluate_lab_entry(
         and top_down_confirmed
         and not strict_confirmation
         and only_allowed_missing
-        and evidence["closed"] >= config["min_closed"]
+        and evidence["closed"] >= effective_min_closed
         and evidence["winrate"] >= config["min_winrate"]
     )
 
@@ -149,8 +166,9 @@ def evaluate_lab_entry(
         "mode": "LAB_SHADOW_EVIDENCE" if approved else "STRICT",
         "evidence": evidence,
         "requirements": {
-            "min_closed": config["min_closed"],
+            "min_closed": effective_min_closed,
             "min_winrate": config["min_winrate"],
+            "progressive": True,
         },
         "missing_confirmations": sorted(missing),
     }

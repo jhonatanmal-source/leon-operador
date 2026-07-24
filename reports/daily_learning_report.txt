@@ -620,3 +620,50 @@ Aprendizado do LEON
 - Hoje nao houve dados suficientes para aprendizado operacional.
 =================================
 
+=================================
+LEON DAILY LEARNING REPORT
+=================================
+Data: 2026-07-23
+
+Resumo do dia
+- Precos coletados: 549
+- Candles coletados: 549
+- Sinais registrados: 275
+- Contextos cerebrais: 595
+- Registros analisados: 275
+- Planos gerados: 275
+- Direcao dominante: AGUARDAR
+- Qualidade dominante: FIBONACCI_LIQUIDEZ_NAO_CONFIRMADOS
+- Confianca dominante: MÉDIA
+
+Ultima coleta
+- Ativo: Gold_Spot
+- Bid: 4043.5
+- Ask: 4043.85
+- Candle close: 4043.5
+
+Ultima leitura estrutural
+- Tendencia: BAIXA
+- Score: 100
+- Sinal: OBSERVAR
+
+Leitura SMC + Elliott
+- SMC dominante: BEARISH
+- Elliott dominante: ABC_RANGE
+- Brain Score medio dos planos: 65.47
+
+Ultimo contexto do cerebro
+- Origem: operator
+- Tipo: analise_programada
+- Alinhamento: ATENCAO
+- Observacao: Ciclo automatico de analise executado.
+
+Memoria geral do cerebro
+- Acertos registrados: 0
+- Erros registrados: 0
+- Taxa historica de acerto: 0.00%
+
+Aprendizado do LEON
+- O LEON acumulou contexto para comparar SMC, Elliott e confianca nos proximos ciclos.
+=================================
+

@@ -68,7 +68,7 @@ def _result_from_deal(mt5, deal):
 
 def check_mt5_closed_operations():
     try:
-        import mt5linux_compat as mt5
+        import mt5_safe as mt5
     except ImportError:
         return {"ok": False, "error": "MT5_IMPORT_ERROR", "operations": []}
 

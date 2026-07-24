@@ -2,7 +2,7 @@
 # MARKET READER
 # ===================================
 
-import mt5linux_compat as mt5
+import mt5_safe as mt5
 from src.price_logger import registrar_preco
 
 def ler_preco_xau():

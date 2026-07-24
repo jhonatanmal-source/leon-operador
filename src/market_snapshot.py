@@ -4,7 +4,7 @@
 
 import json
 from datetime import datetime
-import mt5linux_compat as mt5
+import mt5_safe as mt5
 
 def salvar_snapshot():
 

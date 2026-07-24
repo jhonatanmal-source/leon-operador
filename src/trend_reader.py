@@ -2,7 +2,7 @@
 # TREND READER
 # ===================================
 
-import mt5linux_compat as mt5
+import mt5_safe as mt5
 
 def analisar_tendencia_real():
 

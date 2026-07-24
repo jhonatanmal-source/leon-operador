@@ -36,10 +36,39 @@ def obter_limiares():
     }
 
 
+def _ler_todas_entradas_simuladas():
+    """Retorna todas as linhas de simulated_entries.csv ou lista vazia."""
+    arquivo = DATA_DIR / "simulated_entries.csv"
+    if not arquivo.exists():
+        return []
+    import csv
+    with arquivo.open("r", encoding="utf-8", newline="") as f:
+        return list(csv.DictReader(f, delimiter=";"))
+
+
+def metrica_bias():
+    """Calcula o viés COMPRA/VENDA das entradas simuladas para monitoramento."""
+    linhas = _ler_todas_entradas_simuladas()
+    if not linhas:
+        return {"total": 0, "compra": 0, "venda": 0, "bias_ratio": 0.0, "alerta": "SEM_DADOS"}
+    compras = sum(1 for r in linhas if r.get("direcao") == "COMPRA")
+    vendas = sum(1 for r in linhas if r.get("direcao") == "VENDA")
+    total = compras + vendas
+    bias = round(compras / total * 100, 1) if total else 0.0
+    alerta = "OK" if 30 <= bias <= 70 else "VIES_ALTO"
+    return {
+        "total": total,
+        "compra": compras,
+        "venda": vendas,
+        "bias_ratio": bias,
+        "alerta": alerta,
+    }
+
+
 def registrar_entrada_simulada(direcao, entry, stop, tp, brain_score, contexto):
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     arquivo = DATA_DIR / "simulated_entries.csv"
-    cabecalho = ["id", "data", "direcao", "entry", "stop", "tp", "brain_score", "contexto"]
+    cabecalho = ["id", "data", "direcao", "entry", "stop", "tp", "brain_score", "contexto", "resultado"]
     if not arquivo.exists():
         with arquivo.open("w", encoding="utf-8", newline="") as f:
             import csv
@@ -47,7 +76,86 @@ def registrar_entrada_simulada(direcao, entry, stop, tp, brain_score, contexto):
     with arquivo.open("a", encoding="utf-8", newline="") as f:
         import csv
         linha_id = f"SIM-{datetime.now().strftime('%Y%m%d%H%M%S')}-{abs(hash(direcao + str(datetime.now().timestamp()))) % 100000:05d}"
-        csv.writer(f, delimiter=";").writerow([linha_id, datetime.now().isoformat(timespec="seconds"), direcao, entry, stop, tp, brain_score, contexto])
+        csv.writer(f, delimiter=";").writerow([linha_id, datetime.now().isoformat(timespec="seconds"), direcao, entry, stop, tp, brain_score, contexto, ""])
+
+
+def avaliar_entradas_simuladas(candles):
+    """Avalia entradas simuladas abertas contra candles recentes.
+    
+    Similar a evaluate_shadow_trades, mas para simulated_entries.
+    Retorna quantas foram atualizadas.
+    """
+    if not candles:
+        return {"ok": False, "error": "NO_CANDLES"}
+
+    arquivo = DATA_DIR / "simulated_entries.csv"
+    if not arquivo.exists():
+        return {"ok": False, "error": "NO_SIMULATED_ENTRIES"}
+
+    import csv
+    with arquivo.open("r", encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f, delimiter=";")
+        rows = list(reader)
+
+    if not rows:
+        return {"ok": False, "error": "EMPTY_FILE"}
+
+    updated = 0
+    for row in rows:
+        if row.get("resultado", ""):
+            continue  # ja avaliado
+
+        entrada_data = row.get("data", "")
+        if not entrada_data:
+            continue
+
+        direcao = row.get("direcao", "")
+        try:
+            entry = float(row.get("entry", 0))
+            stop = float(row.get("stop", 0))
+            tp = float(row.get("tp", 0))
+        except (ValueError, TypeError):
+            continue
+
+        if direcao not in ("COMPRA", "VENDA") or stop == 0 or tp == 0:
+            continue
+
+        # avaliar contra candles posteriores a entrada
+        for candle in candles:
+            candle_time = str(candle.get("time", ""))
+            if candle_time <= entrada_data:
+                continue
+
+            try:
+                high = float(candle.get("high", 0))
+                low = float(candle.get("low", 0))
+            except (ValueError, TypeError):
+                continue
+
+            stop_hit = (
+                low <= stop if direcao == "COMPRA"
+                else high >= stop
+            )
+            target_hit = (
+                high >= tp if direcao == "COMPRA"
+                else low <= tp
+            )
+
+            if stop_hit or target_hit:
+                row["resultado"] = "LOSS" if stop_hit else "WIN_2R"
+                updated += 1
+                break
+        else:
+            # nenhum candle posterior atingiu stop ou tp
+            pass
+
+    # reescrever arquivo com resultados atualizados
+    with arquivo.open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=rows[0].keys(), delimiter=";")
+        writer.writeheader()
+        writer.writerows(rows)
+
+    return {"ok": True, "updated": updated}
 
 
 def ler_progresso_bootstrap():

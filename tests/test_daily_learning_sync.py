@@ -9,6 +9,7 @@ class TestDailyLearningSync(TestCase):
 
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
+        self.vault_tmp = Path(tempfile.mkdtemp())
         self.patch_diarios = mock.patch(
             "src.daily_learning_sync.DIARIOS", self.tmp
         )
@@ -20,17 +21,35 @@ class TestDailyLearningSync(TestCase):
             "src.daily_learning_sync.INDICE_FILE",
             self.tmp / "INDICE.md",
         )
+        self.patch_vault_diarios = mock.patch(
+            "src.daily_learning_sync.VAULT_DIARIOS", self.vault_tmp
+        )
+        self.patch_vault_contexto = mock.patch(
+            "src.daily_learning_sync.VAULT_CONTEXTO",
+            self.vault_tmp / "CONTEXTO_EVOLUCAO.md",
+        )
+        self.patch_vault_indice = mock.patch(
+            "src.daily_learning_sync.VAULT_INDICE",
+            self.vault_tmp / "INDICE.md",
+        )
         self.patch_diarios.start()
         self.patch_contexto.start()
         self.patch_indice.start()
+        self.patch_vault_diarios.start()
+        self.patch_vault_contexto.start()
+        self.patch_vault_indice.start()
 
     def tearDown(self):
         self.patch_diarios.stop()
         self.patch_contexto.stop()
         self.patch_indice.stop()
+        self.patch_vault_diarios.stop()
+        self.patch_vault_contexto.stop()
+        self.patch_vault_indice.stop()
         import shutil
 
         shutil.rmtree(self.tmp, ignore_errors=True)
+        shutil.rmtree(self.vault_tmp, ignore_errors=True)
 
     def _contexto_path(self):
         return self.tmp / "CONTEXTO_EVOLUCAO.md"

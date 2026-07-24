@@ -1,0 +1,9 @@
+{
+  "showLineNumber": true,
+  "spellcheck": true,
+  "tabSize": 2,
+  "newFileLocation": "current",
+  "attachmentFolderPath": "./assets",
+  "alwaysUpdateLinks": true,
+  "fileSortOrder": "byModifiedTime"
+}

@@ -1,13 +1,13 @@
 LEON | RELATORIO OPERACIONAL DIARIO
 =================================
-Data: 2026-07-22
-Inicio do operador: SEM REGISTRO
+Data: 2026-07-23
+Inicio do operador: 2026-07-22 19:54:55.102861 (ciclo iniciado anteriormente)
 
 Resumo
-- Checkpoints enviados: 0
-- Estudos realizados: 1
+- Checkpoints enviados: 22
+- Estudos realizados: 182
 - Setups A+: 0
-- Setups bloqueados/observados: 1
+- Setups bloqueados/observados: 182
 
 Decisoes por operacao
 - Entrar: 0
@@ -21,8 +21,13 @@ Bloqueios
 - Preco fora da zona: 0
 
 Erros
-- Ativos: 0
+- Ativos: 16405
 - Recuperados no mesmo dia: 0
+- 2026-07-23 23:00:13.233347 | OPERATOR | configuracao fora do limite: market_restart_delay_seconds=10; usando 120
+- 2026-07-23 23:00:13.274948 | OPERATOR | configuracao fora do limite: market_restart_delay_seconds=10; usando 120
+- 2026-07-23 23:00:13.276229 | OPERATOR | configuracao fora do limite: market_restart_delay_seconds=10; usando 120
+- 2026-07-23 23:00:13.277336 | OPERATOR | configuracao fora do limite: market_restart_delay_seconds=10; usando 120
+- 2026-07-23 23:00:13.279441 | OPERATOR | configuracao fora do limite: market_restart_delay_seconds=10; usando 120
 
 Melhoria sugerida para o proximo dia
 - Continuar estudando ate aparecer Setup A+ com confluencia limpa.

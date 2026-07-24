@@ -1,0 +1,722 @@
+#!/usr/bin/env python3
+"""
+Telegram Commands MCP — LEON XAU ELITE AI
+Bot de comandos Telegram para acessar os MCPs via chat.
+
+Comandos:
+  /start       — Inicia o bot e mostra boas-vindas
+  /help        — Lista todos os comandos disponíveis
+  /memory      — Consulta o Memory MCP (contexto, notas, aprendizado)
+  /market      — Consulta o Market MCP (preços, mercado)
+  /backtest    — Executa ou lista backtests
+  /replay      — Reproduz operações passadas
+
+Modo de uso:
+  Long-polling via Telegram API (getUpdates).
+  NÃO precisa de webhook ou HTTPS público.
+"""
+
+import json
+import sys
+import os
+import time
+import traceback
+from datetime import datetime
+from pathlib import Path
+
+import requests
+
+# ─── Path setup ───────────────────────────────────────────────
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+SRC_DIR = PROJECT_ROOT / "src"
+sys.path.insert(0, str(SRC_DIR))
+sys.path.insert(0, str(PROJECT_ROOT))
+
+import autonomy_guard
+
+from src.telegram_config import TOKEN, CHAT_ID, TELEGRAM_TIMEOUT
+from src.telegram_engine import enviar_mensagem
+
+# ─── MCP handlers ─────────────────────────────────────────────
+# Importamos diretamente os handlers para executar a lógica sem subprocessos
+try:
+    from src.mcp.leon_memory_mcp import MemoryMCPHandler
+    MEMORY_HANDLER = MemoryMCPHandler()
+except Exception as e:
+    MEMORY_HANDLER = None
+    _memory_error = str(e)
+
+try:
+    from src.mcp.leon_market_mcp import MarketMCPHandler
+    MARKET_HANDLER = MarketMCPHandler()
+except Exception as e:
+    MARKET_HANDLER = None
+    _market_error = str(e)
+
+try:
+    from src.mcp.leon_backtest_mcp import BacktestMCPHandler
+    BACKTEST_HANDLER = BacktestMCPHandler()
+except Exception as e:
+    BACKTEST_HANDLER = None
+    _backtest_error = str(e)
+
+try:
+    from src.mcp.leon_replay_mcp import ReplayMCPHandler
+    REPLAY_HANDLER = ReplayMCPHandler()
+except Exception as e:
+    REPLAY_HANDLER = None
+    _replay_error = str(e)
+
+
+# ─── Constantes ───────────────────────────────────────────────
+
+POLL_INTERVAL = 2.0  # segundos entre polls
+ALLOWED_CHAT_IDS = []  # vazio = permite todos os chats que têm o TOKEN
+LAST_UPDATE_ID = 0
+STATE_FILE = PROJECT_ROOT / "data" / "telegram_commands_offset.json"
+
+# ─── Comandos registrados no BotFather ────────────────────────
+
+BOT_COMMANDS = [
+    {"command": "start", "description": "Iniciar o bot e ver boas-vindas"},
+    {"command": "help", "description": "Listar todos os comandos disponíveis"},
+    {"command": "memory", "description": "Consultar memória e contexto do LEON"},
+    {"command": "market", "description": "Obter dados de mercado (preços, OHLC)"},
+    {"command": "backtest", "description": "Executar ou listar backtests"},
+    {"command": "replay", "description": "Reproduzir operações passadas"},
+    {"command": "autonomy", "description": "Ver estado da autonomia | on <min> | off"},
+]
+
+
+# ─── Utilitários ──────────────────────────────────────────────
+
+def _fmt_preco(valor):
+    try:
+        return f"{float(valor):.2f}"
+    except (ValueError, TypeError):
+        return str(valor)
+
+
+def _fmt_data(iso_str):
+    if not iso_str:
+        return "--"
+    try:
+        dt = datetime.fromisoformat(iso_str)
+        return dt.strftime("%d/%m %H:%M")
+    except (ValueError, TypeError):
+        return str(iso_str)[:16]
+
+
+def _executar_handler(handler, tool_name, **kwargs):
+    """Executa um tool de um MCP handler e retorna o texto formatado."""
+    if handler is None:
+        return "❌ MCP não disponível (erro ao carregar)"
+    
+    tool = handler._tools.get(tool_name)
+    if not tool:
+        return f"❌ Tool '{tool_name}' não encontrada"
+    
+    try:
+        result = tool.handler(**kwargs)
+        if isinstance(result, dict):
+            return json.dumps(result, indent=2, default=str, ensure_ascii=False)
+        return str(result)
+    except Exception as e:
+        return f"❌ Erro: {str(e)}"
+
+
+# ─── Formatters por comando ───────────────────────────────────
+
+def _formatar_start(chat_info: dict) -> str:
+    first_name = chat_info.get("first_name", "Operador")
+    return (
+        f"🤖 *LEON XAU ELITE AI*\n\n"
+        f"Olá, {first_name}! Eu sou o LEON, seu assistente de trading.\n\n"
+        f"Comandos disponíveis:\n"
+        f"/memory  — Consultar memória e contexto\n"
+        f"/market  — Dados de mercado\n"
+        f"/backtest — Backtests\n"
+        f"/replay  — Replay de operações\n\n"
+        f"Use /help para detalhes."
+    )
+
+
+def _formatar_help() -> str:
+    return (
+    "📋 *Comandos do LEON*\n\n"
+    "*/start* — Mensagem de boas-vindas\n"
+    "*/help* — Esta ajuda\n\n"
+    "*🧠 Memory MCP*\n"
+    "/memory — Contexto acumulado do LEON\n"
+    "/memory busca <termo> — Busca no vault Obsidian\n\n"
+    "*📊 Market MCP*\n"
+    "/market — Snapshot do mercado (símbolo ativo)\n"
+    "/market <símbolo> — Snapshot de um símbolo específico\n\n"
+    "*🔬 Backtest MCP*\n"
+    "/backtest — Lista os últimos backtests\n"
+    "/backtest executar <dias> — Executa backtest (ex: /backtest executar 7)\n\n"
+    "*🔄 Replay MCP*\n"
+    "/replay — Lista últimas operações\n"
+    "/replay <ID> — Detalha uma operação específica\n\n"
+    "*🤖 Autonomia*\n"
+    "/autonomy — Ver estado da autonomia\n"
+    "/autonomy on <min> — Conceder autonomia\n"
+    "/autonomy off — Revogar autonomia\n\n"
+    "💡 Dica: envie o comando sem argumentos para ver o formato esperado."
+    )
+
+
+def _formatar_memory(args: str) -> str:
+    args = args.strip()
+    
+    if not args:
+        # Contexto acumulado
+        texto = _executar_handler(MEMORY_HANDLER, "get_daily_context")
+        # Extrair só o conteúdo, ignorando metadados
+        try:
+            dados = json.loads(texto)
+            ctx = dados.get("context", "")
+            lines = ctx.split("\n")
+            # Pega apenas as primeiras 30 linhas
+            preview = "\n".join(lines[:30])
+            return f"🧠 *Contexto do LEON*\n\n```\n{preview}\n```"
+        except (json.JSONDecodeError, KeyError):
+            return f"🧠 *Contexto do LEON*\n\n{texto[:1500]}"
+    
+    elif args.startswith("busca "):
+        termo = args[6:].strip()
+        if not termo:
+            return "❌ Use: /memory busca <termo>"
+        texto = _executar_handler(MEMORY_HANDLER, "search_knowledge_base", query=termo, max_results=5)
+        try:
+            dados = json.loads(texto)
+            total = dados.get("total_results", 0)
+            results = dados.get("results", [])
+            if total == 0:
+                return f"🔍 Nenhum resultado para '{termo}'"
+            msg = f"🔍 *Busca: {termo}* ({total} resultados)\n\n"
+            for r in results[:5]:
+                file_name = r.get("file", "?")
+                matches = r.get("matches", 0)
+                snippets = r.get("snippets", [])
+                msg += f"📄 `{file_name}` ({matches} ocorrências)\n"
+                for s in snippets[:2]:
+                    msg += f"   > {s.get('text', '')[:100]}\n"
+                msg += "\n"
+            return msg.strip()
+        except (json.JSONDecodeError, KeyError):
+            return texto[:1500]
+    
+    else:
+        return (
+            "❓ *Uso do /memory*\n\n"
+            "/memory — Contexto acumulado\n"
+            "/memory busca <termo> — Busca no vault"
+        )
+
+
+def _formatar_market(args: str) -> str:
+    args = args.strip()
+    
+    if not args:
+        # Snapshot do símbolo ativo
+        texto = _executar_handler(MARKET_HANDLER, "get_market_snapshot", symbols=[])
+    else:
+        # Snapshot de símbolo específico
+        symbols = [s.strip().upper() for s in args.replace(",", " ").split() if s.strip()]
+        texto = _executar_handler(MARKET_HANDLER, "get_market_snapshot", symbols=symbols)
+    
+    try:
+        dados = json.loads(texto)
+        if "error" in dados:
+            return f"📊 *Mercado*\n\n⚠️ {dados['error']}"
+        
+        snapshot = dados.get("snapshot", {})
+        if not snapshot:
+            return "📊 *Mercado*\n\nSem dados disponíveis"
+        
+        msg = "📊 *Snapshot de Mercado*\n\n"
+        for sym, info in snapshot.items():
+            price = info.get("price", {})
+            if price:
+                bid = price.get("bid", "--")
+                ask = price.get("ask", "--")
+                spread = price.get("spread", "--")
+                msg += f"*{sym}*\n"
+                msg += f"  Bid: `{_fmt_preco(bid)}` | Ask: `{_fmt_preco(ask)}`\n"
+                msg += f"  Spread: {spread}\n\n"
+            else:
+                msg += f"*{sym}*: sem dados\n\n"
+        
+        # Account info
+        account = dados.get("account", {})
+        if account:
+            balance = account.get("balance", "--")
+            equity = account.get("equity", "--")
+            msg += f"💰 Conta: Bal {_fmt_preco(balance)} | Eq {_fmt_preco(equity)}"
+        
+        return msg.strip()
+    
+    except (json.JSONDecodeError, KeyError) as e:
+        return f"📊 *Mercado*\n\n{texto[:1500]}"
+
+
+def _formatar_backtest(args: str) -> str:
+    args = args.strip()
+    
+    if not args:
+        # Listar backtests
+        texto = _executar_handler(BACKTEST_HANDLER, "list_backtests", limit=10)
+        try:
+            dados = json.loads(texto)
+            backtests = dados.get("backtests", [])
+            if not backtests:
+                return "🔬 *Backtests*\n\nNenhum backtest encontrado."
+            
+            msg = f"🔬 *Backtests* ({dados.get('total', 0)} total)\n\n"
+            for bt in backtests[:10]:
+                bt_id = bt.get("id", "?")
+                label = bt.get("label", bt_id)
+                setups = bt.get("total_setups", "?")
+                valid = bt.get("valid_setups", "?")
+                created = bt.get("created_at", "")[:10]
+                msg += f"`{bt_id}` — {label}\n"
+                msg += f"   Setups: {valid}/{setups} | {created}\n"
+            return msg.strip()
+        except (json.JSONDecodeError, KeyError):
+            return f"🔬 *Backtests*\n\n{texto[:1500]}"
+    
+    elif args.startswith("executar "):
+        # Extrair dias
+        try:
+            dias = int(args[9:].strip().split()[0])
+        except (ValueError, IndexError):
+            dias = 15
+        
+        texto_res = _executar_handler(BACKTEST_HANDLER, "run_backtest", days=dias)
+        try:
+            dados = json.loads(texto_res)
+            bt_id = dados.get("backtest_id", "?")
+            result = dados.get("result", {})
+            symbol = result.get("symbol", "?")
+            setups = result.get("valid_setups", "?")
+            total = result.get("total_setups", "?")
+            bias = result.get("direction_bias", "?")
+            confidence = result.get("avg_confidence", "?")
+            note = result.get("note", "")
+            
+            msg = (
+                f"🔬 *Backtest Executado*\n\n"
+                f"`{bt_id}` | {symbol}\n"
+                f"Setups válidos: {setups}/{total}\n"
+                f"Tendência: {bias}\n"
+                f"Confiança: {confidence}%\n"
+            )
+            if note:
+                msg += f"\n_{note}_"
+            return msg.strip()
+        except (json.JSONDecodeError, KeyError):
+            return f"🔬 *Backtest*\n\n{texto_res[:1500]}"
+    
+    else:
+        return (
+            "❓ *Uso do /backtest*\n\n"
+            "/backtest — Lista backtests\n"
+            "/backtest executar <dias> — Executa backtest (ex: /backtest executar 30)"
+        )
+
+
+def _formatar_replay(args: str) -> str:
+    args = args.strip()
+    
+    if not args:
+        # Listar operações
+        texto = _executar_handler(REPLAY_HANDLER, "list_operations", limit=10)
+        try:
+            dados = json.loads(texto)
+            ops = dados.get("operations", [])
+            if not ops:
+                return "🔄 *Replay*\n\nNenhuma operação encontrada."
+            
+            msg = f"🔄 *Últimas Operações*\n\n"
+            for op in ops[:10]:
+                op_id = op.get("id", "?")
+                symbol = op.get("symbol", "?")
+                direction = op.get("direction", "?")
+                entry = op.get("entry", "?")
+                result = op.get("result", "?")
+                status = op.get("status", "?")
+                
+                emoji = "✅" if result and result not in ("N/A", "") and float(result) > 0 else "❌"
+                msg += f"{emoji} `{op_id}` {symbol} {direction}\n"
+                msg += f"   Entry: {_fmt_preco(entry)} | Res: {_fmt_preco(result)} | {status}\n"
+            return msg.strip()
+        except (json.JSONDecodeError, KeyError, ValueError):
+            return f"🔄 *Replay*\n\n{texto[:1500]}"
+    
+    else:
+        # Detalhar operação específica
+        op_id = args.strip().upper()
+        if not op_id.startswith("SHADOW-"):
+            op_id = f"SHADOW-{op_id.zfill(6)}"
+        
+        texto = _executar_handler(REPLAY_HANDLER, "get_operation_detail", operation_id=op_id)
+        try:
+            dados = json.loads(texto)
+            if "error" in dados:
+                # Tentar como replay
+                texto_replay = _executar_handler(REPLAY_HANDLER, "replay_operation", operation_id=op_id, step_by_step=True)
+                try:
+                    dados_replay = json.loads(texto_replay)
+                    r = dados_replay.get("replay", {})
+                    steps = dados_replay.get("step_by_step", [])
+                    
+                    msg = f"🔄 *Replay: {op_id}*\n\n"
+                    msg += f"Ativo: {r.get('symbol', '?')}\n"
+                    msg += f"Direção: {r.get('direction', '?')}\n"
+                    msg += f"Entry: {_fmt_preco(r.get('entry', '?'))}\n"
+                    msg += f"SL: {_fmt_preco(r.get('stop', '?'))}\n"
+                    msg += f"TP: {_fmt_preco(r.get('target', '?'))}\n"
+                    msg += f"Resultado: {r.get('result', '?')}\n\n"
+                    
+                    if steps:
+                        msg += "*Passo a passo:*\n"
+                        for s in steps:
+                            msg += f"{s.get('step', '?')}. {s.get('action', '')}\n"
+                            msg += f"   {s.get('detail', '')}\n"
+                    
+                    return msg.strip()
+                except (json.JSONDecodeError, KeyError):
+                    return f"🔄 *Replay*\n\n{texto_replay[:1500]}"
+            
+            op = dados.get("operation", {})
+            metrics = dados.get("analysis", {})
+            
+            msg = f"🔄 *Operação: {op_id}*\n\n"
+            msg += f"Ativo: {op.get('symbol', '?')}\n"
+            msg += f"Direção: {op.get('direction', '?')}\n"
+            msg += f"Entry: {_fmt_preco(op.get('entry', '?'))}\n"
+            msg += f"SL: {_fmt_preco(op.get('stop', '?'))}\n"
+            msg += f"TP: {_fmt_preco(op.get('target', '?'))}\n"
+            msg += f"Resultado: {op.get('result', '?')}\n"
+            msg += f"Abertura: {_fmt_data(op.get('opened_at', ''))}\n"
+            msg += f"Fechamento: {_fmt_data(op.get('closed_at', ''))}\n"
+            
+            rr = metrics.get("risk_reward")
+            if rr:
+                msg += f"Risco/Recompensa: {rr}:1\n"
+            
+            return msg.strip()
+        
+        except (json.JSONDecodeError, KeyError) as e:
+            return f"🔄 *Replay*\n\n{texto[:1500]}"
+
+
+def _formatar_autonomy(args: str) -> str:
+    args = args.strip().lower()
+    
+    if not args:
+        # Mostrar status atual
+        estado = autonomy_guard.status_autonomia()
+        ativo = estado.get("active", False)
+        escopo = estado.get("scope", "N/A")
+        razao = estado.get("reason", "N/A")
+        
+        emoji = "🟢" if ativo else "🔴"
+        msg = f"{emoji} *Autonomia*\n\n"
+        msg += f"Status: {'**ATIVA**' if ativo else '**INATIVA**'}\n"
+        msg += f"Escopo: `{escopo}`\n"
+        msg += f"Motivo: `{razao}`\n"
+        
+        if ativo:
+            expira = estado.get("expires_at", "")
+            restante = estado.get("remaining_seconds", 0)
+            if expira:
+                msg += f"Expira em: `{_fmt_data(expira)}`\n"
+            if restante:
+                minutos = restante // 60
+                segundos = restante % 60
+                msg += f"Tempo restante: `{minutos}m {segundos}s`\n"
+        else:
+            pas = estado.get("expires_at", "")
+            if pas:
+                msg += f"Expirada em: `{_fmt_data(pas)}`\n"
+        
+        # Mostrar configuração
+        msg += f"\nConfig: max_minutes=`{estado.get('max_minutes', '?')}`"
+        return msg.strip()
+    
+    elif args.startswith("on "):
+        # Conceder autonomia: /autonomy on <minutos>
+        try:
+            minutos = int(args.split(" ", 1)[1])
+        except (ValueError, IndexError):
+            return "❌ Uso: `/autonomy on <minutos>` (ex: `/autonomy on 60`)"
+        
+        if minutos <= 0:
+            return "❌ Minutos deve ser maior que zero."
+        
+        resultado = autonomy_guard.conceder_autonomia(minutos)
+        if not resultado.get("ok"):
+            erro = resultado.get("error", "Desconhecido")
+            if erro == "AUTONOMY_LIMIT_EXCEEDED":
+                max_min = resultado.get("max_minutes", "?")
+                return f"❌ Limite excedido. Máximo configurado: `{max_min}` minutos."
+            return f"❌ Erro: `{erro}`"
+        
+        expira = resultado.get("expires_at", "")
+        scope = resultado.get("scope", "?")
+        return (
+            f"🟢 *Autonomia Concedida*\n\n"
+            f"Escopo: `{scope}`\n"
+            f"Expira: `{_fmt_data(expira)}`\n"
+            f"Duração: `{minutos}` minutos"
+        )
+    
+    elif args == "off":
+        # Revogar autonomia
+        resultado = autonomy_guard.revogar_autonomia()
+        return (
+            f"🔴 *Autonomia Revogada*\n\n"
+            f"Status: `{resultado.get('status', 'REVOKED')}`\n"
+            f"A execução autônoma foi interrompida."
+        )
+    
+    else:
+        return (
+            "❌ Uso:\n"
+            "  `/autonomy` — Ver status\n"
+            "  `/autonomy on <min>` — Conceder autonomia\n"
+            "  `/autonomy off` — Revogar autonomia"
+        )
+
+
+# ─── Dispatcher ───────────────────────────────────────────────
+
+COMANDOS = {
+    "start": _formatar_start,
+    "help": _formatar_help,
+    "memory": _formatar_memory,
+    "market": _formatar_market,
+    "backtest": _formatar_backtest,
+    "replay": _formatar_replay,
+    "autonomy": _formatar_autonomy,
+}
+
+
+def processar_mensagem(chat_id: int, text: str, chat_info: dict) -> str | None:
+    """
+    Processa uma mensagem recebida.
+    Retorna o texto da resposta ou None se não for um comando reconhecido.
+    """
+    if not text or not text.startswith("/"):
+        return None
+    
+    # Parse: /comando argumentos
+    parts = text.split(maxsplit=1)
+    cmd = parts[0].lower().lstrip("/")
+    args = parts[1] if len(parts) > 1 else ""
+    
+    # Remove @botusername se presente
+    if "@" in cmd:
+        cmd = cmd.split("@")[0]
+    
+    handler = COMANDOS.get(cmd)
+    if not handler:
+        return None
+    
+    try:
+        if cmd in ("start", "help"):
+            return handler() if cmd == "help" else handler(chat_info)
+        else:
+            return handler(args)
+    except Exception as e:
+        return f"❌ Erro ao processar /{cmd}: {str(e)}"
+
+
+# ─── API Telegram ─────────────────────────────────────────────
+
+def _api_url(method: str) -> str:
+    return f"https://api.telegram.org/bot{TOKEN}/{method}"
+
+
+def _registrar_comandos():
+    """Registra os comandos do bot na API do Telegram (setMyCommands)."""
+    try:
+        resp = requests.post(
+            _api_url("setMyCommands"),
+            json={"commands": BOT_COMMANDS},
+            timeout=TELEGRAM_TIMEOUT,
+        )
+        if resp.status_code == 200 and resp.json().get("ok"):
+            print("✅ Comandos registrados no Telegram BotFather")
+        else:
+            print(f"⚠️ Falha ao registrar comandos: {resp.text[:200]}")
+    except Exception as e:
+        print(f"⚠️ Erro ao registrar comandos: {e}")
+
+
+def _obter_novas_mensagens() -> list:
+    """Obtém novas mensagens via long-polling (getUpdates)."""
+    global LAST_UPDATE_ID
+    
+    params = {
+        "timeout": 30,
+        "allowed_updates": ["message"],
+    }
+    
+    if LAST_UPDATE_ID > 0:
+        params["offset"] = LAST_UPDATE_ID + 1
+    
+    try:
+        resp = requests.get(
+            _api_url("getUpdates"),
+            params=params,
+            timeout=35,
+        )
+        
+        if resp.status_code != 200:
+            return []
+        
+        data = resp.json()
+        if not data.get("ok"):
+            return []
+        
+        updates = data.get("result", [])
+        if updates:
+            # Atualiza o offset
+            LAST_UPDATE_ID = updates[-1]["update_id"]
+            _salvar_offset()
+        
+        return updates
+    
+    except requests.exceptions.Timeout:
+        return []
+    except Exception as e:
+        print(f"⚠️ Erro no polling: {e}")
+        return []
+
+
+def _salvar_offset():
+    """Persiste o último update_id para retomar após reinício."""
+    try:
+        STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        STATE_FILE.write_text(json.dumps({"offset": LAST_UPDATE_ID}), encoding="utf-8")
+    except Exception:
+        pass
+
+
+def _carregar_offset():
+    """Carrega o último update_id salvo."""
+    global LAST_UPDATE_ID
+    try:
+        if STATE_FILE.exists():
+            data = json.loads(STATE_FILE.read_text(encoding="utf-8"))
+            LAST_UPDATE_ID = data.get("offset", 0)
+    except Exception:
+        pass
+
+
+def _responder(chat_id: int, texto: str):
+    """Envia resposta para o chat."""
+    if not texto or not texto.strip():
+        return
+    
+    # Telegram tem limite de 4096 caracteres
+    max_len = 4000
+    if len(texto) > max_len:
+        texto = texto[:max_len] + "\n\n...(truncado)"
+    
+    # Enviar usando a engine existente ou direto
+    try:
+        if str(chat_id) == str(CHAT_ID):
+            enviar_mensagem(texto)
+        else:
+            # Chat diferente do configurado — enviar direto
+            resp = requests.post(
+                _api_url("sendMessage"),
+                json={
+                    "chat_id": chat_id,
+                    "text": texto,
+                    "parse_mode": "Markdown",
+                },
+                timeout=TELEGRAM_TIMEOUT,
+            )
+    except Exception as e:
+        print(f"⚠️ Erro ao responder: {e}")
+
+
+# ─── Main Loop ────────────────────────────────────────────────
+
+def iniciar_bot_comandos():
+    """Inicia o loop de polling para receber comandos Telegram."""
+    if not TOKEN:
+        print("❌ TOKEN do Telegram não configurado")
+        return
+    
+    _carregar_offset()
+    _registrar_comandos()
+    
+    print(f"🤖 Bot de comandos LEON iniciado (polling a cada {POLL_INTERVAL}s)")
+    print(f"   Comandos: {', '.join('/' + c['command'] for c in BOT_COMMANDS)}")
+    print(f"   Aguardando mensagens...")
+    
+    while True:
+        try:
+            updates = _obter_novas_mensagens()
+            
+            for update in updates:
+                message = update.get("message", {})
+                chat = message.get("chat", {})
+                chat_id = chat.get("id")
+                text = message.get("text", "")
+                
+                if not chat_id or not text:
+                    continue
+                
+                resposta = processar_mensagem(chat_id, text, chat)
+                if resposta:
+                    print(f"  💬 {chat.get('first_name', '?')}: {text[:50]}...")
+                    _responder(chat_id, resposta)
+            
+            time.sleep(POLL_INTERVAL)
+        
+        except KeyboardInterrupt:
+            print("\n🛑 Bot de comandos interrompido")
+            break
+        except Exception as e:
+            print(f"⚠️ Erro no loop: {e}")
+            traceback.print_exc()
+            time.sleep(POLL_INTERVAL * 5)
+
+
+# ─── Execução direta ──────────────────────────────────────────
+
+if __name__ == "__main__":
+    print("=" * 50)
+    print("  LEON — Telegram Commands MCP")
+    print("=" * 50)
+    print()
+    
+    # Verificar token
+    if not TOKEN:
+        print("❌ TOKEN do Telegram não encontrado.")
+        print("   Configure LEON_TELEGRAM_TOKEN no .env ou config.ini")
+        sys.exit(1)
+    
+    print(f"✅ TOKEN configurado: ...{TOKEN[-6:]}")
+    print(f"✅ CHAT_ID configurado: {CHAT_ID}")
+    print()
+    
+    # Verificar handlers MCP
+    if MEMORY_HANDLER:
+        print("✅ MemoryMCPHandler carregado")
+    if MARKET_HANDLER:
+        print("✅ MarketMCPHandler carregado")
+    if BACKTEST_HANDLER:
+        print("✅ BacktestMCPHandler carregado")
+    if REPLAY_HANDLER:
+        print("✅ ReplayMCPHandler carregado")
+    print()
+    
+    iniciar_bot_comandos()

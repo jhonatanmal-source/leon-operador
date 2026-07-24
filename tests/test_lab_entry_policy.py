@@ -39,7 +39,8 @@ class LabEntryPolicyTests(unittest.TestCase):
     def test_approves_demo_lab_with_positive_shadow_evidence(self):
         directory, config_file = self._config_file()
         self.addCleanup(directory.cleanup)
-        rows = [shadow("WIN_2R"), shadow("WIN_2R")]
+        # Progressive target: min_closed=5 for winrate >= 70%
+        rows = [shadow("WIN_2R") for _ in range(5)]
 
         with patch.object(lab_entry_policy, "CONFIG_FILE", config_file):
             result = lab_entry_policy.evaluate_lab_entry(

@@ -827,6 +827,33 @@ def executar_coleta_programada(forcar=False):
     return resultado
 
 
+def _registrar_contexto_memoria(resultado_analise):
+
+    if not resultado_analise or not resultado_analise.get("ok"):
+        return None
+
+    estrutura = resultado_analise.get("structure", {})
+    setup = resultado_analise.get("setup", {})
+
+    contexto = consultar_contexto(
+        tendencia=estrutura.get("tendencia"),
+        direcao=setup.get("direcao"),
+        smc=setup.get("smc"),
+        elliott=setup.get("elliott"),
+    )
+
+    registrar_evento(
+        tipo_evento="analise",
+        tendencia=estrutura.get("tendencia"),
+        direcao=setup.get("direcao"),
+        smc=setup.get("smc"),
+        elliott=setup.get("elliott"),
+        observacao=f"Score: {setup.get('brain_score', 'N/A')} | Sinal: {estrutura.get('sinal', 'N/A')}",
+    )
+
+    return contexto
+
+
 def executar_analise_programada(forcar=False):
 
     agora = datetime.now()
@@ -1016,6 +1043,28 @@ def executar_analise_programada(forcar=False):
         }
 
 
+def _gerar_resumo_memoria_pre_operacao():
+
+    try:
+        from src.operator_status import obter_status_operadores
+        status = obter_status_operadores()
+        estrutura = status["operators"]["structure"]
+        setup = status["operators"]["setup"]
+
+        resumo = gerar_resumo_professor(
+            tendencia=estrutura.get("tendencia"),
+            direcao=setup.get("direcao"),
+            smc=setup.get("smc"),
+            elliott=setup.get("elliott"),
+        )
+
+        registrar_log(f"OPERATOR | contexto memoria gerado para pre-operacao")
+        return resumo
+    except Exception as erro:
+        registrar_log(f"OPERATOR | memoria indisponivel para pre-operacao: {erro}")
+        return None
+
+
 def executar_ordem_demo_programada(forcar=False):
 
     agora = datetime.now()
@@ -1144,12 +1193,34 @@ def executar_estudo_continuo(forcar=False):
             "elliott_abc": estudo_elliott.get("abc_correction", {}).get("ok"),
         }
 
+        import json
+
         registrar_contexto_cerebro(
             "estudo_continuo",
-            resumo,
+            "estudo_continuo",
+            json.dumps(resumo, ensure_ascii=False),
         )
 
         _salvar_estudo(agora)
+
+        from src.learning_bootstrap import avaliar_entradas_simuladas
+
+        resultado_avaliacao = avaliar_entradas_simuladas(candles)
+
+        if resultado_avaliacao.get("ok"):
+            atualizadas = resultado_avaliacao["updated"]
+            if atualizadas:
+                registrar_log(
+                    f"OPERATOR | entradas simuladas avaliadas: "
+                    f"{atualizadas} atualizadas"
+                )
+
+        from src.study_engine import register_market_observation
+
+        register_market_observation(
+            "estudo_continuo",
+            json.dumps(resumo, ensure_ascii=False),
+        )
 
         registrar_log(
             "OPERATOR | estudo continuo concluido: "
@@ -1396,6 +1467,9 @@ def iniciar_operador():
                 )
 
             if config["demo_execution_enabled"] and autonomia["active"]:
+                resumo_memoria = _gerar_resumo_memoria_pre_operacao()
+                if resumo_memoria:
+                    registrar_log("OPERATOR | memoria contextual disponivel para decisao")
                 resultados["demo_execution"] = _executar_tarefa_segura(
                     "execucao_demo",
                     executar_ordem_demo_programada,

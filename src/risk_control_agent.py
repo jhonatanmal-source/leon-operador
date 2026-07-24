@@ -56,7 +56,7 @@ def _risk_config():
 def _obter_saldo_mt5():
 
     try:
-        import mt5linux_compat as mt5
+        import mt5_safe as mt5
 
         if not mt5.initialize():
             return None
@@ -142,7 +142,7 @@ def avaliar_limite_perda_diaria():
     config = _risk_config()
 
     try:
-        import mt5linux_compat as mt5
+        import mt5_safe as mt5
     except ImportError:
         return {
             "ok": False,
@@ -401,7 +401,7 @@ def avaliar_orcamento_risco_aberto(risco_planejado_percentual):
     config = _risk_config()
 
     try:
-        import mt5linux_compat as mt5
+        import mt5_safe as mt5
     except ImportError:
         return {
             "ok": False,

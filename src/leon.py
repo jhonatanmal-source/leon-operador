@@ -73,6 +73,7 @@ from trade_plan_memory import salvar_trade_plan
 from entry_price_engine import calcular_entrada
 from trade_explanation_engine import explicar_trade
 from pre_operation_engine import registrar_pre_operacao
+from interest_zone_engine import create_lab_zone, InterestZoneStore
 from top_down_agent import gerar_leitura_top_down
 
 from setup_validator import validar_setup
@@ -656,6 +657,7 @@ from learning_bootstrap import modo_bootstrap_ativo, obter_limiares, registrar_e
 
 operacao = None
 modo_bootstrap = modo_bootstrap_ativo()
+bootstrap_region_id = ""  # usado pela Rota de Laboratorio abaixo
 if direcao != "AGUARDAR":
     operacao = calcular_entrada(
         direcao,
@@ -690,6 +692,25 @@ elif modo_bootstrap and direcao_candidata in ["COMPRA", "VENDA"] and int(brain_s
         abs(fake_tp1 - fake_entry) / max(abs(fake_entry - fake_stop), 0.01), 2
     )
     operacao = [fake_entry, fake_stop, fake_tp1, fake_tp2, fake_rr]
+    # Rota de Laboratorio: cria Interest Zone artificial para passar o guard
+    # estrutural e permitir execucao demo supervisionada.
+    lab_zone = create_lab_zone(
+        symbol=ativo,
+        direction=direcao_candidata,
+        entry_price=fake_entry,
+        stop_price=fake_stop,
+        tp1_price=fake_tp1,
+        tp2_price=fake_tp2,
+        brain_score=brain_score or 0,
+    )
+    bootstrap_region_id = lab_zone.get("region_id", "") if lab_zone else ""
+    if bootstrap_region_id:
+        print(
+            f"LAB ZONE: zona criada {bootstrap_region_id} "
+            f"para {direcao_candidata} via bootstrap"
+        )
+    else:
+        print("LAB ZONE: falha ao criar zona de laboratorio")
     registrar_entrada_simulada(
         direcao_candidata, fake_entry, fake_stop, fake_tp2, brain_score, "BOOTSTRAP_AUTO_SIMULATE"
     )
@@ -725,6 +746,10 @@ print(f"H1    : {leitura_top_down['h1_contexto']}")
 print(f"M15   : {leitura_top_down['m15_gatilho']}")
 print(f"ALINHAMENTO: {leitura_top_down['alinhamento']}")
 
+# Em modo bootstrap, passa o region_id da zona de laboratorio criada acima
+# para que a pre-operacao tenha uma zona valida associada e passe o guard
+# estrutural validate_zone_for_execution.
+bootstrap_region = bootstrap_region_id if modo_bootstrap and operacao is not None else ""
 registrar_pre_operacao(
     ativo,
     direcao if direcao != "AGUARDAR" else direcao_candidata,
@@ -737,6 +762,7 @@ registrar_pre_operacao(
     confianca,
     brain_score,
     context_mode=timeframe_policy["mode"],
+    region_id=bootstrap_region,
     bootstrap=modo_bootstrap,
 )
 

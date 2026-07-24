@@ -11,14 +11,14 @@ def detectar_ativo():
         return cache
 
     try:
-        import mt5linux_compat as mt5
+        import mt5_safe as mt5
     except ImportError:
-        _salvar_cache("XAUUSD")
-        return "XAUUSD"
+        _salvar_cache(CANDIDATOS[0])
+        return CANDIDATOS[0]
 
     if not mt5.initialize():
-        _salvar_cache("XAUUSD")
-        return "XAUUSD"
+        _salvar_cache(CANDIDATOS[0])
+        return CANDIDATOS[0]
 
     try:
         total = mt5.symbols_total()
@@ -30,17 +30,15 @@ def detectar_ativo():
                     if cand in nomes:
                         select_ok = mt5.symbol_select(cand, True)
                         if select_ok:
-                            info = mt5.symbol_info(cand)
-                            if info and info.bid and info.bid > 0:
-                                _salvar_cache(cand)
-                                mt5.shutdown()
-                                return cand
+                            _salvar_cache(cand)
+                            mt5.shutdown()
+                            return cand
     except Exception:
         pass
 
     mt5.shutdown()
-    _salvar_cache("XAUUSD")
-    return "XAUUSD"
+    _salvar_cache(CANDIDATOS[0])
+    return CANDIDATOS[0]
 
 
 def _ler_cache():

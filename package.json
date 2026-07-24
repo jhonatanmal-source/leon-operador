@@ -1,0 +1,27 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "LEON XAU ELITE AI — Sistema de análise de trading com memória Obsidian headless.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jhonatanmal-source/leon-operador.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jhonatanmal-source/leon-operador/issues"
+  },
+  "homepage": "https://github.com/jhonatanmal-source/leon-operador#readme",
+  "dependencies": {
+    "obsidian-headless": "^0.0.13"
+  }
+}

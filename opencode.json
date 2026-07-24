@@ -1,0 +1,41 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "leon-memory": {
+      "type": "local",
+      "command": [
+        "python3",
+        "src/mcp/leon_memory_mcp.py"
+      ],
+      "environment": {},
+      "enabled": true
+    },
+    "leon-market": {
+      "type": "local",
+      "command": [
+        "python3",
+        "src/mcp/leon_market_mcp.py"
+      ],
+      "environment": {},
+      "enabled": true
+    },
+    "leon-backtest": {
+      "type": "local",
+      "command": [
+        "python3",
+        "src/mcp/leon_backtest_mcp.py"
+      ],
+      "environment": {},
+      "enabled": true
+    },
+    "leon-replay": {
+      "type": "local",
+      "command": [
+        "python3",
+        "src/mcp/leon_replay_mcp.py"
+      ],
+      "environment": {},
+      "enabled": true
+    }
+  }
+}

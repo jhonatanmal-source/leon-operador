@@ -11,6 +11,7 @@ from pathlib import Path
 from src.market_context_agent import revisar_contextos
 from src.operator_council import avaliar_conselho_operadores
 from src.operator_status import obter_status_operadores
+from src.memory_context_engine import gerar_resumo_professor, consultar_contexto
 from src.operation_readiness import avaliar_prontidao_operacional
 from src.pre_operation_engine import resumo_pre_operacao
 from src.risk_control_agent import calcular_plano_risco, resumo_risco
@@ -466,6 +467,7 @@ def enviar_status_operadores():
     setup = operadores["setup"]
     risco = operadores["risk"]
     professor = operadores["professor"]
+    memoria = operadores["memoria"]
     telegram = operadores["telegram"]
     alinhamento = operadores["alignment"]
     pre_operacao = resumo_pre_operacao()
@@ -542,6 +544,11 @@ def enviar_status_operadores():
         _linha("Estado", professor.get("emotion", {}).get("emotion")),
         _linha("Pensamento", professor.get("emotion", {}).get("message")),
         _linha("Ultima licao", contexto.get("last_lesson") or "Em observacao"),
+        _espaco(),
+        _bloco("MEMORIA"),
+        _linha("Registros", memoria.get("total_registros", 0)),
+        _linha("Acertos", f'{memoria.get("taxa_acerto", 0)}%'),
+        _linha("Shadow", "ATIVO" if memoria.get("shadow_mode") else "INATIVO"),
         _espaco(),
         _linha("Proximo envio", telegram.get("next_heartbeat")),
     ])

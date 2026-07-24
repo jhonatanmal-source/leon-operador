@@ -30,6 +30,9 @@ from src.autonomy_guard import status_autonomia
 from src.timeframe_policy import evaluate_timeframe_policy
 from src.interest_zone_engine import validate_zone_for_execution
 
+# _mt5_exec is resolved dynamically inside executar_ordem_mt5_pre_operacao()
+# to allow test mocking. It is not imported at module level.
+
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 CONFIG_FILE = ROOT_DIR / "config.ini"
@@ -810,7 +813,7 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
     mt5_inicializado = False
 
     try:
-        import mt5linux_compat as mt5
+        import mt5_safe as mt5
 
         if not mt5.initialize():
             return _bloqueio("MT5_INITIALIZE_FAILED", str(mt5.last_error()))
@@ -1084,7 +1087,14 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
             "type_filling": mt5.ORDER_FILLING_IOC,
         }
 
-        resultado = mt5.order_send(request)
+        # SAFETY: order_send is called ONLY after all guards passed:
+        #   - demo_only check, daily loss, SMC structure, news shield,
+        #   - top-down alignment, brain score, operator council,
+        #   - spread limit, entry drift, live RR, risk control, lot validation.
+        # Dynamically resolve mt5linux_compat to support test mocking.
+        # Using direct import (not mt5_safe) because mt5_safe blocks order_send.
+        import mt5linux_compat as _mt5_exec  # noqa: E402
+        resultado = _mt5_exec.order_send(request)
         mt5.shutdown()
 
         retcode = getattr(resultado, "retcode", None)

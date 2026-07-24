@@ -8,6 +8,9 @@ ROOT = Path(__file__).resolve().parent.parent
 DIARIOS = ROOT / "tarefas" / "aprendizados_diarios"
 CONTEXTO_FILE = DIARIOS / "CONTEXTO_EVOLUCAO.md"
 INDICE_FILE = DIARIOS / "INDICE.md"
+VAULT_DIARIOS = ROOT / "obsidian_vault" / "aprendizados_diarios"
+VAULT_CONTEXTO = VAULT_DIARIOS / "CONTEXTO_EVOLUCAO.md"
+VAULT_INDICE = VAULT_DIARIOS / "INDICE.md"
 
 SECOES = [
     "Operações / Missões Executadas",
@@ -83,6 +86,31 @@ def _gerar_tabela_correcoes(
     return "\n".join(linhas)
 
 
+def _sincronizar_vault_para_tarefas():
+    """Importa arquivos do vault Obsidian que não existem em tarefas/."""
+    if not VAULT_DIARIOS.exists():
+        return 0
+    contador = 0
+    for vault_file in VAULT_DIARIOS.glob("*.md"):
+        nome = vault_file.name
+        if nome in ("CONTEXTO_EVOLUCAO.md", "INDICE.md", "README.md"):
+            continue
+        tarefa_file = DIARIOS / nome
+        if not tarefa_file.exists():
+            tarefa_file.write_text(vault_file.read_text(encoding="utf-8"), encoding="utf-8")
+            contador += 1
+    return contador
+
+
+def _sincronizar_para_vault(arquivo_tarefas: Path, vault_destino: Path) -> bool:
+    """Copia um arquivo de tarefas/ para o vault Obsidian."""
+    if not arquivo_tarefas.exists():
+        return False
+    VAULT_DIARIOS.mkdir(parents=True, exist_ok=True)
+    vault_destino.write_text(arquivo_tarefas.read_text(encoding="utf-8"), encoding="utf-8")
+    return True
+
+
 def _atualizar_contexto_evolucao(consolidado: dict[str, list[str]]) -> bool:
     padroes = _identificar_padroes_recorrentes(consolidado)
     correcoes = _gerar_tabela_correcoes(consolidado)
@@ -137,6 +165,7 @@ Contém padrões, decisões, erros e correções acumulados que evoluem o conhec
             return False
 
     CONTEXTO_FILE.write_text(novo, encoding="utf-8")
+    _sincronizar_para_vault(CONTEXTO_FILE, VAULT_CONTEXTO)
     return True
 
 
@@ -167,6 +196,7 @@ def _atualizar_indice() -> bool:
             return False
 
     INDICE_FILE.write_text(novo, encoding="utf-8")
+    _sincronizar_para_vault(INDICE_FILE, VAULT_INDICE)
     return True
 
 
@@ -193,8 +223,11 @@ def _gerar_resumo(consolidado: dict[str, list[str]]) -> str:
 
 def executar_sincronizacao(force: bool = False) -> str:
     DIARIOS.mkdir(parents=True, exist_ok=True)
+    importados = _sincronizar_vault_para_tarefas()
     consolidado = _consolidar_todos_aprendizados()
     resumo = _gerar_resumo(consolidado)
+    if importados:
+        print(f"  Importados do vault: {importados} arquivos")
     print(resumo)
     return resumo
 

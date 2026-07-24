@@ -54,14 +54,26 @@ def validate_smc_entry(direction, smc, bos, choch):
             "reason": "INVALID_ORDER_DIRECTION",
         }
 
-    smc_ok = smc == expected["smc"]
     bos_ok = bos == expected["bos"]
     choch_ok = choch == expected["choch"]
+
+    # ── SMC context: accept exact match OR ABC_RANGE with aligned BOS+CHOCH ──
+    # ABC_RANGE means the market is in correction/consolidation, but when the
+    # microstructure (BOS + CHOCH) confirms a direction, the range should not
+    # block entries. This matches real market behavior where trends emerge
+    # from ranges.
+    smc_ok = smc == expected["smc"] or (
+        smc == "ABC_RANGE" and bos_ok and choch_ok
+    )
+
+    # ── Detect if ABC_RANGE was accepted (structure confirmed via BOS+CHOCH) ──
+    smc_is_abc_range = smc == "ABC_RANGE" and smc_ok and (bos_ok and choch_ok)
+    range_suffix = "_VIA_ABC_RANGE" if smc_is_abc_range else ""
 
     if smc_ok and bos_ok and choch_ok:
         return {
             "approved": True,
-            "reason": "SMC_STRUCTURE_CONFIRMED_CHOCH_BOS",
+            "reason": f"SMC_STRUCTURE_CONFIRMED_CHOCH_BOS{range_suffix}",
             "expected": expected,
             "received": {
                 "smc": smc,
@@ -73,7 +85,7 @@ def validate_smc_entry(direction, smc, bos, choch):
     if smc_ok and bos_ok:
         return {
             "approved": True,
-            "reason": "SMC_STRUCTURE_CONFIRMED_BOS",
+            "reason": f"SMC_STRUCTURE_CONFIRMED_BOS{range_suffix}",
             "expected": expected,
             "received": {
                 "smc": smc,

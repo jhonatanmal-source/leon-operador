@@ -1,5 +1,6 @@
 # Secrets and machine-specific configuration
 .env
+.env.encrypted
 config.ini
 *.key
 *.pem
@@ -7,6 +8,8 @@ config.ini
 *.p12
 *credentials*
 *secrets*
+/master_key
+.master_key
 
 # Runtime data and private databases
 data/
@@ -32,6 +35,17 @@ __pycache__/
 .ruff_cache/
 .venv/
 venv/
+
+# Obsidian vault (user content)
+obsidian_vault/.obsidian/workspace.json
+obsidian_vault/.obsidian/caches/
+obsidian_vault/.obsidian/plugins/
+obsidian_vault/.obsidian/themes/
+obsidian_vault/.obsidian/network-cache/
+
+# Node modules (obsidian-headless)
+node_modules/
+package-lock.json
 
 # Windows and temporary files
 Thumbs.db

@@ -13,12 +13,24 @@ def _get_client():
     return _CLIENT
 
 
+def _reset_client():
+    global _CLIENT
+    _CLIENT = None
+
+
 def initialize(*args, **kwargs):
-    return _get_client().initialize(*args, **kwargs)
+    try:
+        return _get_client().initialize(*args, **kwargs)
+    except Exception:
+        _reset_client()
+        return False
 
 
 def shutdown(*args, **kwargs):
-    return _get_client().shutdown(*args, **kwargs)
+    try:
+        return _get_client().shutdown(*args, **kwargs)
+    finally:
+        _reset_client()
 
 
 def login(*args, **kwargs):

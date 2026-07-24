@@ -8,6 +8,7 @@ User=leon
 WorkingDirectory=/opt/leon/app
 Environment=PYTHONUNBUFFERED=1
 Environment=PYTHONPATH=/opt/leon/app:/opt/leon/app/src
+ExecStartPre=/opt/leon/app/scripts/unlock_env.sh
 ExecStart=/opt/leon/venv/bin/python -u /opt/leon/app/src/leon_operator.py
 Restart=on-failure
 RestartSec=30

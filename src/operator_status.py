@@ -10,6 +10,7 @@ from pathlib import Path
 from src.autonomy_guard import status_autonomia
 from src.emotion_engine import get_emotional_state
 from src.telegram_config import CHAT_ID, TELEGRAM_ENABLED, TOKEN
+from src.memory_context_engine import obter_metricas_memoria
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -403,6 +404,23 @@ def _status_professor():
     }
 
 
+
+def _status_memoria():
+
+    metricas = obter_metricas_memoria()
+
+    return {
+        "name": "Memoria Contextual",
+        "status": "ATIVA" if metricas["total"] > 0 else "AGUARDANDO",
+        "summary": "Banco de experiencias contextuais.",
+        "total_registros": metricas["total"],
+        "vitorias": metricas["vitorias"],
+        "derrotas": metricas["derrotas"],
+        "taxa_acerto": metricas["taxa_acerto"],
+        "shadow_mode": metricas["shadow_mode"],
+    }
+
+
 def _status_telegram():
     operador = _config_operador()
     ultimo_status = _ler_datetime_arquivo(TELEGRAM_STATUS_STATE_FILE)
@@ -444,6 +462,7 @@ def obter_status_operadores():
     setup = _status_setup()
     risk = _status_risco()
     professor = _status_professor()
+    memoria = _status_memoria()
     telegram = _status_telegram()
 
     return {
@@ -454,6 +473,7 @@ def obter_status_operadores():
             "setup": setup,
             "risk": risk,
             "professor": professor,
+            "memoria": memoria,
             "telegram": telegram,
             "alignment": _diagnosticar_alinhamento(
                 structure,

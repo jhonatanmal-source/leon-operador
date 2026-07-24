@@ -1,3 +1,4 @@
+from asset_detector import detectar_ativo
 import csv
 import hashlib
 from pathlib import Path
@@ -54,7 +55,7 @@ def _recent_leon_orders(limit=5):
 
 def get_mt5_monitor_status(symbol="XAUUSD"):
     try:
-        import mt5linux_compat as mt5
+        import mt5_safe as mt5
     except ImportError:
         return {
             "connected": False,

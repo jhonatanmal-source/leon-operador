@@ -1,4 +1,4 @@
-import mt5linux_compat as mt5
+import mt5_safe as mt5
 import pandas as pd
 
 from bos_engine import analisar_bos

@@ -16,7 +16,7 @@ SIMBOLO_PADRAO = "Gold_Spot"
 def executar_coleta_manual(simbolo=SIMBOLO_PADRAO):
 
     try:
-        import mt5linux_compat as mt5
+        import mt5_safe as mt5
     except ImportError as erro:
         registrar_erro(f"COLLECTOR | MetaTrader5 nao instalado: {erro}")
         return {

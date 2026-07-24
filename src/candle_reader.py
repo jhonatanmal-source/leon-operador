@@ -4,7 +4,7 @@
 
 from src.candle_logger import registrar_candle
 
-import mt5linux_compat as mt5
+import mt5_safe as mt5
 
 def ler_candle_m15():
 
