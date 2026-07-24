@@ -1,0 +1,332 @@
+{
+  "batch": 8,
+  "generated_at": "2026-07-23T23:55:22",
+  "period_start": "2026-07-23T23:50:01",
+  "period_end": "2026-07-23T23:55:21",
+  "operation_ids": [
+    "PREOP-000174",
+    "PREOP-000175",
+    "PREOP-000176",
+    "PREOP-000177",
+    "PREOP-000178",
+    "PREOP-000181",
+    "PREOP-000182",
+    "PREOP-000183",
+    "PREOP-000184",
+    "PREOP-000185",
+    "PREOP-000186",
+    "PREOP-000187",
+    "PREOP-000188",
+    "PREOP-000189",
+    "PREOP-000190",
+    "PREOP-000191",
+    "PREOP-000063",
+    "PREOP-000084",
+    "PREOP-000089",
+    "PREOP-000091"
+  ],
+  "total": 20,
+  "wins": 20,
+  "losses": 0,
+  "winrate": 100.0,
+  "average_rr": 3.0,
+  "net_r": 40.5,
+  "best_contexts": [
+    {
+      "dimension": "direcao",
+      "value": "VENDA",
+      "total": 20,
+      "wins": 20,
+      "losses": 0,
+      "winrate": 100.0
+    },
+    {
+      "dimension": "setup",
+      "value": "SETUP FRACO",
+      "total": 20,
+      "wins": 20,
+      "losses": 0,
+      "winrate": 100.0
+    },
+    {
+      "dimension": "bos",
+      "value": "BOS_BEARISH",
+      "total": 20,
+      "wins": 20,
+      "losses": 0,
+      "winrate": 100.0
+    },
+    {
+      "dimension": "choch",
+      "value": "CHOCH_BEARISH",
+      "total": 20,
+      "wins": 20,
+      "losses": 0,
+      "winrate": 100.0
+    },
+    {
+      "dimension": "rr",
+      "value": "RR_3_OU_MAIS",
+      "total": 20,
+      "wins": 20,
+      "losses": 0,
+      "winrate": 100.0
+    }
+  ],
+  "weak_contexts": [
+    {
+      "dimension": "direcao",
+      "value": "VENDA",
+      "total": 20,
+      "wins": 20,
+      "losses": 0,
+      "winrate": 100.0
+    },
+    {
+      "dimension": "setup",
+      "value": "SETUP FRACO",
+      "total": 20,
+      "wins": 20,
+      "losses": 0,
+      "winrate": 100.0
+    },
+    {
+      "dimension": "bos",
+      "value": "BOS_BEARISH",
+      "total": 20,
+      "wins": 20,
+      "losses": 0,
+      "winrate": 100.0
+    },
+    {
+      "dimension": "choch",
+      "value": "CHOCH_BEARISH",
+      "total": 20,
+      "wins": 20,
+      "losses": 0,
+      "winrate": 100.0
+    },
+    {
+      "dimension": "rr",
+      "value": "RR_3_OU_MAIS",
+      "total": 20,
+      "wins": 20,
+      "losses": 0,
+      "winrate": 100.0
+    }
+  ],
+  "recommendations": [
+    {
+      "batch": 8,
+      "dimension": "sessao",
+      "value": "ASIA",
+      "sample": 19,
+      "winrate": 100.0,
+      "action": "AUMENTAR_CONFIANCA_RECOMENDADA",
+      "suggested_adjustment": 5,
+      "reason": "Contexto consistente no bloco.",
+      "applied_automatically": true
+    },
+    {
+      "batch": 8,
+      "dimension": "top_down",
+      "value": "ALINHADO",
+      "sample": 17,
+      "winrate": 100.0,
+      "action": "AUMENTAR_CONFIANCA_RECOMENDADA",
+      "suggested_adjustment": 5,
+      "reason": "Contexto consistente no bloco.",
+      "applied_automatically": true
+    },
+    {
+      "batch": 8,
+      "dimension": "direcao",
+      "value": "VENDA",
+      "sample": 20,
+      "winrate": 100.0,
+      "action": "AUMENTAR_CONFIANCA_RECOMENDADA",
+      "suggested_adjustment": 5,
+      "reason": "Contexto consistente no bloco.",
+      "applied_automatically": true
+    },
+    {
+      "batch": 8,
+      "dimension": "smc",
+      "value": "BEARISH",
+      "sample": 13,
+      "winrate": 100.0,
+      "action": "AUMENTAR_CONFIANCA_RECOMENDADA",
+      "suggested_adjustment": 5,
+      "reason": "Contexto consistente no bloco.",
+      "applied_automatically": true
+    },
+    {
+      "batch": 8,
+      "dimension": "elliott",
+      "value": "ABC_RANGE",
+      "sample": 17,
+      "winrate": 100.0,
+      "action": "AUMENTAR_CONFIANCA_RECOMENDADA",
+      "suggested_adjustment": 5,
+      "reason": "Contexto consistente no bloco.",
+      "applied_automatically": true
+    },
+    {
+      "batch": 8,
+      "dimension": "setup",
+      "value": "SETUP FRACO",
+      "sample": 20,
+      "winrate": 100.0,
+      "action": "AUMENTAR_CONFIANCA_RECOMENDADA",
+      "suggested_adjustment": 5,
+      "reason": "Contexto consistente no bloco.",
+      "applied_automatically": true
+    },
+    {
+      "batch": 8,
+      "dimension": "bos",
+      "value": "BOS_BEARISH",
+      "sample": 20,
+      "winrate": 100.0,
+      "action": "AUMENTAR_CONFIANCA_RECOMENDADA",
+      "suggested_adjustment": 5,
+      "reason": "Contexto consistente no bloco.",
+      "applied_automatically": true
+    },
+    {
+      "batch": 8,
+      "dimension": "choch",
+      "value": "CHOCH_BEARISH",
+      "sample": 20,
+      "winrate": 100.0,
+      "action": "AUMENTAR_CONFIANCA_RECOMENDADA",
+      "suggested_adjustment": 5,
+      "reason": "Contexto consistente no bloco.",
+      "applied_automatically": true
+    },
+    {
+      "batch": 8,
+      "dimension": "rr",
+      "value": "RR_3_OU_MAIS",
+      "sample": 20,
+      "winrate": 100.0,
+      "action": "AUMENTAR_CONFIANCA_RECOMENDADA",
+      "suggested_adjustment": 5,
+      "reason": "Contexto consistente no bloco.",
+      "applied_automatically": true
+    }
+  ],
+  "analyses": {
+    "sessao": [
+      {
+        "value": "ASIA",
+        "total": 19,
+        "wins": 19,
+        "losses": 0,
+        "winrate": 100.0
+      },
+      {
+        "value": "FORA_DAS_SESSOES",
+        "total": 1,
+        "wins": 1,
+        "losses": 0,
+        "winrate": 100.0
+      }
+    ],
+    "top_down": [
+      {
+        "value": "ALINHADO",
+        "total": 17,
+        "wins": 17,
+        "losses": 0,
+        "winrate": 100.0
+      },
+      {
+        "value": "MISTO",
+        "total": 3,
+        "wins": 3,
+        "losses": 0,
+        "winrate": 100.0
+      }
+    ],
+    "direcao": [
+      {
+        "value": "VENDA",
+        "total": 20,
+        "wins": 20,
+        "losses": 0,
+        "winrate": 100.0
+      }
+    ],
+    "smc": [
+      {
+        "value": "BEARISH",
+        "total": 13,
+        "wins": 13,
+        "losses": 0,
+        "winrate": 100.0
+      },
+      {
+        "value": "NEUTRO",
+        "total": 7,
+        "wins": 7,
+        "losses": 0,
+        "winrate": 100.0
+      }
+    ],
+    "elliott": [
+      {
+        "value": "ABC_RANGE",
+        "total": 17,
+        "wins": 17,
+        "losses": 0,
+        "winrate": 100.0
+      },
+      {
+        "value": "POSSIVEL ONDA 3",
+        "total": 3,
+        "wins": 3,
+        "losses": 0,
+        "winrate": 100.0
+      }
+    ],
+    "setup": [
+      {
+        "value": "SETUP FRACO",
+        "total": 20,
+        "wins": 20,
+        "losses": 0,
+        "winrate": 100.0
+      }
+    ],
+    "bos": [
+      {
+        "value": "BOS_BEARISH",
+        "total": 20,
+        "wins": 20,
+        "losses": 0,
+        "winrate": 100.0
+      }
+    ],
+    "choch": [
+      {
+        "value": "CHOCH_BEARISH",
+        "total": 20,
+        "wins": 20,
+        "losses": 0,
+        "winrate": 100.0
+      }
+    ],
+    "rr": [
+      {
+        "value": "RR_3_OU_MAIS",
+        "total": 20,
+        "wins": 20,
+        "losses": 0,
+        "winrate": 100.0
+      }
+    ]
+  },
+  "rules_changed": false,
+  "report": "LEON | REVISAO DE 20 OPERACOES\n=================================\nBloco: 8\nPeriodo: 2026-07-23T23:50:01 ate 2026-07-23T23:55:21\nOperacoes: 20\nVitorias: 20\nDerrotas: 0\nTaxa de acerto: 100.0%\nRR medio: 1:3.0\nResultado liquido simulado: 40.5R\n\nMelhores contextos\n- direcao=VENDA | 100.0% em 20 operacoes\n- setup=SETUP FRACO | 100.0% em 20 operacoes\n- bos=BOS_BEARISH | 100.0% em 20 operacoes\n- choch=CHOCH_BEARISH | 100.0% em 20 operacoes\n- rr=RR_3_OU_MAIS | 100.0% em 20 operacoes\n\nContextos para revisar\n- direcao=VENDA | 100.0% em 20 operacoes\n- setup=SETUP FRACO | 100.0% em 20 operacoes\n- bos=BOS_BEARISH | 100.0% em 20 operacoes\n- choch=CHOCH_BEARISH | 100.0% em 20 operacoes\n- rr=RR_3_OU_MAIS | 100.0% em 20 operacoes\n\nRecomendacoes de confianca\n- AUMENTAR_CONFIANCA_RECOMENDADA: sessao=ASIA (100.0%, amostra 19, ajuste sugerido +5)\n- AUMENTAR_CONFIANCA_RECOMENDADA: top_down=ALINHADO (100.0%, amostra 17, ajuste sugerido +5)\n- AUMENTAR_CONFIANCA_RECOMENDADA: direcao=VENDA (100.0%, amostra 20, ajuste sugerido +5)\n- AUMENTAR_CONFIANCA_RECOMENDADA: smc=BEARISH (100.0%, amostra 13, ajuste sugerido +5)\n- AUMENTAR_CONFIANCA_RECOMENDADA: elliott=ABC_RANGE (100.0%, amostra 17, ajuste sugerido +5)\n- AUMENTAR_CONFIANCA_RECOMENDADA: setup=SETUP FRACO (100.0%, amostra 20, ajuste sugerido +5)\n- AUMENTAR_CONFIANCA_RECOMENDADA: bos=BOS_BEARISH (100.0%, amostra 20, ajuste sugerido +5)\n- AUMENTAR_CONFIANCA_RECOMENDADA: choch=CHOCH_BEARISH (100.0%, amostra 20, ajuste sugerido +5)\n- AUMENTAR_CONFIANCA_RECOMENDADA: rr=RR_3_OU_MAIS (100.0%, amostra 20, ajuste sugerido +5)\n- 9 recomendacao(oes) foram aplicadas automaticamente.\n\nProtecao\n- Risco, BOS, CHOCH, setup e regras operacionais permanecem inalterados.\n================================="
+}

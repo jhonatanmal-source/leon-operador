@@ -1,0 +1,42 @@
+{
+  "mission_id": "MISSION-20260723-MCPS",
+  "date": "2026-07-23",
+  "type": "INFRAESTRUTURA / IA / DESENVOLVIMENTO",
+  "description": "Criação de 4 MCPs (Memory, Market, Backtest, Replay) para o LEON",
+  "status": "CONCLUÍDO",
+  "phases": {
+    "triage": "COMPLETED",
+    "diagnosis": "COMPLETED",
+    "plan": "COMPLETED",
+    "convocation": "COMPLETED",
+    "implementation": "COMPLETED",
+    "tests": "COMPLETED",
+    "review": "COMPLETED",
+    "security": "COMPLETED",
+    "documentation": "COMPLETED",
+    "report": "COMPLETED",
+    "approval": "PENDING"
+  },
+  "files_created": [
+    "src/mcp/mcp_protocol.py",
+    "src/mcp/_mt5_safe.py",
+    "src/mcp/leon_memory_mcp.py",
+    "src/mcp/leon_market_mcp.py",
+    "src/mcp/leon_backtest_mcp.py",
+    "src/mcp/leon_replay_mcp.py",
+    "opencode.json",
+    "docs/mcp.md"
+  ],
+  "files_modified": [],
+  "files_operational_affected": [],
+  "mcp_servers": {
+    "leon-memory": {"tools": 6, "file": "src/mcp/leon_memory_mcp.py"},
+    "leon-market": {"tools": 7, "file": "src/mcp/leon_market_mcp.py"},
+    "leon-backtest": {"tools": 4, "file": "src/mcp/leon_backtest_mcp.py"},
+    "leon-replay": {"tools": 5, "file": "src/mcp/leon_replay_mcp.py"}
+  },
+  "security_verified": true,
+  "mt5_affected": false,
+  "real_account_affected": false,
+  "strategy_risk_tp_sl_affected": false
+}

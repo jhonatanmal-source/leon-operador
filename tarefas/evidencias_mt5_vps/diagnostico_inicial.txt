@@ -1,0 +1,46 @@
+======================================================================
+DIAGNOSTICO MT5 VPS
+======================================================================
+data_hora:      2026-07-23T13:18:39.809338
+hostname:       vps10098.panel.icontainer.net
+usuario:        leon
+sessao:         N/A
+python:         /opt/leon/venv/bin/python3
+python_ver:     3.12.3
+arquitetura:    ('64bit', 'ELF')
+diretorio:      /home/leon
+mt5_procs:      3
+  leon       23372  5.0  2.9 1395804 178976 ?      Sl   Jul20 228:48 C:\Program Files\MetaTrader 5\terminal64.exe /portable
+  leon      127642  0.0  0.1 2690336 8832 ?        S    Jul22   0:00 start.exe /exec /home/leon/.mt5/drive_c/Program Files/MetaTrader 5/terminal64.exe
+  leon      127717  5.4  3.1 1572996 190400 ?      Sl   Jul22  66:57 C:\Program Files\MetaTrader 5\terminal64.exe /portable
+rpyc_procs:     3
+terminal_existe:True
+
+--- MT5 VIA RPyc (mt5linux) ---
+initialize:     True
+last_error:     (1, 'Success')
+version:        (500, 6034, '18 Jul 2026')
+term_name:      MetaTrader 5
+term_connected: True
+term_path:      C:\Program Files\MetaTrader 5
+acc_login:      207815
+acc_server:     FXGlobeInternational-Real
+acc_balance:    10000.0
+acc_currency:   USD
+acc_trade_allow:True
+
+--- SYMBOLS ---
+symbols_total:  177
+symbols_get:    177 symbols
+XAU/GOLD syms:  2
+  Gold_Spot | select=True | visible=True | spread=36
+  GoldmanSacs | select=False | visible=False | spread=0
+
+--- XAUUSD SELECT ---
+symbol_select:  False
+symbol_info:    None
+
+STATUS:         MT5_OK
+
+======================================================================
+DIAGNOSTICO CONCLUIDO
