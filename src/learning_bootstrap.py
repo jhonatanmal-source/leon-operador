@@ -22,6 +22,7 @@ def obter_limiares():
         "min_pre_operation_winrate": 40.0,
         "auto_simulate_on_weak_setup": True,
         "auto_simulate_min_score": 30,
+        "auto_simulate_min_winrate": 0.0,
     }
     config = configparser.ConfigParser()
     config.read(CONFIG_FILE, encoding="utf-8")
@@ -33,6 +34,7 @@ def obter_limiares():
         "min_pre_operation_winrate": secao.getfloat("min_winrate", fallback=padrao["min_pre_operation_winrate"]),
         "auto_simulate_on_weak_setup": secao.get("auto_simulate", fallback=str(padrao["auto_simulate_on_weak_setup"])).lower() == "true",
         "auto_simulate_min_score": secao.getint("auto_simulate_min_score", fallback=padrao["auto_simulate_min_score"]),
+        "auto_simulate_min_winrate": secao.getfloat("auto_simulate_min_winrate", fallback=padrao["auto_simulate_min_winrate"]),
     }
 
 
@@ -156,6 +158,64 @@ def avaliar_entradas_simuladas(candles):
         writer.writerows(rows)
 
     return {"ok": True, "updated": updated}
+
+
+def _winrate_shadows_recentes(ultimas_n=20):
+    """Calcula winrate das últimas N shadow trades fechadas.
+
+    Usado pelo bootstrap para decidir se continua simulando.
+    Se winrate muito baixa, o bootstrap pausa para evitar perdas em sequência.
+    """
+    import csv
+    shadow_file = DATA_DIR / "shadow_trades.csv"
+    if not shadow_file.exists():
+        return {"winrate": 0, "fechados": 0, "wins": 0, "losses": 0}
+
+    with shadow_file.open("r", encoding="utf-8", newline="") as f:
+        rows = list(csv.DictReader(f, delimiter=";"))
+
+    fechados = [r for r in rows if r.get("status") == "FECHADO"][-ultimas_n:]
+    if not fechados:
+        return {"winrate": 0, "fechados": 0, "wins": 0, "losses": 0}
+
+    wins = sum(1 for r in fechados if r.get("result") == "WIN_2R")
+    losses = sum(1 for r in fechados if r.get("result") == "LOSS")
+    total = wins + losses
+    winrate = round(wins / total * 100, 1) if total else 0
+
+    return {"winrate": winrate, "fechados": total, "wins": wins, "losses": losses}
+
+
+def auto_simulate_permitido(brain_score=0, winrate_min=None):
+    """Verifica se o bootstrap pode fazer auto-simulate.
+
+    Critérios:
+    - brain_score >= auto_simulate_min_score
+    - winrate das últimas shadows >= auto_simulate_min_winrate (se houver dados)
+    - Sem dados de winrate (0 fechados) → permite (fase inicial de coleta)
+    """
+    limiares = obter_limiares()
+    if not limiares["auto_simulate_on_weak_setup"]:
+        return False, "AUTO_SIMULATE_DISABLED"
+
+    if int(brain_score or 0) < limiares["auto_simulate_min_score"]:
+        return False, f"BRAIN_SCORE_BAIXO ({brain_score} < {limiares['auto_simulate_min_score']})"
+
+    wr_min = winrate_min if winrate_min is not None else limiares.get("auto_simulate_min_winrate", 30)
+    recente = _winrate_shadows_recentes(ultimas_n=20)
+
+    # Sem dados fechados ainda → permite (fase de coleta)
+    if recente["fechados"] == 0:
+        return True, "SEM_DADOS_AINDA"
+
+    if recente["winrate"] < wr_min:
+        return False, (
+            f"WINRATE_BAIXA ({recente['winrate']}% < {wr_min}%) "
+            f"nas últimas {recente['fechados']} shadows "
+            f"({recente['wins']}W/{recente['losses']}L)"
+        )
+
+    return True, f"OK ({recente['winrate']}% em {recente['fechados']} shadows)"
 
 
 def ler_progresso_bootstrap():

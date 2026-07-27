@@ -36,6 +36,7 @@ import autonomy_guard
 
 from src.telegram_config import TOKEN, CHAT_ID, TELEGRAM_TIMEOUT
 from src.telegram_engine import enviar_mensagem
+from src.telegram_analysis_status import build_analysis_message
 
 # ─── MCP handlers ─────────────────────────────────────────────
 # Importamos diretamente os handlers para executar a lógica sem subprocessos
@@ -80,11 +81,14 @@ STATE_FILE = PROJECT_ROOT / "data" / "telegram_commands_offset.json"
 BOT_COMMANDS = [
     {"command": "start", "description": "Iniciar o bot e ver boas-vindas"},
     {"command": "help", "description": "Listar todos os comandos disponíveis"},
+    {"command": "status", "description": "Status geral e evolução do LEON"},
     {"command": "memory", "description": "Consultar memória e contexto do LEON"},
     {"command": "market", "description": "Obter dados de mercado (preços, OHLC)"},
+    {"command": "analise", "description": "Ver a análise atual do operador VPS"},
     {"command": "backtest", "description": "Executar ou listar backtests"},
     {"command": "replay", "description": "Reproduzir operações passadas"},
     {"command": "autonomy", "description": "Ver estado da autonomia | on <min> | off"},
+    {"command": "go", "description": "Ativar autonomia do LEON (24h demo)"},
 ]
 
 
@@ -133,8 +137,11 @@ def _formatar_start(chat_info: dict) -> str:
         f"🤖 *LEON XAU ELITE AI*\n\n"
         f"Olá, {first_name}! Eu sou o LEON, seu assistente de trading.\n\n"
         f"Comandos disponíveis:\n"
+        f"/status  — Status geral e evolução\n"
+        f"/go      — Ativar autonomia (24h demo)\n"
         f"/memory  — Consultar memória e contexto\n"
         f"/market  — Dados de mercado\n"
+        f"/analise — Leitura atual do operador VPS\n"
         f"/backtest — Backtests\n"
         f"/replay  — Replay de operações\n\n"
         f"Use /help para detalhes."
@@ -145,13 +152,15 @@ def _formatar_help() -> str:
     return (
     "📋 *Comandos do LEON*\n\n"
     "*/start* — Mensagem de boas-vindas\n"
-    "*/help* — Esta ajuda\n\n"
+    "*/help* — Esta ajuda\n"
+    "*/status* — Status geral, winrate e evolução\n\n"
     "*🧠 Memory MCP*\n"
     "/memory — Contexto acumulado do LEON\n"
     "/memory busca <termo> — Busca no vault Obsidian\n\n"
     "*📊 Market MCP*\n"
     "/market — Snapshot do mercado (símbolo ativo)\n"
     "/market <símbolo> — Snapshot de um símbolo específico\n\n"
+    "*/analise* — Visão oficial, região, bloqueios e exposição DEMO\n\n"
     "*🔬 Backtest MCP*\n"
     "/backtest — Lista os últimos backtests\n"
     "/backtest executar <dias> — Executa backtest (ex: /backtest executar 7)\n\n"
@@ -159,8 +168,9 @@ def _formatar_help() -> str:
     "/replay — Lista últimas operações\n"
     "/replay <ID> — Detalha uma operação específica\n\n"
     "*🤖 Autonomia*\n"
+    "/go — Ativar autonomia (24h demo)\n"
     "/autonomy — Ver estado da autonomia\n"
-    "/autonomy on <min> — Conceder autonomia\n"
+    "/autonomy on <min> — Conceder autonomia por N minutos\n"
     "/autonomy off — Revogar autonomia\n\n"
     "💡 Dica: envie o comando sem argumentos para ver o formato esperado."
     )
@@ -259,6 +269,18 @@ def _formatar_market(args: str) -> str:
     
     except (json.JSONDecodeError, KeyError) as e:
         return f"📊 *Mercado*\n\n{texto[:1500]}"
+
+
+def _formatar_analise(args: str = "") -> str:
+    """Consulta informativa da leitura atual produzida pelo operador VPS."""
+    try:
+        import mt5_safe
+    except Exception:
+        mt5_safe = None
+    return build_analysis_message(
+        PROJECT_ROOT / "data",
+        mt5_module=mt5_safe,
+    )
 
 
 def _formatar_backtest(args: str) -> str:
@@ -443,15 +465,21 @@ def _formatar_autonomy(args: str) -> str:
                 msg += f"Expirada em: `{_fmt_data(pas)}`\n"
         
         # Mostrar configuração
-        msg += f"\nConfig: max_minutes=`{estado.get('max_minutes', '?')}`"
+        config = autonomy_guard._carregar_config()
+        msg += f"\nConfig: max_minutes=`{config.get('max_minutes', '?')}`"
         return msg.strip()
     
-    elif args.startswith("on "):
-        # Conceder autonomia: /autonomy on <minutos>
-        try:
-            minutos = int(args.split(" ", 1)[1])
-        except (ValueError, IndexError):
-            return "❌ Uso: `/autonomy on <minutos>` (ex: `/autonomy on 60`)"
+    elif args == "on" or args.startswith("on "):
+        # Conceder autonomia: /autonomy on <minutos> ou /autonomy on (usa max_minutes)
+        if args == "on":
+            # Sem argumento: usa max_minutes da config
+            config = autonomy_guard._carregar_config()
+            minutos = config.get("max_minutes", 1440)
+        else:
+            try:
+                minutos = int(args.split(" ", 1)[1])
+            except (ValueError, IndexError):
+                return "❌ Uso: `/autonomy on <minutos>` (ex: `/autonomy on 60`)"
         
         if minutos <= 0:
             return "❌ Minutos deve ser maior que zero."
@@ -491,16 +519,169 @@ def _formatar_autonomy(args: str) -> str:
         )
 
 
+def _formatar_go(args: str) -> str:
+    """
+    Comando /go — Atalho rápido para ativar autonomia.
+    
+    Sem argumentos: concede autonomia com max_minutes da config.
+    Útil para ativar o LEON rapidamente pelo Telegram.
+    """
+    # Verificar estado atual
+    estado = autonomy_guard.status_autonomia()
+    
+    if estado.get("active"):
+        # Já está ativa — mostrar status
+        expira = estado.get("expires_at", "")
+        restante = estado.get("remaining_seconds", 0)
+        minutos_rest = restante // 60
+        msg = (
+            f"🟢 *LEON já está autônomo!*\n\n"
+            f"Escopo: `{estado.get('scope', '?')}`\n"
+            f"Expira: `{_fmt_data(expira)}`\n"
+            f"Restam: `{minutos_rest}m`\n\n"
+            f"Use `/autonomy off` para revogar."
+        )
+        return msg
+    
+    # Conceder autonomia com duração máxima da config
+    config = autonomy_guard._carregar_config()
+    max_min = config.get("max_minutes", 1440)
+    
+    resultado = autonomy_guard.conceder_autonomia(max_min)
+    if not resultado.get("ok"):
+        return f"❌ Erro ao ativar autonomia: `{resultado.get('error', 'Desconhecido')}`"
+    
+    expira = resultado.get("expires_at", "")
+    scope = resultado.get("scope", "?")
+    return (
+        f"🚀 *LEON Autônomo!*\n\n"
+        f"Escopo: `{scope}`\n"
+        f"Duração: `{max_min}` minutos\n"
+        f"Expira: `{_fmt_data(expira)}`\n\n"
+        f"O LEON agora opera autonomamente em demo.\n"
+        f"Use `/autonomy off` para revogar."
+    )
+
+
+# ─── Status / Evolução ────────────────────────────────────────
+
+def _formatar_status(args: str = "") -> str:
+    """Comando /status — Status geral e evolução do LEON."""
+    import csv
+    from pathlib import Path
+
+    data_dir = PROJECT_ROOT / "data"
+    agora = datetime.now()
+
+    # ── Shadow Trades ──────────────────────────────────────────
+    shadow_file = data_dir / "shadow_trades.csv"
+    if shadow_file.exists():
+        rows = list(csv.DictReader(
+            shadow_file.open("r", encoding="utf-8", newline=""),
+            delimiter=";",
+        ))
+        fechadas = [r for r in rows if r.get("status") == "FECHADO"]
+        s_wins = sum(1 for r in fechadas if r.get("result") == "WIN_2R")
+        s_losses = sum(1 for r in fechadas if r.get("result") == "LOSS")
+        s_total = s_wins + s_losses
+        s_wr = round(s_wins / s_total * 100, 1) if s_total else 0
+    else:
+        s_wins = s_losses = s_total = 0
+        s_wr = 0
+
+    # ── Pré-Operações Hoje ─────────────────────────────────────
+    preop_file = data_dir / "pre_operation_trades.csv"
+    hoje = agora.date().isoformat()
+    if preop_file.exists():
+        rows = list(csv.DictReader(
+            preop_file.open("r", encoding="utf-8", newline=""),
+            delimiter=";",
+        ))
+        hj = [r for r in rows if str(r.get("data_abertura", "")).startswith(hoje)]
+        hj_f = [r for r in hj if r.get("status") == "FECHADO"]
+        hj_w = sum(1 for r in hj_f if str(r.get("resultado", "")).startswith("WIN"))
+        hj_l = sum(1 for r in hj_f if r.get("resultado") == "LOSS")
+        hj_total = hj_w + hj_l
+        hj_wr = round(hj_w / hj_total * 100, 1) if hj_total else 0
+        hj_abertas = sum(1 for r in hj if r.get("status") == "ABERTO")
+        hj_sim = sum(1 for r in hj if r.get("resultado") == "EM_SIMULACAO")
+    else:
+        hj_total = hj_w = hj_l = hj_abertas = hj_sim = 0
+        hj_wr = 0
+
+    # ── Últimas 24h ────────────────────────────────────────────
+    if preop_file.exists():
+        from datetime import timedelta
+        limite = (agora - timedelta(hours=24)).isoformat()
+        ult24h = [r for r in rows if str(r.get("data_abertura", "")) >= limite]
+        u24_f = [r for r in ult24h if r.get("status") == "FECHADO"]
+        u24_w = sum(1 for r in u24_f if str(r.get("resultado", "")).startswith("WIN"))
+        u24_l = sum(1 for r in u24_f if r.get("resultado") == "LOSS")
+        u24_t = u24_w + u24_l
+        u24_wr = round(u24_w / u24_t * 100, 1) if u24_t else 0
+    else:
+        u24_w = u24_l = u24_t = 0
+        u24_wr = 0
+
+    # ── Autonomia ──────────────────────────────────────────────
+    try:
+        est_auto = autonomy_guard.status_autonomia()
+        auto_status = "🟢" if est_auto.get("active") else "🔴"
+        auto_scope = est_auto.get("scope", "?")
+        restante = est_auto.get("remaining_seconds", 0)
+        auto_min = int(restante // 60)
+    except Exception:
+        auto_status = "⚪"
+        auto_scope = "?"
+        auto_min = 0
+
+    # ── Símbolo ────────────────────────────────────────────────
+    try:
+        from market_reader import detectar_ativo
+        ativo = detectar_ativo()
+    except Exception:
+        ativo = "Gold_Spot"
+
+    # ── Construir mensagem ─────────────────────────────────────
+    linhas = [
+        f"🤖 *LEON XAU ELITE AI* — Status",
+        f"📅 {agora.strftime('%d/%m/%Y %H:%M')} | `{ativo}`",
+        "",
+        "*📊 Shadow Trades (histórico)*",
+        f"   Fechadas: `{s_total}` | 🟢{s_wins}W / 🔴{s_losses}L",
+        f"   Winrate: `{s_wr}%`",
+        "",
+        "*📈 Hoje*",
+        f"   Total: `{hj_total + hj_abertas + hj_sim}` | Fechadas: `{hj_total}`",
+        f"   🟢{hj_w}W / 🔴{hj_l}L | Winrate: `{hj_wr}%`",
+        f"   Abertas: `{hj_abertas}` | Simulação: `{hj_sim}`",
+        "",
+        "*🕐 Últimas 24h*",
+        f"   Fechadas: `{u24_t}` | 🟢{u24_w}W / 🔴{u24_l}L | WR: `{u24_wr}%`",
+        "",
+        "*🔋 Sistema*",
+        f"   Autonomia: {auto_status} `{auto_scope}` ({auto_min}m restantes)",
+        f"   Limite diário: `♾️` (modo estudo)",
+        "",
+        "💡 Use `/analise` para ver o mercado agora.",
+    ]
+
+    return "\n".join(linhas)
+
+
 # ─── Dispatcher ───────────────────────────────────────────────
 
 COMANDOS = {
     "start": _formatar_start,
     "help": _formatar_help,
+    "status": _formatar_status,
     "memory": _formatar_memory,
     "market": _formatar_market,
+    "analise": _formatar_analise,
     "backtest": _formatar_backtest,
     "replay": _formatar_replay,
     "autonomy": _formatar_autonomy,
+    "go": _formatar_go,
 }
 
 

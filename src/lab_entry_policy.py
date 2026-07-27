@@ -13,6 +13,7 @@ LAB_EVENT_FILE = ROOT_DIR / "data" / "lab_entry_events.json"
 ALLOWED_MISSING_CONFIRMATIONS = {
     "FIBONACCI_ONDA_2_OU_4",
     "CAPTURA_LIQUIDEZ",
+    "TOP_DOWN_H4_H1_M15",
 }
 
 

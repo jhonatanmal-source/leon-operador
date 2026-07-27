@@ -653,7 +653,7 @@ salvar_trade_plan(
     confianca
 )
 
-from learning_bootstrap import modo_bootstrap_ativo, obter_limiares, registrar_entrada_simulada
+from learning_bootstrap import modo_bootstrap_ativo, obter_limiares, registrar_entrada_simulada, auto_simulate_permitido
 
 operacao = None
 modo_bootstrap = modo_bootstrap_ativo()
@@ -670,51 +670,55 @@ if direcao != "AGUARDAR":
     )
     if operacao is not None and lab_entry["approved"]:
         mark_lab_event(lab_event_signature)
-elif modo_bootstrap and direcao_candidata in ["COMPRA", "VENDA"] and int(brain_score or 0) >= obter_limiares()["auto_simulate_min_score"]:
-    fake_entry = 0.0
-    fake_stop = 0.0
-    fake_tp1 = 0.0
-    fake_tp2 = 0.0
-    if candles_m15:
-        recent = candles_m15[-8:]
-        fake_entry = float(candles_m15[-1]["close"])
-        if direcao_candidata == "COMPRA":
-            fake_stop = min(float(c["low"]) for c in recent)
-            risk = fake_entry - fake_stop
-            fake_tp1 = fake_entry + risk * 1.5
-            fake_tp2 = fake_entry + risk * 3
-        else:
-            fake_stop = max(float(c["high"]) for c in recent)
-            risk = fake_stop - fake_entry
-            fake_tp1 = fake_entry - risk * 1.5
-            fake_tp2 = fake_entry - risk * 3
-    fake_rr = round(
-        abs(fake_tp1 - fake_entry) / max(abs(fake_entry - fake_stop), 0.01), 2
-    )
-    operacao = [fake_entry, fake_stop, fake_tp1, fake_tp2, fake_rr]
-    # Rota de Laboratorio: cria Interest Zone artificial para passar o guard
-    # estrutural e permitir execucao demo supervisionada.
-    lab_zone = create_lab_zone(
-        symbol=ativo,
-        direction=direcao_candidata,
-        entry_price=fake_entry,
-        stop_price=fake_stop,
-        tp1_price=fake_tp1,
-        tp2_price=fake_tp2,
-        brain_score=brain_score or 0,
-    )
-    bootstrap_region_id = lab_zone.get("region_id", "") if lab_zone else ""
-    if bootstrap_region_id:
-        print(
-            f"LAB ZONE: zona criada {bootstrap_region_id} "
-            f"para {direcao_candidata} via bootstrap"
-        )
+elif modo_bootstrap and direcao_candidata in ["COMPRA", "VENDA"]:
+    auto_sim_permitido, auto_sim_razao = auto_simulate_permitido(brain_score=brain_score)
+    if not auto_sim_permitido:
+        print(f"BOOTSTRAP: auto-simulate BLOQUEADO — {auto_sim_razao}")
     else:
-        print("LAB ZONE: falha ao criar zona de laboratorio")
-    registrar_entrada_simulada(
-        direcao_candidata, fake_entry, fake_stop, fake_tp2, brain_score, "BOOTSTRAP_AUTO_SIMULATE"
-    )
-    print(f"BOOTSTRAP: entrada simulada criada para {direcao_candidata} a {fake_entry:.2f}")
+        fake_entry = 0.0
+        fake_stop = 0.0
+        fake_tp1 = 0.0
+        fake_tp2 = 0.0
+        if candles_m15:
+            recent = candles_m15[-8:]
+            fake_entry = float(candles_m15[-1]["close"])
+            if direcao_candidata == "COMPRA":
+                fake_stop = min(float(c["low"]) for c in recent)
+                risk = fake_entry - fake_stop
+                fake_tp1 = fake_entry + risk * 1.5
+                fake_tp2 = fake_entry + risk * 3
+            else:
+                fake_stop = max(float(c["high"]) for c in recent)
+                risk = fake_stop - fake_entry
+                fake_tp1 = fake_entry - risk * 1.5
+                fake_tp2 = fake_entry - risk * 3
+        fake_rr = round(
+            abs(fake_tp1 - fake_entry) / max(abs(fake_entry - fake_stop), 0.01), 2
+        )
+        operacao = [fake_entry, fake_stop, fake_tp1, fake_tp2, fake_rr]
+        # Rota de Laboratorio: cria Interest Zone artificial para passar o guard
+        # estrutural e permitir execucao demo supervisionada.
+        lab_zone = create_lab_zone(
+            symbol=ativo,
+            direction=direcao_candidata,
+            entry_price=fake_entry,
+            stop_price=fake_stop,
+            tp1_price=fake_tp1,
+            tp2_price=fake_tp2,
+            brain_score=brain_score or 0,
+        )
+        bootstrap_region_id = lab_zone.get("region_id", "") if lab_zone else ""
+        if bootstrap_region_id:
+            print(
+                f"LAB ZONE: zona criada {bootstrap_region_id} "
+                f"para {direcao_candidata} via bootstrap"
+            )
+        else:
+            print("LAB ZONE: falha ao criar zona de laboratorio")
+        registrar_entrada_simulada(
+            direcao_candidata, fake_entry, fake_stop, fake_tp2, brain_score, "BOOTSTRAP_AUTO_SIMULATE"
+        )
+        print(f"BOOTSTRAP: entrada simulada criada para {direcao_candidata} a {fake_entry:.2f}")
 explicar_trade(
     tendencia,
     estrutura,
