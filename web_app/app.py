@@ -3,6 +3,7 @@ from datetime import timedelta
 from pathlib import Path
 
 from flask import Flask, flash, redirect, render_template, url_for
+from flask_compress import Compress
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -30,6 +31,7 @@ def create_app(test_config=None):
     if test_config:
         app.config.update(test_config)
 
+    Compress(app)
     init_db()
     register_blueprints(app)
     app.before_request(validate_csrf)
@@ -39,6 +41,9 @@ def create_app(test_config=None):
         return {
             "current_user": current_user(),
             "csrf_token": csrf_token,
+            "mt5_account": config.MT5_ACCOUNT,
+            "mt5_server": config.MT5_SERVER,
+            "mt5_type": config.MT5_TYPE,
         }
 
     @app.errorhandler(400)
@@ -69,6 +74,23 @@ def create_app(test_config=None):
             "error",
         )
         return redirect(url_for("analysis.upload"))
+
+    @app.after_request
+    def add_security_headers(response):
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; "
+            "img-src 'self' data:; "
+            "font-src 'self'; "
+            "connect-src 'self'; "
+            "frame-ancestors 'none'; "
+            "form-action 'self'"
+        )
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        return response
 
     return app
 

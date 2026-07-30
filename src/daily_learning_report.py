@@ -3,6 +3,7 @@
 # ===================================
 
 import csv
+import json
 from collections import Counter
 from datetime import date, datetime
 from pathlib import Path
@@ -20,6 +21,9 @@ PRICE_HISTORY_FILE = DATA_DIR / "price_history.csv"
 CANDLE_HISTORY_FILE = DATA_DIR / "candle_history.csv"
 SIGNALS_FILE = DATA_DIR / "signals.csv"
 DAILY_LEARNING_FILE = REPORTS_DIR / "daily_learning_report.txt"
+PRE_OPERATION_FILE = DATA_DIR / "pre_operation_trades.csv"
+IDENTITY_REGISTRY_FILE = DATA_DIR / "memory_identity_registry.json"
+MARKET_CONTEXT_MEMORY_FILE = DATA_DIR / "market_context_memory.csv"
 
 
 def _ler_csv(caminho, campos):
@@ -108,6 +112,73 @@ def _ultimo(registros):
         return {}
 
     return registros[-1]
+
+
+def _ler_csv_dict(caminho):
+
+    if not caminho.exists():
+        return []
+
+    try:
+        with caminho.open(
+            "r",
+            encoding="utf-8-sig",
+            newline="",
+        ) as arquivo:
+            return list(csv.DictReader(arquivo, delimiter=";"))
+    except OSError:
+        return []
+
+
+def _resumo_memoria_operacional():
+
+    pre_operacoes = _ler_csv_dict(PRE_OPERATION_FILE)
+    contextos = _ler_csv_dict(MARKET_CONTEXT_MEMORY_FILE)
+    context_ids = {
+        str(registro.get("pre_operation_id") or "").strip()
+        for registro in contextos
+    }
+
+    registry_ids = set()
+    if IDENTITY_REGISTRY_FILE.exists():
+        try:
+            payload = json.loads(
+                IDENTITY_REGISTRY_FILE.read_text(encoding="utf-8")
+            )
+            registry_ids = {
+                str(registro.get("canonical_id") or "").strip()
+                for registro in payload.get("records", [])
+                if isinstance(registro, dict)
+            }
+        except (OSError, json.JSONDecodeError):
+            registry_ids = set()
+
+    total = len(pre_operacoes)
+    completos = sum(
+        1
+        for registro in pre_operacoes
+        if (
+            str(registro.get("id") or "").strip() in registry_ids
+            and str(registro.get("id") or "").strip() in context_ids
+            and registro.get("identity_version") == "LEON_PREOP_ID_V2"
+        )
+    )
+    percentual = (completos / total * 100) if total else 0
+
+    return {
+        "total": total,
+        "completos": completos,
+        "percentual": percentual,
+        "status": "INTEGRA" if total and completos == total else "PARCIAL",
+        "identidades_registradas": len(registry_ids),
+        "contextos_vinculados": len(
+            {
+                str(registro.get("id") or "").strip()
+                for registro in pre_operacoes
+            }
+            & context_ids
+        ),
+    }
 
 
 def gerar_relatorio_aprendizado_diario(data_referencia=None):
@@ -264,10 +335,11 @@ def gerar_relatorio_aprendizado_diario(data_referencia=None):
         taxa_acerto = (acertos / total_resultados) * 100
     else:
         taxa_acerto = 0
+    memoria_operacional = _resumo_memoria_operacional()
 
     linhas = [
         "=================================",
-        "LEON DAILY LEARNING REPORT",
+        "LEON VPS | RELATORIO DIARIO DE APRENDIZADO",
         "=================================",
         f"Data: {data_referencia}",
         "",
@@ -304,7 +376,24 @@ def gerar_relatorio_aprendizado_diario(data_referencia=None):
         f"- Alinhamento: {ultimo_contexto.get('alinhamento', 'SEM DADOS')}",
         f"- Observacao: {ultimo_contexto.get('observacao', 'SEM DADOS')}",
         "",
-        "Memoria geral do cerebro",
+        "Memoria operacional do operador",
+        (
+            "- Integridade da memoria: "
+            f"{memoria_operacional['percentual']:.2f}%"
+        ),
+        f"- Status: {memoria_operacional['status']}",
+        f"- PRE_OPERATION atuais: {memoria_operacional['total']}",
+        (
+            "- Identidades registradas: "
+            f"{memoria_operacional['identidades_registradas']}"
+        ),
+        (
+            "- Contextos vinculados: "
+            f"{memoria_operacional['contextos_vinculados']} / "
+            f"{memoria_operacional['total']}"
+        ),
+        "",
+        "Resultados historicos usados no aprendizado",
         f"- Acertos registrados: {acertos}",
         f"- Erros registrados: {erros}",
         f"- Taxa historica de acerto: {taxa_acerto:.2f}%",

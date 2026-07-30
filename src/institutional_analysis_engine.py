@@ -386,6 +386,9 @@ def analyze_smc_context(candles):
     choch_event, bos_event = _event_pair(events)
     liquidity = detect_liquidity_event(candles)
 
+    # Inicializa liquidity_conflict como False (pode ser alterado depois)
+    liquidity_conflict = False
+
     if not bos_event:
         return {
             "direction": None,
@@ -395,6 +398,7 @@ def analyze_smc_context(candles):
             "fvg": "SEM_FVG_CONFIRMADO",
             "fvg_zone": None,
             "liquidity": liquidity,
+        "liquidity_conflict": liquidity_conflict,
             "poi_score": 0,
             "structure_bias": _structure_bias(pivots),
             "pivots": pivots,
@@ -403,6 +407,13 @@ def analyze_smc_context(candles):
         }
 
     direction = bos_event["direction"]
+    # Liquidez contradiz BOS? Marcar conflito mas NAO inverter direcao
+    liquidity_conflict = (
+        liquidity.get("index") is not None
+        and liquidity.get("direction")
+        and liquidity["direction"] != direction
+        and (bos_event.get("index") is None or liquidity["index"] > bos_event.get("index"))
+    )
     fvg = _latest_fvg_near_event(candles, direction, bos_event["index"])
     expected_fvg = f"FVG_{direction}"
     range_high = max((pivot["price"] for pivot in pivots if pivot["type"] == "HIGH"), default=0)
@@ -468,6 +479,8 @@ def _partial_wave_three(points, direction):
 def analyze_fibonacci_wave_setup(pivots, direction):
     result = {
         "valid": False,
+        "partial": False,
+        "expanded_ranges": True,
         "target_wave": None,
         "retracement": None,
         "preferred_zone": None,
@@ -491,14 +504,16 @@ def analyze_fibonacci_wave_setup(pivots, direction):
             if direction == "ALTA"
             else p3 < p1 and p4 < p2
         )
-        if structure_ok and 0.382 <= retracement <= 0.5:
+        if structure_ok and 0.236 <= retracement <= 0.5:
             wave_one = abs(p1 - p0)
             projection = p4 + wave_one if direction == "ALTA" else p4 - wave_one
             return {
                 "valid": True,
+                "partial": False,
+                "expanded_ranges": True,
                 "target_wave": "ONDA 5",
                 "retracement": round(retracement, 4),
-                "preferred_zone": [0.382, 0.5],
+                "preferred_zone": [0.236, 0.5],
                 "projection": round(projection, 2),
                 "reason": "ONDA_4_NA_ZONA_FIBONACCI",
                 "pivots": pivots[-5:],
@@ -514,7 +529,7 @@ def analyze_fibonacci_wave_setup(pivots, direction):
         wave_one = abs(p1 - p0)
         retracement = abs(p1 - p2) / wave_one if wave_one > 0 else 0
         origin_preserved = p2 > p0 if direction == "ALTA" else p2 < p0
-        if origin_preserved and 0.618 <= retracement <= 0.786:
+        if origin_preserved and 0.5 <= retracement <= 0.886:
             projection = (
                 p2 + wave_one * 1.618
                 if direction == "ALTA"
@@ -522,14 +537,20 @@ def analyze_fibonacci_wave_setup(pivots, direction):
             )
             return {
                 "valid": True,
+                "partial": False,
+                "expanded_ranges": True,
                 "target_wave": "ONDA 3",
                 "retracement": round(retracement, 4),
-                "preferred_zone": [0.618, 0.786],
+                "preferred_zone": [0.5, 0.886],
                 "projection": round(projection, 2),
                 "reason": "ONDA_2_NA_ZONA_FIBONACCI",
                 "pivots": pivots[-3:],
             }
 
+    # Fallback: se falhar, marcar como partial se houver estrutura basica
+    if not result["valid"]:
+        result["partial"] = True
+        result["reason"] = "FIBONACCI_PARCIAL_SEM_ESTRUTURA_PERFEITA"
     return result
 
 
@@ -636,4 +657,3 @@ def analyze_elliott_context(candles, trend):
         "invalidation": points[-1] if points else None,
         "correction_possible": True,
     })
-    return result

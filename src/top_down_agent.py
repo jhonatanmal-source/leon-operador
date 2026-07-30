@@ -77,7 +77,7 @@ def _bias(candles):
     short_term = sum(closes[-5:]) / 5
     medium_term = sum(closes[-20:]) / 20 if len(closes) >= 20 else sum(closes) / len(closes)
 
-    threshold = medium_term * 0.002  # 0.2% para evitar ruido
+    threshold = medium_term * 0.005  # 0.5% para evitar ruido (antes 0.2%)
     if short_term > medium_term + threshold:
         return "ALTA"
 

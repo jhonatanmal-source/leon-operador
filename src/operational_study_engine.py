@@ -4,7 +4,7 @@
 
 from datetime import datetime
 
-from study_engine import get_study_by_topic, register_study_note
+from src.study_engine import get_study_by_topic, register_study_note
 
 
 def load_operational_rules():

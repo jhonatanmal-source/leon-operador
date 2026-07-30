@@ -1,61 +1,66 @@
 {% extends "base.html" %}
-{% block title %}Análise {{ analysis.id }} | LEON WEB COLLAB{% endblock %}
+{% block title %}Análise #{{ analysis.id }} | LEON XAU ELITE AI{% endblock %}
 {% block content %}
-<section class="page-heading">
+
+<div class="page-head">
   <div>
-    <div class="eyebrow">ANÁLISE #{{ analysis.id }}</div>
     <h1>{{ analysis.symbol }} · {{ analysis.timeframe }} · {{ analysis.direction }}</h1>
     <p class="muted">Enviada por {{ analysis.username }} em {{ analysis.created_at }}</p>
   </div>
-  <span class="badge large {{ analysis.status|lower }}">{{ analysis.status }}</span>
-</section>
+  <span class="badge {{ 'g' if analysis.status == 'APROVADA' else ('r' if analysis.status == 'REJEITADA' else 'y') }}">{{ analysis.status }}</span>
+</div>
 
-<section class="detail-grid">
-  <article class="card">
-    <h2>Leitura humana</h2>
-    <dl class="details">
-      <div><dt>Operador</dt><dd>{{ analysis.username }}</dd></div>
-      <div><dt>Tipo</dt><dd>{{ analysis.analysis_type }}</dd></div>
-      <div><dt>Direção</dt><dd>{{ analysis.direction }}</dd></div>
-      <div><dt>Timeframe</dt><dd>{{ analysis.timeframe }}</dd></div>
-    </dl>
-    <div class="analysis-text">{{ analysis.text_analysis }}</div>
+<div class="g21">
+  <div class="card">
+    <div class="card-head"><h2>Leitura Humana</h2></div>
+    <div class="dl" style="margin-bottom:12px">
+      <div class="dl-item"><dt>Operador</dt><dd>{{ analysis.username }}</dd></div>
+      <div class="dl-item"><dt>Tipo</dt><dd>{{ analysis.analysis_type }}</dd></div>
+      <div class="dl-item"><dt>Direção</dt><dd style="color:var(--gold)">{{ analysis.direction }}</dd></div>
+      <div class="dl-item"><dt>Timeframe</dt><dd>{{ analysis.timeframe }}</dd></div>
+    </div>
+    <div style="white-space:pre-wrap;line-height:1.6;font-size:0.85rem;color:var(--text)">{{ analysis.text_analysis }}</div>
     {% if analysis.image_path %}
-      <a href="{{ url_for('static', filename='uploads/' + analysis.image_path) }}" target="_blank" rel="noopener">
-        <img class="analysis-image" src="{{ url_for('static', filename='uploads/' + analysis.image_path) }}" alt="Print da análise">
-      </a>
+    <a href="{{ url_for('static', filename='uploads/' + analysis.image_path) }}" target="_blank">
+      <img src="{{ url_for('static', filename='uploads/' + analysis.image_path) }}" alt="Print" style="width:100%;max-height:500px;object-fit:contain;border-radius:8px;border:1px solid var(--border);margin-top:12px;background:#020617">
+    </a>
     {% endif %}
-  </article>
+  </div>
 
-  <aside class="stack">
-    <article class="card leon-card">
+  <div class="stack">
+    <div class="card" style="border-color:rgba(215,178,75,0.2)">
       <div class="eyebrow">O QUE O LEON ENTENDEU</div>
-      <p>{{ analysis.leon_summary }}</p>
-      <h3>Palavras detectadas</h3>
-      <p class="muted">{{ analysis.detected_keywords or 'Nenhuma' }}</p>
-      <div class="score"><span>Confiança inicial</span><strong>{{ analysis.confidence_score or 0 }}%</strong></div>
-    </article>
+      <p style="font-size:0.82rem;line-height:1.5">{{ analysis.leon_summary }}</p>
+      <h3 style="margin-top:10px">Palavras detectadas</h3>
+      <p class="muted" style="font-size:0.78rem">{{ analysis.detected_keywords or 'Nenhuma' }}</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+        <span style="font-size:0.78rem;color:var(--muted)">Confiança</span>
+        <span style="font-size:1.2rem;font-weight:800;color:var(--gold)">{{ analysis.confidence_score or 0 }}%</span>
+      </div>
+    </div>
 
-    <article class="card">
-      <h2>Supervisão</h2>
-      <p><strong>Status:</strong> {{ analysis.status }}</p>
-      <p><strong>Qualidade:</strong> {{ analysis.quality_score }} / 100</p>
-      <p><strong>Revisor:</strong> {{ analysis.reviewer_username or 'Aguardando' }}</p>
-      <p class="analysis-text">{{ analysis.supervisor_comment or 'Sem comentário.' }}</p>
-    </article>
-  </aside>
-</section>
+    <div class="card">
+      <div class="card-head"><h2>Supervisão</h2></div>
+      <div class="dl">
+        <div class="dl-item"><dt>Status</dt><dd>{{ analysis.status }}</dd></div>
+        <div class="dl-item"><dt>Qualidade</dt><dd>{{ analysis.quality_score }} / 100</dd></div>
+        <div class="dl-item" style="grid-column:span 2"><dt>Revisor</dt><dd>{{ analysis.reviewer_username or 'Aguardando' }}</dd></div>
+      </div>
+      <p style="font-size:0.82rem;margin-top:8px;white-space:pre-wrap">{{ analysis.supervisor_comment or 'Sem comentário.' }}</p>
+    </div>
+  </div>
+</div>
 
 {% if current_user.role in ['ADMIN', 'SUPERVISOR'] %}
-<section class="card review-card">
-  <h2>Revisar estudo</h2>
-  <form method="post" action="{{ url_for('analysis.review', analysis_id=analysis.id) }}" class="form-grid">
+<div class="card" style="margin-top:16px">
+  <div class="card-head"><h2>Revisar Estudo</h2></div>
+  <form method="post" action="{{ url_for('analysis.review', analysis_id=analysis.id) }}" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>Status<select name="status" required><option>APROVADA</option><option>PARCIAL</option><option>REJEITADA</option></select></label>
-    <label>Qualidade 0–100<input type="number" name="quality_score" min="0" max="100" value="{{ analysis.quality_score }}" required></label>
-    <label class="span-2">Comentário do supervisor<textarea name="supervisor_comment" rows="5">{{ analysis.supervisor_comment or '' }}</textarea></label>
-    <button class="button success" type="submit">Salvar revisão</button>
+    <label>Status<select class="form-select" name="status" required><option>APROVADA</option><option>PARCIAL</option><option>REJEITADA</option></select></label>
+    <label>Qualidade 0–100<input class="form-input" type="number" name="quality_score" min="0" max="100" value="{{ analysis.quality_score }}" required></label>
+    <label style="grid-column:span 2">Comentário<textarea class="form-input" name="supervisor_comment" rows="4">{{ analysis.supervisor_comment or '' }}</textarea></label>
+    <div style="grid-column:span 2"><button class="btn btn-gold" type="submit">Salvar revisão</button></div>
   </form>
-</section>
+</div>
 {% endif %}
 {% endblock %}

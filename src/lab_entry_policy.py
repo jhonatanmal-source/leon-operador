@@ -36,7 +36,7 @@ def _config():
             == "true"
         ),
         "min_closed": int(section.get("lab_shadow_min_closed", 2)),
-        "min_winrate": float(section.get("lab_shadow_min_winrate", 50)),
+        "min_winrate": float(section.get("lab_shadow_min_winrate", 30)),
     }
 
 
@@ -48,12 +48,12 @@ def _progressive_min_closed(winrate):
     """
     if winrate >= 70:
         return 5
-    elif winrate >= 60:
-        return 10
     elif winrate >= 50:
+        return 10
+    elif winrate >= 30:
         return 20
     else:
-        return 30
+        return 15
 
 
 def _read_shadow_rows():

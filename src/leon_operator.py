@@ -41,6 +41,7 @@ from src.mt5_order_executor import (
     executar_ordem_mt5_pre_operacao,
     liberar_nova_tentativa_mt5,
 )
+from src.memory_context_engine import gerar_resumo_professor
 from src.market_context_agent import registrar_contexto_mercado
 from src.market_session_guard import (
     inspect_broker_session,
@@ -774,6 +775,21 @@ def executar_status_telegram(forcar=False):
         if resultado.get("ok"):
             _salvar_status_telegram(agora)
             registrar_log("OPERATOR | status Telegram enviado")
+            return resultado
+
+        # Erros de configuracao permanente: salva timestamp para evitar
+        # retry infinito a cada ciclo (~30s). O erro ja foi registrado
+        # pelo telegram_engine, nao precisa repetir.
+        erro_permanente = resultado.get("error") in (
+            "TELEGRAM_CONFIG_MISSING",
+            "TELEGRAM_DISABLED",
+        )
+        if erro_permanente:
+            _salvar_status_telegram(agora)
+            registrar_log(
+                "OPERATOR | status Telegram nao enviado (configuracao); "
+                f"proxima tentativa em {config['telegram_status_interval_minutes']}min"
+            )
         else:
             registrar_erro(
                 "OPERATOR | status Telegram nao enviado; "

@@ -1,137 +1,356 @@
 {% extends "base.html" %}
-{% block title %}Painel Leon | LEON WEB COLLAB{% endblock %}
+{% block title %}Painel LEON | LEON XAU ELITE AI{% endblock %}
 {% block content %}
-<section class="page-heading">
+
+<div class="page-head">
   <div>
-    <div class="eyebrow">PAINEL LEON UNIFICADO</div>
-    <h1>Operação, autonomia e acesso remoto</h1>
-    <p class="muted">Atualizado em {{ panel.generated_at }} com modo remoto protegido por login.</p>
+    <h1>Olá, {{ current_user.username }}!</h1>
+    <p class="muted">Bem-vindo ao LEON XAU ELITE AI</p>
   </div>
-  <span class="badge large {{ 'aprovada' if panel.autonomy.active else 'pendente' }}">
-    {{ 'AUTONOMIA ATIVA' if panel.autonomy.active else 'MODO SEGURO' }}
-  </span>
-</section>
+  <span class="badge {{ 'g' if panel.autonomy.active else 'y' }}">{{ 'AUTONOMIA ATIVA' if panel.autonomy.active else 'MODO SEGURO' }}</span>
+</div>
 
-{% if current_user.role in ['COLABORADOR', 'VISUALIZADOR'] %}
-<section class="card notice-panel">
-  <strong>Modo visualização:</strong> seu perfil pode acompanhar o Leon, mas não altera usuários nem fluxo administrativo.
-</section>
-{% endif %}
-
-<section class="stats-grid">
-  <article class="card stat"><span>Operador</span><strong class="{{ 'green' if panel.processes.operator else 'red' }}">{{ 'ONLINE' if panel.processes.operator else 'OFF' }}</strong></article>
-  <article class="card stat"><span>Web remoto</span><strong class="{{ 'green' if panel.processes.web_collab else 'red' }}">{{ 'ONLINE' if panel.processes.web_collab else 'OFF' }}</strong></article>
-  <article class="card stat"><span>Túnel</span><strong class="{{ 'green' if panel.processes.cloudflare_tunnel else 'yellow' }}">{{ 'ATIVO' if panel.processes.cloudflare_tunnel else 'PARADO' }}</strong></article>
-  <article class="card stat"><span>Execução demo</span><strong class="{{ 'yellow' if panel.mode.demo_execution == 'true' else 'red' }}">{{ panel.mode.demo_execution|upper }}</strong></article>
-  <article class="card stat"><span>Bloqueio real</span><strong class="{{ 'green' if panel.mode.real_blocked == 'true' else 'red' }}">{{ panel.mode.real_blocked|upper }}</strong></article>
-</section>
-
-<section class="health-grid">
-  <article class="card">
-    <h2>Acesso remoto</h2>
-    <dl class="details">
-      <div><dt>Colaboração</dt><dd>{{ panel.collaboration.enabled|upper }}</dd></div>
-      <div><dt>Escopo</dt><dd>{{ panel.collaboration.scope }}</dd></div>
-      <div><dt>Telegram ativo</dt><dd>{{ panel.telegram.enabled|upper }}</dd></div>
-      <div><dt>Token configurado</dt><dd>{{ 'SIM' if panel.telegram.has_token else 'NÃO' }}</dd></div>
-      <div><dt>Chat ID configurado</dt><dd>{{ 'SIM' if panel.telegram.has_chat_id else 'NÃO' }}</dd></div>
-      <div><dt>Painel legado</dt><dd>{{ 'ONLINE' if panel.processes.legacy_panel else 'OFF' }}</dd></div>
-    </dl>
-    {% if panel.remote.remote_url %}
-      <p><a href="{{ panel.remote.remote_url }}" target="_blank" rel="noopener">Abrir link remoto atual</a></p>
-    {% else %}
-      <p class="muted">Nenhum link remoto ativo no momento.</p>
-    {% endif %}
-  </article>
-
-  <article class="card">
-    <h2>Autonomia e prontidão</h2>
-    <dl class="details">
-      <div><dt>Autonomia</dt><dd>{{ 'ATIVA' if panel.autonomy.active else 'INATIVA' }}</dd></div>
-      <div><dt>Motivo</dt><dd>{{ panel.autonomy.reason }}</dd></div>
-      <div><dt>Escopo</dt><dd>{{ panel.autonomy.scope }}</dd></div>
-      <div><dt>Prontidão</dt><dd>{{ panel.readiness.nivel }}</dd></div>
-      <div><dt>Conselho</dt><dd>{{ panel.council.status }}</dd></div>
-      <div><dt>Modo estudo</dt><dd>{{ panel.mode.study_scope }}</dd></div>
-    </dl>
-  </article>
-
-  <article class="card">
-    <h2>Leitura atual do Leon</h2>
-    <dl class="details">
-      <div><dt>Direção</dt><dd>{{ panel.operator_status.operators.setup.direcao }}</dd></div>
-      <div><dt>SMC</dt><dd>{{ panel.operator_status.operators.setup.smc }}</dd></div>
-      <div><dt>Elliott</dt><dd>{{ panel.operator_status.operators.setup.elliott }}</dd></div>
-      <div><dt>Confiança</dt><dd>{{ panel.operator_status.operators.setup.confianca }}</dd></div>
-      <div><dt>Alinhamento</dt><dd>{{ panel.operator_status.operators.alignment.status }}</dd></div>
-      <div><dt>MT5 monitor</dt><dd>{{ panel.mt5_monitor.status }}</dd></div>
-    </dl>
-  </article>
-
-  <article class="card">
-    <h2>Risco e lote</h2>
-    <dl class="details">
-      <div><dt>Risco por método</dt><dd>{{ panel.risk_control.method_risk_percent }}%</dd></div>
-      <div><dt>Limite diário</dt><dd>{{ panel.risk_control.daily_loss_percent }}%</dd></div>
-      <div><dt>Método ativo</dt><dd>{{ panel.risk_control.active_method }}</dd></div>
-      <div><dt>Pré-operações</dt><dd>{{ panel.pre_operation.total }}</dd></div>
-      <div><dt>Fechadas</dt><dd>{{ panel.pre_operation.fechados }}</dd></div>
-      <div><dt>Liberar real</dt><dd>{{ panel.mode.mt5_enabled|upper }}</dd></div>
-    </dl>
-    {% if panel.risk_plan %}
-      <p class="analysis-text">{{ panel.risk_plan.reason }}</p>
-    {% endif %}
-  </article>
-</section>
-
-<section class="detail-grid">
-  <article class="card">
-    <div class="section-title">
-      <h2>Log operacional</h2>
-      <span class="badge pendente">Somente leitura</span>
+<!-- STATUS ROW -->
+<div class="status-row">
+  <div class="status-box">
+    <div class="status-ico {{ 'g' if panel.processes.operator else 'r' }}">{{ '&#10003;' if panel.processes.operator else '&#10007;' }}</div>
+    <div class="status-txt">
+      <small>Operador</small>
+      <strong>{{ 'ONLINE' if panel.processes.operator else 'OFF' }}</strong>
+      <span class="sub {{ 'g' if panel.processes.operator else 'r' }}">{{ 'Conectado' if panel.processes.operator else 'Desconectado' }}</span>
     </div>
-    <pre class="log-box">{{ panel.logs or 'Sem logs recentes.' }}</pre>
-  </article>
-
-  <article class="stack">
-    <article class="card">
-      <div class="section-title">
-        <h2>Erros recentes</h2>
-        <span class="badge {{ 'rejeitada' if panel.errors else 'aprovada' }}">{{ 'ATENÇÃO' if panel.errors else 'OK' }}</span>
-      </div>
-      <pre class="log-box">{{ panel.errors or 'Sem erros recentes.' }}</pre>
-    </article>
-
-    <article class="card">
-      <h2>Aprendizado diário</h2>
-      <p><strong>Estado:</strong> {{ panel.daily_learning_state or 'Sem estado salvo.' }}</p>
-      <pre class="log-box">{{ panel.daily_learning_report or 'Sem relatório diário ainda.' }}</pre>
-    </article>
-  </article>
-</section>
-
-{% if current_user.role in ['ADMIN', 'SUPERVISOR'] %}
-<section class="card">
-  <div class="section-title">
-    <h2>Últimos acessos</h2>
-    <span class="badge aprovada">Auditoria</span>
   </div>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>Data</th><th>Usuário</th><th>IP</th><th>Rota</th><th>Ação</th></tr></thead>
+  <div class="status-box">
+    <div class="status-ico {{ 'g' if panel.processes.web_collab else 'r' }}">{{ '&#10003;' if panel.processes.web_collab else '&#10007;' }}</div>
+    <div class="status-txt">
+      <small>Web Remoto</small>
+      <strong>{{ 'ONLINE' if panel.processes.web_collab else 'OFF' }}</strong>
+      <span class="sub {{ 'g' if panel.processes.web_collab else 'r' }}">web_app</span>
+    </div>
+  </div>
+  <div class="status-box">
+    <div class="status-ico {{ 'g' if panel.processes.cloudflare_tunnel else 'y' }}">{{ '&#10003;' if panel.processes.cloudflare_tunnel else '&#9888;' }}</div>
+    <div class="status-txt">
+      <small>Túnel</small>
+      <strong>{{ 'ATIVO' if panel.processes.cloudflare_tunnel else 'PARADO' }}</strong>
+      <span class="sub {{ 'g' if panel.processes.cloudflare_tunnel else 'r' }}">cloudflared</span>
+    </div>
+  </div>
+  <div class="status-box">
+    <div class="status-ico {{ 'g' if panel.mt5_monitor.status == 'OK' else 'r' }}">{{ '&#10003;' if panel.mt5_monitor.status == 'OK' else '&#10007;' }}</div>
+    <div class="status-txt">
+      <small>MT5</small>
+      <strong>{{ panel.mt5_monitor.status }}</strong>
+      <span class="sub g">Terminal</span>
+    </div>
+  </div>
+  <div class="status-box">
+    <div class="status-ico {{ 'g' if panel.autonomy.active else 'y' }}">{{ '&#10003;' if panel.autonomy.active else '&#9888;' }}</div>
+    <div class="status-txt">
+      <small>LEON AI</small>
+      <strong>{{ 'ATIVO' if panel.autonomy.active else 'STANDBY' }}</strong>
+      <span class="sub g">Analisando mercado</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODO ESTUDOS -->
+<div class="card" style="margin-bottom:16px;border-color:var(--gold)">
+  <div class="card-head">
+    <h2>Modo Estudos (LAB_LEARNING)</h2>
+    <span class="badge g">ATIVO</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;padding:8px 0">
+    <div style="text-align:center;padding:8px;background:var(--bg);border-radius:6px">
+      <div style="font-size:0.65rem;color:var(--muted)">Shadow Trades</div>
+      <div style="font-weight:700;font-size:1.1rem">{{ panel.shadow.total }}</div>
+    </div>
+    <div style="text-align:center;padding:8px;background:var(--bg);border-radius:6px">
+      <div style="font-size:0.65rem;color:var(--muted)">Wins</div>
+      <div style="font-weight:700;font-size:1.1rem;color:var(--green)">{{ panel.shadow.wins }}</div>
+    </div>
+    <div style="text-align:center;padding:8px;background:var(--bg);border-radius:6px">
+      <div style="font-size:0.65rem;color:var(--muted)">Losses</div>
+      <div style="font-weight:700;font-size:1.1rem;color:var(--red)">{{ panel.shadow.losses }}</div>
+    </div>
+    <div style="text-align:center;padding:8px;background:var(--bg);border-radius:6px">
+      <div style="font-size:0.65rem;color:var(--muted)">Simuladas</div>
+      <div style="font-weight:700;font-size:1.1rem">{{ panel.simulated.total }}</div>
+    </div>
+    <div style="text-align:center;padding:8px;background:var(--bg);border-radius:6px">
+      <div style="font-size:0.65rem;color:var(--muted)">Performance</div>
+      <div style="font-weight:700;font-size:1.1rem">{{ panel.performance.total }}</div>
+    </div>
+  </div>
+  {% if panel.study %}
+  <div style="font-size:0.75rem;color:var(--muted);margin-bottom:6px"><b>Ultimo estudo:</b> {{ panel.study }}</div>
+  {% endif %}
+  {% if panel.demo %}
+  <div style="font-size:0.75rem;color:var(--muted);margin-bottom:6px"><b>Ultima demo:</b> {{ panel.demo }}</div>
+  {% endif %}
+  {% if panel.recent_orders %}
+  <div class="tbl-wrap" style="max-height:180px;overflow-y:auto">
+    <table class="tbl">
+      <thead><tr><th>Data</th><th>Dir</th><th>Lote</th><th>Entrada</th><th>Status</th><th>Ticket</th></tr></thead>
       <tbody>
-        {% for row in panel.recent_access_logs %}
+        {% for o in panel.recent_orders %}
         <tr>
-          <td>{{ row.created_at }}</td>
-          <td>{{ row.username or '-' }}</td>
-          <td>{{ row.ip_address or '-' }}</td>
-          <td>{{ row.route or '-' }}</td>
-          <td>{{ row.action }}</td>
+          <td style="font-size:0.7rem">{{ o.data }}</td>
+          <td style="color:{{ 'var(--green)' if o.direcao == 'COMPRA' else 'var(--red)' }};font-weight:600">{{ 'C' if o.direcao == 'COMPRA' else 'V' }}</td>
+          <td>{{ o.lote }}</td>
+          <td>{{ o.entrada }}</td>
+          <td><span class="badge {{ 'g' if o.status == 'ENVIADA' else 'y' }}">{{ o.status[:8] }}</span></td>
+          <td>{{ o.ticket if o.ticket else '-' }}</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
-</section>
+  {% else %}
+  <p class="empty" style="font-size:0.8rem">Nenhuma ordem demo recente</p>
+  {% endif %}
+</div>
+
+<!-- LEITURA + RISCO -->
+<div class="g2">
+  <div class="card">
+    <div class="card-head">
+      <h2>Leitura Atual</h2>
+      <span class="badge y">{{ panel.operator_status.operators.alignment.status }}</span>
+    </div>
+    <div class="dl">
+      <div class="dl-item"><dt>Direção</dt><dd style="color:var(--gold)">{{ panel.operator_status.operators.setup.direcao }}</dd></div>
+      <div class="dl-item"><dt>SMC</dt><dd>{{ panel.operator_status.operators.setup.smc }}</dd></div>
+      <div class="dl-item"><dt>Elliott</dt><dd>{{ panel.operator_status.operators.setup.elliott }}</dd></div>
+      <div class="dl-item"><dt>Confiança</dt><dd>{{ panel.operator_status.operators.setup.confianca }}</dd></div>
+      <div class="dl-item"><dt>Alinhamento</dt><dd>{{ panel.operator_status.operators.alignment.status }}</dd></div>
+      <div class="dl-item"><dt>MT5 Monitor</dt><dd><span class="badge {{ 'g' if panel.mt5_monitor.status == 'OK' else 'r' }}">{{ panel.mt5_monitor.status }}</span></dd></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>Risco e Controle</h2>
+      <span class="badge g">{{ panel.risk_control.active_method }}</span>
+    </div>
+    <div class="dl">
+      <div class="dl-item"><dt>Risco por Método</dt><dd>{{ panel.risk_control.method_risk_percent }}%</dd></div>
+      <div class="dl-item"><dt>Limite Diário</dt><dd>{{ panel.risk_control.daily_loss_percent }}%</dd></div>
+      <div class="dl-item"><dt>Pré-Operações</dt><dd>{{ panel.pre_operation.total }}</dd></div>
+      <div class="dl-item"><dt>Fechadas</dt><dd>{{ panel.pre_operation.fechados }}</dd></div>
+      <div class="dl-item"><dt>Conselho</dt><dd><span class="badge {{ 'g' if panel.council.status == 'APROVADO' else 'y' }}">{{ panel.council.status }}</span></dd></div>
+      <div class="dl-item"><dt>Modo</dt><dd>{{ 'DEMO' if panel.mode.demo_execution == 'true' else 'REAL' }}</dd></div>
+    </div>
+    {% if panel.risk_plan %}
+    <div style="margin-top:10px;padding:8px;background:var(--bg);border-radius:6px;font-size:0.78rem">{{ panel.risk_plan.reason }}</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- TOP DOWN + SHADOW + CONTEXTO -->
+<div class="g3">
+  <div class="card">
+    <div class="card-head"><h2>Top Down</h2><span class="badge {{ 'g' if panel.top_down and panel.top_down.get('alinhamento') == 'ALINHADO' else 'y' }}">{{ panel.top_down.get('alinhamento', '-') if panel.top_down else '-' }}</span></div>
+    {% if panel.top_down %}
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px">
+      <div style="text-align:center;padding:6px;background:var(--bg);border-radius:6px">
+        <div style="font-size:0.6rem;color:var(--muted)">MACRO</div>
+        <div style="font-weight:700;font-size:0.85rem;color:{{ 'var(--green)' if panel.top_down.get('macro_semanal') == 'ALTA' else 'var(--red)' if panel.top_down.get('macro_semanal') == 'BAIXA' else 'var(--gold)' }}">{{ panel.top_down.get('macro_semanal', '-') }}</div>
+      </div>
+      <div style="text-align:center;padding:6px;background:var(--bg);border-radius:6px">
+        <div style="font-size:0.6rem;color:var(--muted)">H4</div>
+        <div style="font-weight:700;font-size:0.85rem;color:{{ 'var(--green)' if panel.top_down.get('h4_bias') == 'ALTA' else 'var(--red)' if panel.top_down.get('h4_bias') == 'BAIXA' else 'var(--gold)' }}">{{ panel.top_down.get('h4_bias', '-') }}</div>
+      </div>
+      <div style="text-align:center;padding:6px;background:var(--bg);border-radius:6px">
+        <div style="font-size:0.6rem;color:var(--muted)">H1</div>
+        <div style="font-weight:700;font-size:0.85rem;color:{{ 'var(--green)' if panel.top_down.get('h1_contexto') == 'ALTA' else 'var(--red)' if panel.top_down.get('h1_contexto') == 'BAIXA' else 'var(--gold)' }}">{{ panel.top_down.get('h1_contexto', '-') }}</div>
+      </div>
+      <div style="text-align:center;padding:6px;background:var(--bg);border-radius:6px">
+        <div style="font-size:0.6rem;color:var(--muted)">M15</div>
+        <div style="font-weight:700;font-size:0.85rem;color:{{ 'var(--green)' if panel.top_down.get('m15_gatilho') == 'ALTA' else 'var(--red)' if panel.top_down.get('m15_gatilho') == 'BAIXA' else 'var(--gold)' }}">{{ panel.top_down.get('m15_gatilho', '-') }}</div>
+      </div>
+    </div>
+    {% if panel.top_down.get('resumo') %}<div style="font-size:0.78rem;color:var(--muted);padding:6px;background:var(--bg);border-radius:6px">{{ panel.top_down.get('resumo') }}</div>{% endif %}
+    {% else %}<p class="empty">Sem leitura</p>{% endif %}
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>Shadow Trades</h2><span class="badge b">{{ panel.shadow.total }}</span></div>
+    <div class="g2" style="gap:8px;margin-bottom:8px">
+      <div style="text-align:center;padding:10px;background:var(--bg);border-radius:6px">
+        <div class="stat-num g">{{ panel.shadow.wins }}</div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-top:4px">Wins</div>
+      </div>
+      <div style="text-align:center;padding:10px;background:var(--bg);border-radius:6px">
+        <div class="stat-num r">{{ panel.shadow.losses }}</div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-top:4px">Losses</div>
+      </div>
+    </div>
+    <div style="text-align:center;font-size:0.75rem;color:var(--muted);margin-bottom:10px">
+      Abertas: <b style="color:var(--gold)">{{ panel.shadow.open }}</b>
+    </div>
+    {% if panel.shadow_trades %}
+    <div class="tbl-wrap" style="max-height:200px;overflow-y:auto">
+      <table class="tbl">
+        <thead><tr><th>ID</th><th>Par</th><th>Dir</th><th>Entrada</th><th>Status</th><th>Resultado</th></tr></thead>
+        <tbody>
+          {% for trade in panel.shadow_trades[:20] %}
+          <tr>
+            <td style="font-size:0.7rem">{{ trade.id }}</td>
+            <td>{{ trade.symbol }}</td>
+            <td style="color:{{ 'var(--green)' if trade.direction == 'COMPRA' else 'var(--red)' }}">{{ 'C' if trade.direction == 'COMPRA' else 'V' }}</td>
+            <td>{{ trade.entry }}</td>
+            <td><span class="badge {{ 'g' if trade.status == 'ABERTO' else 'm' }}">{{ trade.status }}</span></td>
+            <td style="font-weight:600;color:{{ 'var(--green)' if trade.result.startswith('WIN') else 'var(--red)' if trade.result == 'LOSS' else 'var(--gold)' }}">{{ trade.result }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if panel.shadow_trades|length > 20 %}<div style="font-size:0.7rem;color:var(--muted);text-align:center;margin-top:4px">Mostrando 20 de {{ panel.shadow_trades|length }} trades</div>{% endif %}
+    {% else %}<p class="empty">Nenhum trade detalhado disponível</p>{% endif %}
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>Contexto</h2><span class="badge b">{{ panel.market_context.get('total', 0) if panel.market_context else '0' }}</span></div>
+    {% if panel.market_context and panel.market_context.get('total', 0) > 0 %}
+    <div class="dl">
+      <div class="dl-item"><dt>Total Registros</dt><dd>{{ panel.market_context.get('total', 0) }}</dd></div>
+      <div class="dl-item"><dt>Sessões</dt><dd>{% if panel.market_context.get('sessions') %}{% for sess, count in panel.market_context.get('sessions', {}).items() %}<span class="badge m" style="margin-right:4px">{{ sess }}: {{ count }}</span>{% endfor %}{% else %}-{% endif %}</dd></div>
+      {% if panel.market_context.get('last_lesson') %}
+      <div class="dl-item"><dt>Última Lição</dt><dd style="font-size:0.75rem">{{ panel.market_context.get('last_lesson') }}</dd></div>
+      {% endif %}
+    </div>
+    {% if panel.market_context.get('best_contexts') %}
+    <div style="margin-top:8px;font-size:0.75rem;font-weight:600;color:var(--muted)">Melhores Contextos</div>
+    <div class="tbl-wrap" style="max-height:140px;overflow-y:auto;margin-top:4px">
+      <table class="tbl">
+        <thead><tr><th>Contexto</th><th>Wins</th><th>Losses</th><th>Taxa</th></tr></thead>
+        <tbody>
+          {% for ctx in panel.market_context.get('best_contexts', []) %}
+          <tr>
+            <td style="font-size:0.7rem">{{ ctx.context }}</td>
+            <td style="color:var(--green)">{{ ctx.wins }}</td>
+            <td style="color:var(--red)">{{ ctx.losses }}</td>
+            <td><span class="badge {{ 'g' if ctx.taxa >= 50 else 'r' }}">{{ ctx.taxa }}%</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+    {% else %}<p class="empty">Sem contexto</p>{% endif %}
+  </div>
+</div>
+
+<!-- DESEMPENHO POR MÉTODO -->
+<div class="card" style="margin-bottom:16px">
+  <div class="card-head"><h2>Desempenho por Método</h2><span class="badge y">Métricas</span></div>
+  {% if panel.risk_methods %}
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th>Método</th><th>Operações</th><th>Win Rate</th><th>Resultado</th></tr></thead>
+      <tbody>
+        {% for metodo, dados in panel.risk_methods.items() %}
+        <tr>
+          <td style="font-weight:700">{{ metodo }}</td>
+          <td>{{ dados.get('total', 0) }}</td>
+          <td><span class="badge {{ 'g' if dados.get('win_rate', 0) >= 50 else 'r' }}">{{ dados.get('win_rate', 0) }}%</span></td>
+          <td style="font-weight:600;color:{{ 'var(--green)' if dados.get('resultado', 0) >= 0 else 'var(--red)' }}">{{ dados.get('resultado', 0) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}<p class="empty">Sem dados</p>{% endif %}
+</div>
+
+<!-- LOGS + ERROS -->
+<div class="g2">
+  <div class="card">
+    <div class="card-head"><h2>Log Operacional</h2><span class="badge m">Somente leitura</span></div>
+    <div style="margin-bottom:6px">
+      <input type="text" class="log-filter-input" id="logFilter" placeholder="Buscar nos logs..." oninput="filterLogs(this.value)">
+    </div>
+    <pre class="logbox" id="logBox">{{ panel.logs or 'Sem logs recentes.' }}</pre>
+  </div>
+  <div class="stack">
+    <div class="card">
+      <div class="card-head"><h2>Erros Recentes</h2><span class="badge {{ 'r' if panel.errors else 'g' }}">{{ 'ATENÇÃO' if panel.errors else 'OK' }}</span></div>
+      <pre class="logbox" style="max-height:120px">{{ panel.errors or 'Sem erros recentes.' }}</pre>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Aprendizado Diário</h2></div>
+      <div style="font-size:0.78rem;color:var(--muted);margin-bottom:6px"><b style="color:var(--text)">Estado:</b> {{ panel.daily_learning_state or 'Sem estado.' }}</div>
+      <pre class="logbox" style="max-height:100px">{{ panel.daily_learning_report or 'Sem relatório.' }}</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ACESSOS -->
+{% if current_user.role in ['ADMIN', 'SUPERVISOR'] %}
+<div class="card" style="margin-top:16px">
+  <div class="card-head"><h2>Acessos</h2><span class="badge g">Auditoria</span></div>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th>Data</th><th>Usuário</th><th>IP</th><th>Rota</th><th>Ação</th></tr></thead>
+      <tbody>
+        {% for row in panel.recent_access_logs.rows %}
+        <tr>
+          <td>{{ row.created_at }}</td>
+          <td>{{ row.username or '-' }}</td>
+          <td>{{ row.ip_address or '-' }}</td>
+          <td>{{ row.route or '-' }}</td>
+          <td><span class="badge y">{{ row.action }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if panel.recent_access_logs.total_pages > 1 %}
+  <div class="pagination">
+    {% if panel.recent_access_logs.page > 1 %}
+      <a href="{{ url_for('leon.index', page=panel.recent_access_logs.page-1, per_page=panel.recent_access_logs.per_page) }}" class="page-link">« Anterior</a>
+    {% else %}
+      <span class="page-link disabled">« Anterior</span>
+    {% endif %}
+
+    <span class="page-info">Página {{ panel.recent_access_logs.page }} de {{ panel.recent_access_logs.total_pages }}</span>
+
+    {% if panel.recent_access_logs.page < panel.recent_access_logs.total_pages %}
+      <a href="{{ url_for('leon.index', page=panel.recent_access_logs.page+1, per_page=panel.recent_access_logs.per_page) }}" class="page-link">Próximo »</a>
+    {% else %}
+      <span class="page-link disabled">Próximo »</span>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
 {% endif %}
+
+<script>
+var _logCache = {};
+function filterLogs(value) {
+  var box = document.getElementById('logBox');
+  if (!box) return;
+  var key = 'logBox';
+  if (!_logCache[key]) {
+    _logCache[key] = box.textContent;
+  }
+  var q = value.trim();
+  if (q === '') {
+    box.textContent = _logCache[key];
+    return;
+  }
+  var lines = _logCache[key].split('\n');
+  q = q.toLowerCase();
+  var filtered = [];
+  for (var i = 0; i < lines.length; i++) {
+    if (lines[i].toLowerCase().indexOf(q) !== -1) {
+      filtered.push(lines[i]);
+    }
+  }
+  box.textContent = filtered.join('\n');
+}
+</script>
 {% endblock %}

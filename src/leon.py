@@ -543,7 +543,6 @@ bos_event = smc_context.get("bos_event") or {}
 choch_event = smc_context.get("choch_event") or {}
 lab_event_signature = "|".join(
     [
-        direcao_candidata,
         str(bos_event.get("time")),
         str(choch_event.get("time")),
     ]
@@ -568,7 +567,6 @@ if lab_entry["approved"]:
 if direcao_candidata in ["COMPRA", "VENDA"] and confirmacoes_faltantes:
     assinatura_shadow = "|".join(
         [
-            direcao_candidata,
             str(bos_event.get("time")),
             str(choch_event.get("time")),
         ]

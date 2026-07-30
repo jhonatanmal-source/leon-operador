@@ -1,9 +1,9 @@
 {
-  "mission_id": "MISSION-20260723-OBSIDIAN",
+  "mission_id": "MISSION-20260730-MELHORIAS",
   "status": "CONCLUÍDO",
   "writer": "Engineering Director",
   "reserved_files": [],
-  "started_at": "2026-07-23T08:00:00",
-  "completed_at": "2026-07-23T08:10:00",
-  "notes": "Instalação do Obsidian headless concluída. Nenhuma alteração operacional."
+  "started_at": "2026-07-30T14:30:00",
+  "completed_at": "2026-07-30T15:45:00",
+  "notes": "8 correções implementadas (C1-C8). Sistema em modo estudo para coleta de dados. Pendente: filtro de entrada em zona + BE progressivo (próxima missão após ~20-30 operações)."
 }

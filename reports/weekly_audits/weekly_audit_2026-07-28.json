@@ -1,0 +1,136 @@
+{
+  "generated_at": "28/07/2026 23:46:43",
+  "period_start": "22/07/2026",
+  "period_end": "28/07/2026",
+  "reference_date": "2026-07-28",
+  "status": "ATENCAO",
+  "score": 72,
+  "metrics": {
+    "studies": 283,
+    "entries": 31,
+    "blocks": 109,
+    "observations": 0,
+    "technical_errors": 7829,
+    "wins": 91,
+    "losses": 179
+  },
+  "human_analyses": {
+    "total": 0,
+    "pending": 0,
+    "approved": 0,
+    "rejected": 0
+  },
+  "findings": [
+    {
+      "severity": "ALTO",
+      "title": "Erros técnicos registrados",
+      "count": 7829,
+      "detail": "O operador registrou falhas técnicas durante a semana.",
+      "correction": "Confirmar recuperação no log, corrigir a causa recorrente e executar os testes do módulo afetado.",
+      "items": [
+        "2026-07-28 23:45:57.485368 | OPERATOR | status Telegram nao enviado; nova tentativa sera permitida: {'ok': False, 'error': 'TELEGRAM_CONFIG_MISSING'}",
+        "2026-07-28 23:45:57.496849 | TELEGRAM | TOKEN ou CHAT_ID nao configurado",
+        "2026-07-28 23:46:27.939969 | TELEGRAM | TOKEN ou CHAT_ID nao configurado",
+        "2026-07-28 23:46:27.940320 | OPERATOR | status Telegram nao enviado; nova tentativa sera permitida: {'ok': False, 'error': 'TELEGRAM_CONFIG_MISSING'}",
+        "2026-07-28 23:46:27.952482 | TELEGRAM | TOKEN ou CHAT_ID nao configurado"
+      ]
+    },
+    {
+      "severity": "MEDIO",
+      "title": "Risco-retorno insuficiente",
+      "count": 2,
+      "detail": "Entradas foram bloqueadas ou avaliadas com RR abaixo do mínimo.",
+      "correction": "Aguardar retorno à zona planejada; não perseguir preço para forçar uma entrada.",
+      "items": []
+    },
+    {
+      "severity": "INFO",
+      "title": "Setups fracos bloqueados corretamente",
+      "count": 283,
+      "detail": "O filtro evitou execução em contexto neutro ou fraco.",
+      "correction": "Manter o bloqueio. Usar esses casos como estudo, sem tratá-los como erro operacional.",
+      "items": []
+    }
+  ],
+  "daily": [
+    {
+      "date": "22/07/2026",
+      "studies": 0,
+      "entries": 0,
+      "blocks": 0,
+      "observations": 0,
+      "errors": 0
+    },
+    {
+      "date": "23/07/2026",
+      "studies": 0,
+      "entries": 0,
+      "blocks": 0,
+      "observations": 0,
+      "errors": 0
+    },
+    {
+      "date": "24/07/2026",
+      "studies": 0,
+      "entries": 3,
+      "blocks": 82,
+      "observations": 0,
+      "errors": 0
+    },
+    {
+      "date": "25/07/2026",
+      "studies": 0,
+      "entries": 0,
+      "blocks": 0,
+      "observations": 0,
+      "errors": 0
+    },
+    {
+      "date": "26/07/2026",
+      "studies": 0,
+      "entries": 3,
+      "blocks": 0,
+      "observations": 0,
+      "errors": 1
+    },
+    {
+      "date": "27/07/2026",
+      "studies": 4,
+      "entries": 8,
+      "blocks": 13,
+      "observations": 0,
+      "errors": 93
+    },
+    {
+      "date": "28/07/2026",
+      "studies": 279,
+      "entries": 17,
+      "blocks": 14,
+      "observations": 0,
+      "errors": 7735
+    }
+  ],
+  "top_block_reasons": [
+    {
+      "reason": "TOP_DOWN_M15_NOT_ALIGNED",
+      "count": 77
+    },
+    {
+      "reason": "MAINTENANCE_BREAK",
+      "count": 13
+    },
+    {
+      "reason": "SETUP_SCORE_BELOW_MINIMUM",
+      "count": 12
+    },
+    {
+      "reason": "MT5_RETCODE_None",
+      "count": 2
+    },
+    {
+      "reason": "OPEN_RISK_BUDGET_EXCEEDED",
+      "count": 2
+    }
+  ],
+  "safety_note": "A auditoria recomenda correções, mas não altera regras, risco ou execução automaticamente."
+}

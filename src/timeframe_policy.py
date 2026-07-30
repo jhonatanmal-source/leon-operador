@@ -16,9 +16,11 @@ def evaluate_timeframe_policy(top_down, trade_direction):
     h1 = top_down.get("h1_contexto")
     m15 = top_down.get("m15_gatilho")
     tactical = [h4, h1, m15]
+    # 2 de 3 timeframes alinhados ja e suficiente (C7)
+    aligned_count = sum(1 for reading in tactical if reading == candidate)
     tactical_aligned = (
         candidate in VALID_DIRECTIONS
-        and all(reading == candidate for reading in tactical)
+        and aligned_count >= 2
     )
 
     if tactical_aligned and macro == candidate:

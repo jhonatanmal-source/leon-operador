@@ -5,6 +5,7 @@ from . import (
     health_bp,
     leon_bp,
     users_bp,
+    virtual_operations_bp,
     weekly_audit_bp,
 )
 
@@ -16,4 +17,5 @@ def register_blueprints(app):
     app.register_blueprint(leon_bp)
     app.register_blueprint(users_bp)
     app.register_blueprint(analysis_bp)
+    app.register_blueprint(virtual_operations_bp)
     app.register_blueprint(weekly_audit_bp)

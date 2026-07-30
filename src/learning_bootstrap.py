@@ -23,6 +23,7 @@ def obter_limiares():
         "auto_simulate_on_weak_setup": True,
         "auto_simulate_min_score": 30,
         "auto_simulate_min_winrate": 0.0,
+        "consecutive_loss_limit": 5,
     }
     config = configparser.ConfigParser()
     config.read(CONFIG_FILE, encoding="utf-8")
@@ -35,7 +36,23 @@ def obter_limiares():
         "auto_simulate_on_weak_setup": secao.get("auto_simulate", fallback=str(padrao["auto_simulate_on_weak_setup"])).lower() == "true",
         "auto_simulate_min_score": secao.getint("auto_simulate_min_score", fallback=padrao["auto_simulate_min_score"]),
         "auto_simulate_min_winrate": secao.getfloat("auto_simulate_min_winrate", fallback=padrao["auto_simulate_min_winrate"]),
+        "consecutive_loss_limit": secao.getint("consecutive_loss_limit", fallback=padrao["consecutive_loss_limit"]),
     }
+
+
+def _consecutive_losses(shadows=None, limit=5):
+    """Retorna True se houver 'limit' ou mais losses consecutivos nas shadows fechadas."""
+    if shadows is None:
+        import csv
+        shadow_file = DATA_DIR / "shadow_trades.csv"
+        if not shadow_file.exists():
+            return False
+        with shadow_file.open("r", encoding="utf-8", newline="") as f:
+            shadows = list(csv.DictReader(f, delimiter=";"))
+
+    fechados = [r for r in shadows if r.get("status") == "FECHADO"]
+    recentes = fechados[-limit:]
+    return len(recentes) == limit and all(r.get("result") == "LOSS" for r in recentes)
 
 
 def _ler_todas_entradas_simuladas():
@@ -191,12 +208,18 @@ def auto_simulate_permitido(brain_score=0, winrate_min=None):
 
     Critérios:
     - brain_score >= auto_simulate_min_score
+    - Nenhuma streak de perdas consecutivas >= consecutive_loss_limit
     - winrate das últimas shadows >= auto_simulate_min_winrate (se houver dados)
     - Sem dados de winrate (0 fechados) → permite (fase inicial de coleta)
     """
     limiares = obter_limiares()
     if not limiares["auto_simulate_on_weak_setup"]:
         return False, "AUTO_SIMULATE_DISABLED"
+
+    # Verificar streak de perdas consecutivas
+    streak_limit = limiares.get("consecutive_loss_limit", 5)
+    if _consecutive_losses(limit=streak_limit):
+        return False, f"CONSECUTIVE_LOSSES ({streak_limit})"
 
     if int(brain_score or 0) < limiares["auto_simulate_min_score"]:
         return False, f"BRAIN_SCORE_BAIXO ({brain_score} < {limiares['auto_simulate_min_score']})"

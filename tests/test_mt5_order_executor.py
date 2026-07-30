@@ -23,6 +23,7 @@ def mock_config():
             "max_demo_orders_day": 3,
             "min_live_rr": 1.0,
             "max_entry_drift_points": 5.0,
+            "max_open_positions": 2,
         }
         yield m
 
@@ -145,6 +146,7 @@ def mock_deps():
         patch("src.mt5_order_executor.gerar_print_entrada"),
         patch("src.mt5_order_executor.enviar_foto"),
         patch("src.mt5_order_executor.validate_zone_for_execution", return_value={"ok": True, "region": {"region_id": "REG-TEST-1234"}}),
+        patch("src.mt5_order_executor.score_operational_context", return_value=80),
     ]
     for p in patches:
         p.start()
@@ -187,6 +189,44 @@ class TestPureFunctions:
     def test_valor_none(self):
         from src.mt5_order_executor import _valor
         assert _valor(None) == "SEM DADOS"
+
+    def test_operational_study_engine_importa(self):
+        """Regressão: src.operational_study_engine deve importar sem ModuleNotFoundError.
+
+        A cadeia de import mt5_order_executor → operational_study_engine → study_engine
+        quebrava porque operational_study_engine usava 'from study_engine import ...'
+        em vez de 'from src.study_engine import ...'.
+        """
+        from src.operational_study_engine import (
+            load_operational_rules,
+            validate_setup_a_plus,
+            score_operational_context,
+            generate_entry_checklist,
+        )
+        assert callable(load_operational_rules)
+        assert callable(validate_setup_a_plus)
+        assert callable(score_operational_context)
+        assert callable(generate_entry_checklist)
+
+        # Verifica que score_operational_context funciona sem erro
+        context = {
+            "direction": "COMPRA",
+            "trend": "ALTA",
+            "momentum": "ALTA",
+            "liquidity_event": "SWEEP_CONFIRMADO",
+            "bos": "BOS_BULLISH",
+            "choch": "CHOCH_BULLISH",
+            "fvg": "FVG_BULLISH",
+            "poi_score": 80,
+            "top_down": "ALINHADO",
+            "session": "LONDON",
+            "rr": 3.0,
+            "high_impact_news": False,
+            "market_state": "TRENDING",
+        }
+        score = score_operational_context(context)
+        assert isinstance(score, (int, float))
+        assert 0 <= score <= 100
 
 
 class TestExecutor:
@@ -283,3 +323,131 @@ class TestExecutor:
                 assert result.get("ok") is True
                 assert result.get("order", {}).get("status") == "ENVIADA"
                 mock_mt5.order_send.assert_called_once()
+
+
+@pytest.fixture
+def mock_lab_config():
+    """Config with learning_lab_enabled=True for LAB_LEARNING tests."""
+    with patch("src.mt5_order_executor._execution_config") as m:
+        m.return_value = {
+            "enabled": True,
+            "demo_only": True,
+            "learning_lab_enabled": True,
+            "lot": 0.01,
+            "deviation": 20,
+            "magic": 20260616,
+            "max_spread": 50.0,
+            "max_demo_orders_day": 3,
+            "min_live_rr": 1.0,
+            "max_entry_drift_points": 5.0,
+            "lab_min_setup_score": 60,
+            "lab_min_live_rr": 0.75,
+            "lab_max_entry_drift_points": 3.0,
+            "max_open_positions": 2,
+        }
+        yield m
+
+
+class TestLabLearning:
+
+    def test_lab_bypasses_smc_guard(self, mock_mt5, mock_lab_config, mock_deps,
+                                     mock_pre_op_csv, mock_csv, mock_risk_config):
+        """LAB_LEARNING nao bloqueia quando SMC guard falha."""
+        from src.mt5_order_executor import executar_ordem_mt5_pre_operacao
+        with patch("src.mt5_order_executor.calcular_plano_risco",
+                   return_value={"approved": True, "lot": 0.01,
+                                 "estimated_risk": 50.0, "estimated_risk_percent": 0.5}):
+            with patch("src.mt5_order_executor.avaliar_orcamento_risco_aberto",
+                       return_value={"approved": True}):
+                with patch("src.mt5_order_executor.validate_smc_entry",
+                           return_value={"approved": False}):
+                    result = executar_ordem_mt5_pre_operacao(forcar=False)
+                    assert result.get("ok") is True
+                    assert result.get("order", {}).get("status") == "ENVIADA"
+
+    def test_lab_bypasses_top_down(self, mock_mt5, mock_lab_config, mock_deps,
+                                    mock_pre_op_csv, mock_csv, mock_risk_config):
+        """LAB_LEARNING nao bloqueia quando top-down nao alinhado."""
+        from src.mt5_order_executor import executar_ordem_mt5_pre_operacao
+        with patch("src.mt5_order_executor.calcular_plano_risco",
+                   return_value={"approved": True, "lot": 0.01,
+                                 "estimated_risk": 50.0, "estimated_risk_percent": 0.5}):
+            with patch("src.mt5_order_executor.avaliar_orcamento_risco_aberto",
+                       return_value={"approved": True}):
+                with patch("src.mt5_order_executor.ultima_leitura_top_down",
+                           return_value={"alinhamento": "DIVERGENTE", "m15_gatilho": None}):
+                    result = executar_ordem_mt5_pre_operacao(forcar=False)
+                    assert result.get("ok") is True
+
+    def test_lab_bypasses_risk_plan(self, mock_mt5, mock_lab_config, mock_deps,
+                                     mock_pre_op_csv, mock_csv, mock_risk_config):
+        """LAB_LEARNING nao bloqueia quando risk plan nao aprovado."""
+        from src.mt5_order_executor import executar_ordem_mt5_pre_operacao
+        with patch("src.mt5_order_executor.calcular_plano_risco",
+                   return_value={"approved": False, "lot": 0.01,
+                                 "estimated_risk": 50.0, "estimated_risk_percent": 0.5}):
+            with patch("src.mt5_order_executor.avaliar_orcamento_risco_aberto",
+                       return_value={"approved": True}):
+                result = executar_ordem_mt5_pre_operacao(forcar=False)
+                assert result.get("ok") is True
+
+    def test_lab_bypasses_risk_budget(self, mock_mt5, mock_lab_config, mock_deps,
+                                       mock_pre_op_csv, mock_csv, mock_risk_config):
+        """LAB_LEARNING nao bloqueia quando orcamento de risco excedido."""
+        from src.mt5_order_executor import executar_ordem_mt5_pre_operacao
+        with patch("src.mt5_order_executor.calcular_plano_risco",
+                   return_value={"approved": True, "lot": 0.01,
+                                 "estimated_risk": 50.0, "estimated_risk_percent": 0.5}):
+            with patch("src.mt5_order_executor.avaliar_orcamento_risco_aberto",
+                       return_value={"approved": False}):
+                result = executar_ordem_mt5_pre_operacao(forcar=False)
+                assert result.get("ok") is True
+
+    def test_lab_caps_lot_instead_of_blocking(self, mock_mt5, mock_lab_config, mock_deps,
+                                                mock_pre_op_csv, mock_csv, mock_risk_config):
+        """LAB_LEARNING faz capping do lote ao inves de bloquear."""
+        from src.mt5_order_executor import executar_ordem_mt5_pre_operacao
+        # Use lot=0.5 (calculado) com config lot=0.01 (maximo)
+        # risk_percent precisa ser <= max_risk_percent (1.0) para passar no _validar_lote_executor
+        with patch("src.mt5_order_executor.calcular_plano_risco",
+                   return_value={"approved": True, "lot": 0.5,
+                                 "estimated_risk": 50.0, "estimated_risk_percent": 0.5}):
+            with patch("src.mt5_order_executor.avaliar_orcamento_risco_aberto",
+                       return_value={"approved": True}):
+                result = executar_ordem_mt5_pre_operacao(forcar=False)
+                assert result.get("ok") is True
+                order = result.get("order", {})
+                assert order.get("lote") == 0.01  # capped to config["lot"]
+
+    def test_lab_ignores_council_block(self, mock_mt5, mock_lab_config, mock_deps,
+                                        mock_pre_op_csv, mock_csv, mock_risk_config):
+        """LAB_LEARNING ignora bloqueio do conselho de operadores."""
+        from src.mt5_order_executor import executar_ordem_mt5_pre_operacao
+        with patch("src.mt5_order_executor.calcular_plano_risco",
+                   return_value={"approved": True, "lot": 0.01,
+                                 "estimated_risk": 50.0, "estimated_risk_percent": 0.5}):
+            with patch("src.mt5_order_executor.avaliar_orcamento_risco_aberto",
+                       return_value={"approved": True}):
+                with patch("src.mt5_order_executor.avaliar_conselho_operadores",
+                           return_value={"decision": "BLOQUEADO", "summary": "test block"}):
+                    result = executar_ordem_mt5_pre_operacao(forcar=False)
+                    assert result.get("ok") is True
+
+    def test_lab_order_send_retry_on_none(self, mock_mt5, mock_lab_config, mock_deps,
+                                            mock_pre_op_csv, mock_csv, mock_risk_config):
+        """LAB_LEARNING: order_send=None faz retry com reconexao."""
+        from src.mt5_order_executor import executar_ordem_mt5_pre_operacao
+        mock_mt5.order_send.side_effect = [None, MagicMock(retcode=10009, order=99999)]
+        mock_mt5.last_error.return_value = (10099, "test error")
+        with patch("src.mt5_order_executor.calcular_plano_risco",
+                   return_value={"approved": True, "lot": 0.01,
+                                 "estimated_risk": 50.0, "estimated_risk_percent": 0.5}):
+            with patch("src.mt5_order_executor.avaliar_orcamento_risco_aberto",
+                       return_value={"approved": True}):
+                result = executar_ordem_mt5_pre_operacao(forcar=False)
+                assert result.get("ok") is True
+                order = result.get("order", {})
+                assert order.get("ticket") == 99999
+                assert mock_mt5.order_send.call_count == 2
+                mock_mt5.shutdown.assert_called()
+                mock_mt5.initialize.assert_called()

@@ -1,0 +1,340 @@
+{
+  "batch": 17,
+  "generated_at": "2026-07-29T06:29:11",
+  "period_start": "2026-07-29T04:21:53",
+  "period_end": "2026-07-29T06:29:11",
+  "operation_ids": [
+    "PREOP-000950",
+    "PREOP-000951",
+    "PREOP-000952",
+    "PREOP-000955",
+    "PREOP-000956",
+    "PREOP-000957",
+    "PREOP-000953",
+    "PREOP-000954",
+    "PREOP-000958",
+    "PREOP-000959",
+    "PREOP-000960",
+    "PREOP-000961",
+    "PREOP-000973",
+    "PREOP-000974",
+    "PREOP-000969",
+    "PREOP-000970",
+    "PREOP-000971",
+    "PREOP-000972",
+    "PREOP-000975",
+    "PREOP-000976"
+  ],
+  "total": 20,
+  "wins": 11,
+  "losses": 9,
+  "winrate": 55.0,
+  "average_rr": 3.0,
+  "net_r": 9.0,
+  "best_contexts": [
+    {
+      "dimension": "direcao",
+      "value": "VENDA",
+      "total": 12,
+      "wins": 9,
+      "losses": 3,
+      "winrate": 75.0
+    },
+    {
+      "dimension": "smc",
+      "value": "BEARISH",
+      "total": 12,
+      "wins": 9,
+      "losses": 3,
+      "winrate": 75.0
+    },
+    {
+      "dimension": "sessao",
+      "value": "LONDRES",
+      "total": 20,
+      "wins": 11,
+      "losses": 9,
+      "winrate": 55.0
+    },
+    {
+      "dimension": "top_down",
+      "value": "MISTO",
+      "total": 20,
+      "wins": 11,
+      "losses": 9,
+      "winrate": 55.0
+    },
+    {
+      "dimension": "elliott",
+      "value": "ONDA 3",
+      "total": 20,
+      "wins": 11,
+      "losses": 9,
+      "winrate": 55.0
+    }
+  ],
+  "weak_contexts": [
+    {
+      "dimension": "direcao",
+      "value": "COMPRA",
+      "total": 8,
+      "wins": 2,
+      "losses": 6,
+      "winrate": 25.0
+    },
+    {
+      "dimension": "smc",
+      "value": "BULLISH",
+      "total": 8,
+      "wins": 2,
+      "losses": 6,
+      "winrate": 25.0
+    },
+    {
+      "dimension": "sessao",
+      "value": "LONDRES",
+      "total": 20,
+      "wins": 11,
+      "losses": 9,
+      "winrate": 55.0
+    },
+    {
+      "dimension": "top_down",
+      "value": "MISTO",
+      "total": 20,
+      "wins": 11,
+      "losses": 9,
+      "winrate": 55.0
+    },
+    {
+      "dimension": "elliott",
+      "value": "ONDA 3",
+      "total": 20,
+      "wins": 11,
+      "losses": 9,
+      "winrate": 55.0
+    }
+  ],
+  "recommendations": [
+    {
+      "batch": 17,
+      "dimension": "sessao",
+      "value": "LONDRES",
+      "sample": 20,
+      "winrate": 55.0,
+      "action": "MANTER_EM_OBSERVACAO",
+      "suggested_adjustment": 0,
+      "reason": "Amostra ainda sem vantagem clara.",
+      "applied_automatically": false
+    },
+    {
+      "batch": 17,
+      "dimension": "top_down",
+      "value": "MISTO",
+      "sample": 20,
+      "winrate": 55.0,
+      "action": "MANTER_EM_OBSERVACAO",
+      "suggested_adjustment": 0,
+      "reason": "Amostra ainda sem vantagem clara.",
+      "applied_automatically": false
+    },
+    {
+      "batch": 17,
+      "dimension": "direcao",
+      "value": "VENDA",
+      "sample": 12,
+      "winrate": 75.0,
+      "action": "AUMENTAR_CONFIANCA_RECOMENDADA",
+      "suggested_adjustment": 5,
+      "reason": "Contexto consistente no bloco.",
+      "applied_automatically": true
+    },
+    {
+      "batch": 17,
+      "dimension": "direcao",
+      "value": "COMPRA",
+      "sample": 8,
+      "winrate": 25.0,
+      "action": "REDUZIR_CONFIANCA_RECOMENDADA",
+      "suggested_adjustment": -5,
+      "reason": "Contexto apresentou recorrencia de perdas.",
+      "applied_automatically": false
+    },
+    {
+      "batch": 17,
+      "dimension": "smc",
+      "value": "BEARISH",
+      "sample": 12,
+      "winrate": 75.0,
+      "action": "AUMENTAR_CONFIANCA_RECOMENDADA",
+      "suggested_adjustment": 5,
+      "reason": "Contexto consistente no bloco.",
+      "applied_automatically": true
+    },
+    {
+      "batch": 17,
+      "dimension": "smc",
+      "value": "BULLISH",
+      "sample": 8,
+      "winrate": 25.0,
+      "action": "REDUZIR_CONFIANCA_RECOMENDADA",
+      "suggested_adjustment": -5,
+      "reason": "Contexto apresentou recorrencia de perdas.",
+      "applied_automatically": false
+    },
+    {
+      "batch": 17,
+      "dimension": "elliott",
+      "value": "ONDA 3",
+      "sample": 20,
+      "winrate": 55.0,
+      "action": "MANTER_EM_OBSERVACAO",
+      "suggested_adjustment": 0,
+      "reason": "Amostra ainda sem vantagem clara.",
+      "applied_automatically": false
+    },
+    {
+      "batch": 17,
+      "dimension": "setup",
+      "value": "SETUP FRACO",
+      "sample": 20,
+      "winrate": 55.0,
+      "action": "MANTER_EM_OBSERVACAO",
+      "suggested_adjustment": 0,
+      "reason": "Amostra ainda sem vantagem clara.",
+      "applied_automatically": false
+    },
+    {
+      "batch": 17,
+      "dimension": "bos",
+      "value": "BOS_BULLISH",
+      "sample": 20,
+      "winrate": 55.0,
+      "action": "MANTER_EM_OBSERVACAO",
+      "suggested_adjustment": 0,
+      "reason": "Amostra ainda sem vantagem clara.",
+      "applied_automatically": false
+    },
+    {
+      "batch": 17,
+      "dimension": "choch",
+      "value": "CHOCH_BULLISH",
+      "sample": 20,
+      "winrate": 55.0,
+      "action": "MANTER_EM_OBSERVACAO",
+      "suggested_adjustment": 0,
+      "reason": "Amostra ainda sem vantagem clara.",
+      "applied_automatically": false
+    },
+    {
+      "batch": 17,
+      "dimension": "rr",
+      "value": "RR_3_OU_MAIS",
+      "sample": 20,
+      "winrate": 55.0,
+      "action": "MANTER_EM_OBSERVACAO",
+      "suggested_adjustment": 0,
+      "reason": "Amostra ainda sem vantagem clara.",
+      "applied_automatically": false
+    }
+  ],
+  "analyses": {
+    "sessao": [
+      {
+        "value": "LONDRES",
+        "total": 20,
+        "wins": 11,
+        "losses": 9,
+        "winrate": 55.0
+      }
+    ],
+    "top_down": [
+      {
+        "value": "MISTO",
+        "total": 20,
+        "wins": 11,
+        "losses": 9,
+        "winrate": 55.0
+      }
+    ],
+    "direcao": [
+      {
+        "value": "VENDA",
+        "total": 12,
+        "wins": 9,
+        "losses": 3,
+        "winrate": 75.0
+      },
+      {
+        "value": "COMPRA",
+        "total": 8,
+        "wins": 2,
+        "losses": 6,
+        "winrate": 25.0
+      }
+    ],
+    "smc": [
+      {
+        "value": "BEARISH",
+        "total": 12,
+        "wins": 9,
+        "losses": 3,
+        "winrate": 75.0
+      },
+      {
+        "value": "BULLISH",
+        "total": 8,
+        "wins": 2,
+        "losses": 6,
+        "winrate": 25.0
+      }
+    ],
+    "elliott": [
+      {
+        "value": "ONDA 3",
+        "total": 20,
+        "wins": 11,
+        "losses": 9,
+        "winrate": 55.0
+      }
+    ],
+    "setup": [
+      {
+        "value": "SETUP FRACO",
+        "total": 20,
+        "wins": 11,
+        "losses": 9,
+        "winrate": 55.0
+      }
+    ],
+    "bos": [
+      {
+        "value": "BOS_BULLISH",
+        "total": 20,
+        "wins": 11,
+        "losses": 9,
+        "winrate": 55.0
+      }
+    ],
+    "choch": [
+      {
+        "value": "CHOCH_BULLISH",
+        "total": 20,
+        "wins": 11,
+        "losses": 9,
+        "winrate": 55.0
+      }
+    ],
+    "rr": [
+      {
+        "value": "RR_3_OU_MAIS",
+        "total": 20,
+        "wins": 11,
+        "losses": 9,
+        "winrate": 55.0
+      }
+    ]
+  },
+  "rules_changed": false,
+  "report": "LEON | REVISAO DE 20 OPERACOES\n=================================\nBloco: 17\nPeriodo: 2026-07-29T04:21:53 ate 2026-07-29T06:29:11\nOperacoes: 20\nVitorias: 11\nDerrotas: 9\nTaxa de acerto: 55.0%\nRR medio: 1:3.0\nResultado liquido simulado: 9.0R\n\nMelhores contextos\n- direcao=VENDA | 75.0% em 12 operacoes\n- smc=BEARISH | 75.0% em 12 operacoes\n- sessao=LONDRES | 55.0% em 20 operacoes\n- top_down=MISTO | 55.0% em 20 operacoes\n- elliott=ONDA 3 | 55.0% em 20 operacoes\n\nContextos para revisar\n- direcao=COMPRA | 25.0% em 8 operacoes\n- smc=BULLISH | 25.0% em 8 operacoes\n- sessao=LONDRES | 55.0% em 20 operacoes\n- top_down=MISTO | 55.0% em 20 operacoes\n- elliott=ONDA 3 | 55.0% em 20 operacoes\n\nRecomendacoes de confianca\n- MANTER_EM_OBSERVACAO: sessao=LONDRES (55.0%, amostra 20, ajuste sugerido +0)\n- MANTER_EM_OBSERVACAO: top_down=MISTO (55.0%, amostra 20, ajuste sugerido +0)\n- AUMENTAR_CONFIANCA_RECOMENDADA: direcao=VENDA (75.0%, amostra 12, ajuste sugerido +5)\n- REDUZIR_CONFIANCA_RECOMENDADA: direcao=COMPRA (25.0%, amostra 8, ajuste sugerido -5)\n- AUMENTAR_CONFIANCA_RECOMENDADA: smc=BEARISH (75.0%, amostra 12, ajuste sugerido +5)\n- REDUZIR_CONFIANCA_RECOMENDADA: smc=BULLISH (25.0%, amostra 8, ajuste sugerido -5)\n- MANTER_EM_OBSERVACAO: elliott=ONDA 3 (55.0%, amostra 20, ajuste sugerido +0)\n- MANTER_EM_OBSERVACAO: setup=SETUP FRACO (55.0%, amostra 20, ajuste sugerido +0)\n- MANTER_EM_OBSERVACAO: bos=BOS_BULLISH (55.0%, amostra 20, ajuste sugerido +0)\n- MANTER_EM_OBSERVACAO: choch=CHOCH_BULLISH (55.0%, amostra 20, ajuste sugerido +0)\n- MANTER_EM_OBSERVACAO: rr=RR_3_OU_MAIS (55.0%, amostra 20, ajuste sugerido +0)\n- 2 recomendacao(oes) foram aplicadas automaticamente.\n\nProtecao\n- Risco, BOS, CHOCH, setup e regras operacionais permanecem inalterados.\n================================="
+}

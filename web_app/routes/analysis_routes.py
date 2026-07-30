@@ -229,28 +229,62 @@ def upload():
 @login_required
 def history():
     user = current_user()
+
+    # Pagination params
+    try:
+        page = int(request.args.get("page", "1"))
+    except (ValueError, TypeError):
+        page = 1
+    try:
+        per_page = int(request.args.get("per_page", "20"))
+    except (ValueError, TypeError):
+        per_page = 20
+    per_page = max(1, min(per_page, 100))
+    offset = (page - 1) * per_page
+
     if user["role"] in {"ADMIN", "SUPERVISOR"}:
-        where = ""
+        where_clause = ""
         params = ()
     elif user["role"] == "COLABORADOR":
-        where = "WHERE human_analyses.user_id = ?"
+        where_clause = "WHERE human_analyses.user_id = ?"
         params = (user["id"],)
     else:
-        where = "WHERE human_analyses.status = 'APROVADA'"
+        where_clause = "WHERE human_analyses.status = 'APROVADA'"
         params = ()
 
     with get_connection() as connection:
+        total = connection.execute(
+            f"""
+            SELECT COUNT(*) as count
+            FROM human_analyses
+            JOIN users ON users.id = human_analyses.user_id
+            {where_clause}
+            """,
+            params,
+        ).fetchone()["count"]
+
         analyses = connection.execute(
             f"""
             SELECT human_analyses.*, users.username
             FROM human_analyses
             JOIN users ON users.id = human_analyses.user_id
-            {where}
+            {where_clause}
             ORDER BY human_analyses.id DESC
+            LIMIT ? OFFSET ?
             """,
-            params,
+            params + (per_page, offset),
         ).fetchall()
-    return render_template("analysis_history.html", analyses=analyses)
+
+    total_pages = max(1, (total + per_page - 1) // per_page)
+
+    return render_template(
+        "analysis_history.html",
+        analyses=analyses,
+        page=page,
+        per_page=per_page,
+        total_pages=total_pages,
+        total_items=total,
+    )
 
 
 @analysis_bp.get("/<int:analysis_id>")

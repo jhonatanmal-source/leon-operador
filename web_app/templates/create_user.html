@@ -1,22 +1,45 @@
 {% extends "base.html" %}
-{% block title %}Criar usuário | LEON WEB COLLAB{% endblock %}
+{% block title %}Criar Usuário | LEON XAU ELITE AI{% endblock %}
 {% block content %}
-<section class="form-page">
-  <div class="card form-card">
-    <div class="eyebrow">NOVO ACESSO</div>
-    <h1>Criar usuário</h1>
-    <form method="post" class="form-stack">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <label>Usuário<input name="username" minlength="3" required></label>
-      <label>Senha inicial<input type="password" name="password" minlength="10" required></label>
-      <label>
-        Função
-        <select name="role" required>
-          {% for role in roles %}<option value="{{ role }}">{{ role }}</option>{% endfor %}
-        </select>
-      </label>
-      <button class="button" type="submit">Criar acesso</button>
-    </form>
-  </div>
-</section>
+
+<div class="page-head">
+  <div><h1>Criar Usuário</h1><p class="muted">Adicione um novo operador ao sistema.</p></div>
+  <a class="btn btn-outline" href="{{ url_for('users.list_users') }}">Voltar</a>
+</div>
+
+<div class="card" style="max-width:480px">
+  <form method="post" class="form-stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label>
+      Nome de usuário
+      <input class="form-input" type="text" name="username" placeholder="Ex: operador.um" minlength="3" required autofocus>
+      <small style="color:var(--muted);font-weight:400;text-transform:none">Mínimo de 3 caracteres.</small>
+    </label>
+
+    <label>
+      Senha
+      <input class="form-input" type="password" name="password" placeholder="Mínimo 10 caracteres" minlength="10" required>
+      <small style="color:var(--muted);font-weight:400;text-transform:none">Mínimo de 10 caracteres. O usuário deverá trocar no primeiro login.</small>
+    </label>
+
+    <label>
+      Função
+      <select name="role" class="form-select" required>
+        <option value="">Selecione...</option>
+        {% for role in roles %}
+        <option value="{{ role }}">{{ role }}</option>
+        {% endfor %}
+      </select>
+      <small style="color:var(--muted);font-weight:400;text-transform:none">
+        ADMIN: acesso total &middot;
+        SUPERVISOR: gerencia análises &middot;
+        COLABORADOR: envia análises &middot;
+        VISUALIZADOR: apenas leitura
+      </small>
+    </label>
+
+    <button class="btn btn-gold form-full" type="submit">Criar Usuário</button>
+  </form>
+</div>
 {% endblock %}

@@ -1,71 +1,192 @@
 {% extends "base.html" %}
-{% block title %}Painel | LEON WEB COLLAB{% endblock %}
+{% block title %}Dashboard | LEON XAU ELITE AI{% endblock %}
+{% block body_class %}dashboard-pro{% endblock %}
 {% block content %}
-<section class="page-heading">
+
+<div class="dashboard-stage-one">
+<header class="pro-topbar">
   <div>
-    <div class="eyebrow">VISÃO GERAL</div>
-    <h1>Painel colaborativo</h1>
-    <p class="muted">Estudos humanos organizados, interpretados e supervisionados.</p>
+    <h1>Ola, {{ user.username|upper }}! <span>♛</span></h1>
+    <p>Bem-vindo ao LEON XAU ELITE AI</p>
   </div>
-  {% if user.role in ['ADMIN', 'SUPERVISOR', 'COLABORADOR'] %}
-    <a class="button" href="{{ url_for('analysis.upload') }}">Nova análise</a>
+  <div class="pro-top-actions">
+    <div class="pro-license"><i>♜</i><span>Licenca<strong>ATIVA</strong></span></div>
+    <div class="pro-plan"><small>Plano</small><strong>LEON PRO</strong></div>
+    <a href="{{ url_for('health.index') }}" class="pro-icon-btn" aria-label="Saude do sistema">◎</a>
+    <a href="{{ url_for('auth.logout') }}" class="pro-icon-btn" aria-label="Sair">⇥</a>
+  </div>
+</header>
+
+<section class="pro-system-row" aria-label="Status dos sistemas">
+  <article class="pro-system-card"><span class="pro-system-icon green">⬡</span><div><b>VPN MIKROTIK</b><strong>CONECTADO</strong><small>Rede local protegida</small></div><i class="signal-waves">◔</i></article>
+  <article class="pro-system-card"><span class="pro-system-icon gold">♕</span><div><b>LICENCA</b><strong>ATIVA</strong><small>Sessao autorizada</small></div><i class="mini-progress"><span></span></i></article>
+  <article class="pro-system-card"><span class="pro-system-icon green">MT5</span><div><b>METATRADER 5</b><strong>MONITORANDO</strong><small>XAUUSD</small></div></article>
+  <article class="pro-system-card"><span class="pro-system-icon gold">LE</span><div><b>LEON AI</b><strong>ATIVO</strong><small>Analisando mercado</small></div><i class="ai-pulse"></i></article>
+</section>
+
+<!-- MODO ESTUDOS -->
+<section class="card" style="margin-bottom:16px;border-color:var(--gold)">
+  <div class="card-head">
+    <h2>🧪 Modo Estudos (LAB_LEARNING)</h2>
+    <span class="badge g" style="font-size:0.85rem">ATIVO</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;padding:12px 0">
+    <div class="status-box">
+      <div class="status-ico b">🧪</div>
+      <div class="status-txt"><small>Shadow Trades</small><strong>{{ shadow.total }}</strong></div>
+    </div>
+    <div class="status-box">
+      <div class="status-ico g">📗</div>
+      <div class="status-txt"><small>Shadow Wins</small><strong>{{ shadow.wins }}</strong></div>
+    </div>
+    <div class="status-box">
+      <div class="status-ico r">📕</div>
+      <div class="status-txt"><small>Shadow Losses</small><strong>{{ shadow.losses }}</strong></div>
+    </div>
+    <div class="status-box">
+      <div class="status-ico y">🔄</div>
+      <div class="status-txt"><small>Shadow Abertas</small><strong>{{ shadow.open }}</strong></div>
+    </div>
+    <div class="status-box">
+      <div class="status-ico b">📊</div>
+      <div class="status-txt"><small>Simuladas</small><strong>{{ simulated.total }}</strong></div>
+    </div>
+    <div class="status-box">
+      <div class="status-ico b">📈</div>
+      <div class="status-txt"><small>Performance</small><strong>{{ performance.total }}</strong></div>
+    </div>
+  </div>
+  {% if shadow.total > 0 %}
+  <div style="margin-bottom:8px">
+    <small style="color:var(--muted)">Taxa de Acerto Shadow: 
+      <strong style="color:{{ 'var(--green)' if shadow.total > 0 and (shadow.wins / shadow.total * 100) >= 50 else 'var(--red)' }}">
+        {{ "%.1f"|format(shadow.wins / shadow.total * 100) if shadow.total > 0 else 0 }}%
+      </strong>
+    </small>
+  </div>
   {% endif %}
-</section>
-
-{% if user.must_change_password %}
-<section class="card password-alert">
-  <div>
-    <h2>Troque sua senha inicial</h2>
-    <p class="muted">Use uma senha exclusiva com pelo menos 10 caracteres.</p>
+  {% if study %}
+  <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px">
+    <b>Ultimo estudo:</b> {{ study }}
   </div>
-  <form method="post" action="{{ url_for('auth.change_password') }}" class="inline-form password-form">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="password" name="current_password" placeholder="Senha atual" required>
-    <input type="password" name="new_password" placeholder="Nova senha" minlength="10" required>
-    <input type="password" name="confirm_password" placeholder="Confirmar senha" minlength="10" required>
-    <button class="button success" type="submit">Alterar senha</button>
-  </form>
-</section>
-{% endif %}
-
-<section class="stats-grid">
-  <article class="card stat"><span>Total</span><strong>{{ stats.total }}</strong></article>
-  <article class="card stat"><span>Pendentes</span><strong class="yellow">{{ stats.pending }}</strong></article>
-  <article class="card stat"><span>Aprovadas</span><strong class="green">{{ stats.approved }}</strong></article>
-  <article class="card stat"><span>Rejeitadas</span><strong class="red">{{ stats.rejected }}</strong></article>
-  {% if user.role in ['ADMIN', 'SUPERVISOR'] %}
-    <article class="card stat"><span>Usuários ativos</span><strong>{{ stats.active_users }}</strong></article>
   {% endif %}
-</section>
-
-<section class="card">
-  <div class="section-title">
-    <h2>Análises recentes</h2>
-    <a href="{{ url_for('analysis.history') }}">Ver histórico</a>
+  {% if demo %}
+  <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px">
+    <b>Ultima execucao demo:</b> {{ demo }}
   </div>
-  {% if recent %}
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr><th>Data</th><th>Operador</th><th>Timeframe</th><th>Direção</th><th>Tipo</th><th>Status</th><th></th></tr>
-      </thead>
+  {% endif %}
+  {% if recent_orders %}
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th>Data</th><th>Pre-Op</th><th>Direção</th><th>Lote</th><th>Entrada</th><th>Status</th><th>Ticket</th></tr></thead>
       <tbody>
-        {% for analysis in recent %}
+        {% for o in recent_orders %}
         <tr>
-          <td>{{ analysis.created_at }}</td>
-          <td>{{ analysis.username }}</td>
-          <td>{{ analysis.timeframe }}</td>
-          <td>{{ analysis.direction }}</td>
-          <td>{{ analysis.analysis_type }}</td>
-          <td><span class="badge {{ analysis.status|lower }}">{{ analysis.status }}</span></td>
-          <td><a href="{{ url_for('analysis.detail', analysis_id=analysis.id) }}">Detalhes</a></td>
+          <td>{{ o.data }}</td>
+          <td>{{ o.pre_operation_id }}</td>
+          <td style="font-weight:600;color:{{ 'var(--green)' if o.direcao == 'COMPRA' else 'var(--red)' }}">{{ o.direcao }}</td>
+          <td>{{ o.lote }}</td>
+          <td>{{ o.entrada }}</td>
+          <td><span class="badge {{ 'g' if o.status == 'ENVIADA' or o.status == 'FECHADA' else ('r' if o.status == 'RECUSADA' or o.status == 'ERRO' else 'y') }}">{{ o.status }}</span></td>
+          <td>{{ o.ticket if o.ticket else '-' }}</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
   {% else %}
-    <p class="empty">Nenhuma análise disponível para seu perfil.</p>
+  <p class="empty" style="font-size:0.85rem">Nenhuma ordem demo recente.</p>
   {% endif %}
 </section>
+
+<div class="page-head">
+  <div>
+    <h1>Painel Colaborativo</h1>
+    <p class="muted">Estudos humanos organizados e supervisionados.</p>
+  </div>
+  {% if user.role in ['ADMIN', 'SUPERVISOR', 'COLABORADOR'] %}
+    <a class="btn btn-gold" href="{{ url_for('analysis.upload') }}">Nova análise</a>
+  {% endif %}
+</div>
+
+{% if user.must_change_password %}
+<div class="card" style="margin-bottom:16px;border-color:var(--gold)">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+    <div>
+      <b style="color:var(--gold)">Troque sua senha inicial</b>
+      <p class="muted" style="font-size:0.78rem;margin:0">Mínimo 10 caracteres.</p>
+    </div>
+    <form method="post" action="{{ url_for('auth.change_password') }}" class="inline-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input class="form-input" type="password" name="current_password" placeholder="Atual" required style="width:120px">
+      <input class="form-input" type="password" name="new_password" placeholder="Nova" minlength="10" required style="width:120px">
+      <input class="form-input" type="password" name="confirm_password" placeholder="Confirmar" minlength="10" required style="width:120px">
+      <button class="btn btn-gold btn-sm" type="submit">Alterar</button>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<!-- STATS -->
+<div class="status-row">
+  <div class="status-box">
+    <div class="status-ico b">&#9679;</div>
+    <div class="status-txt"><small>Total</small><strong>{{ stats.total }}</strong></div>
+  </div>
+  <div class="status-box">
+    <div class="status-ico y">&#9679;</div>
+    <div class="status-txt"><small>Pendentes</small><strong>{{ stats.pending }}</strong></div>
+  </div>
+  <div class="status-box">
+    <div class="status-ico g">&#9679;</div>
+    <div class="status-txt"><small>Aprovadas</small><strong>{{ stats.approved }}</strong></div>
+  </div>
+  <div class="status-box">
+    <div class="status-ico r">&#9679;</div>
+    <div class="status-txt"><small>Rejeitadas</small><strong>{{ stats.rejected }}</strong></div>
+  </div>
+  {% if stats.total > 0 %}
+  <div class="status-box">
+    <div class="status-ico g">&#9679;</div>
+    <div class="status-txt"><small>Taxa de Acerto</small><strong>{{ (stats.approved / stats.total * 100)|round(1) }}%</strong></div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ANÁLISES -->
+<div class="card">
+  <div class="card-head">
+    <h2>Análises Recentes</h2>
+    <a href="{{ url_for('analysis.history') }}" class="btn btn-outline btn-sm">Ver histórico</a>
+  </div>
+  {% if recent %}
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th>Data</th><th>Operador</th><th>TF</th><th>Direção</th><th>Tipo</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for a in recent %}
+        <tr>
+          <td>{{ a.created_at }}</td>
+          <td>{{ a.username }}</td>
+          <td>{{ a.timeframe }}</td>
+          <td style="font-weight:600;color:{{ 'var(--green)' if a.direction == 'COMPRA' else 'var(--red)' }}">{{ a.direction }}</td>
+          <td>{{ a.analysis_type }}</td>
+          <td><span class="badge {{ 'g' if a.status == 'APROVADA' else ('r' if a.status == 'REJEITADA' else 'y') }}">{{ a.status }}</span></td>
+          <td><a href="{{ url_for('analysis.detail', analysis_id=a.id) }}" class="btn btn-outline btn-sm">Ver</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="empty">Nenhuma análise disponível.</p>
+  {% endif %}
+</div>
+<footer class="pro-bottom-bar">
+  <span><i></i> Servidor: <b>Conectado</b></span>
+  <span>Ambiente: <b>Local</b></span>
+  <span>Sincronizacao: <b>OK</b></span>
+  <em>♛ LEON XAU ELITE AI — inteligencia operacional supervisionada.</em>
+</footer>
+</div>
 {% endblock %}

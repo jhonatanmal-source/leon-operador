@@ -1,39 +1,55 @@
 {% extends "base.html" %}
-{% block title %}Histórico | LEON WEB COLLAB{% endblock %}
+{% block title %}Histórico | LEON XAU ELITE AI{% endblock %}
 {% block content %}
-<section class="page-heading">
-  <div>
-    <div class="eyebrow">MEMÓRIA HUMANA</div>
-    <h1>Histórico de análises</h1>
-  </div>
-  {% if current_user.role in ['ADMIN', 'SUPERVISOR', 'COLABORADOR'] %}
-    <a class="button" href="{{ url_for('analysis.upload') }}">Enviar análise</a>
-  {% endif %}
-</section>
 
-<section class="card">
+<div class="page-head">
+  <div><h1>Histórico de Análises</h1></div>
+  {% if current_user.role in ['ADMIN', 'SUPERVISOR', 'COLABORADOR'] %}
+    <a class="btn btn-gold" href="{{ url_for('analysis.upload') }}">Enviar análise</a>
+  {% endif %}
+</div>
+
+<div class="card">
   {% if analyses %}
-  <div class="table-wrap">
-    <table>
+  <div class="tbl-wrap">
+    <table class="tbl">
       <thead><tr><th>Data</th><th>Usuário</th><th>Símbolo</th><th>TF</th><th>Direção</th><th>Tipo</th><th>Status</th><th></th></tr></thead>
       <tbody>
-        {% for analysis in analyses %}
+        {% for a in analyses %}
         <tr>
-          <td>{{ analysis.created_at }}</td>
-          <td>{{ analysis.username }}</td>
-          <td>{{ analysis.symbol }}</td>
-          <td>{{ analysis.timeframe }}</td>
-          <td>{{ analysis.direction }}</td>
-          <td>{{ analysis.analysis_type }}</td>
-          <td><span class="badge {{ analysis.status|lower }}">{{ analysis.status }}</span></td>
-          <td><a href="{{ url_for('analysis.detail', analysis_id=analysis.id) }}">Detalhes</a></td>
+          <td>{{ a.created_at }}</td>
+          <td>{{ a.username }}</td>
+          <td>{{ a.symbol }}</td>
+          <td>{{ a.timeframe }}</td>
+          <td style="font-weight:600;color:{{ 'var(--green)' if a.direction == 'COMPRA' else 'var(--red)' }}">{{ a.direction }}</td>
+          <td>{{ a.analysis_type }}</td>
+          <td><span class="badge {{ 'g' if a.status == 'APROVADA' else ('r' if a.status == 'REJEITADA' else 'y') }}">{{ a.status }}</span></td>
+          <td><a href="{{ url_for('analysis.detail', analysis_id=a.id) }}" class="btn btn-outline btn-sm">Ver</a></td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
   {% else %}
-    <p class="empty">Nenhuma análise encontrada.</p>
+  <p class="empty">Nenhuma análise encontrada.</p>
   {% endif %}
-</section>
+
+  {% if total_pages > 1 %}
+  <div class="pagination">
+    {% if page > 1 %}
+      <a href="{{ url_for('analysis.history', page=page-1, per_page=per_page) }}" class="page-link">« Anterior</a>
+    {% else %}
+      <span class="page-link disabled">« Anterior</span>
+    {% endif %}
+
+    <span class="page-info">Página {{ page }} de {{ total_pages }}</span>
+
+    {% if page < total_pages %}
+      <a href="{{ url_for('analysis.history', page=page+1, per_page=per_page) }}" class="page-link">Próximo »</a>
+    {% else %}
+      <span class="page-link disabled">Próximo »</span>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
 {% endblock %}

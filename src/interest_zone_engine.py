@@ -1438,3 +1438,56 @@ def validate_zone_for_execution(
             "confirmation_gate": confirmation_gate,
         }
     return {"ok": True, "region": zone}
+
+
+def find_nearest_zone(direction, entry_price, candles):
+    """Find nearest structural zone for stop placement.
+
+    Analyzes candle swing points to identify the closest structural level
+    below (COMPRA) or above (VENDA) the entry price.
+
+    Args:
+        direction: "COMPRA" or "VENDA"
+        entry_price: Entry price level
+        candles: List of candle dicts with 'high', 'low' keys
+
+    Returns:
+        dict with 'zone_stop' key, or None if not found
+    """
+    if not candles or len(candles) < 5:
+        return None
+
+    # Swing point detection in last 30 candles
+    candles_subset = candles[-30:]
+    swing_highs = []
+    swing_lows = []
+
+    for i in range(1, len(candles_subset) - 1):
+        prev = candles_subset[i - 1]
+        curr = candles_subset[i]
+        nxt = candles_subset[i + 1]
+        try:
+            prev_high = float(prev["high"])
+            curr_high = float(curr["high"])
+            nxt_high = float(nxt["high"])
+            prev_low = float(prev["low"])
+            curr_low = float(curr["low"])
+            nxt_low = float(nxt["low"])
+        except (ValueError, TypeError, KeyError):
+            continue
+
+        if curr_high > prev_high and curr_high >= nxt_high:
+            swing_highs.append(curr_high)
+        if curr_low < prev_low and curr_low <= nxt_low:
+            swing_lows.append(curr_low)
+
+    if direction == "COMPRA":
+        below = [s for s in swing_lows if s < entry_price]
+        if not below:
+            return None
+        return {"zone_stop": max(below)}  # nearest swing low below entry
+    else:
+        above = [s for s in swing_highs if s > entry_price]
+        if not above:
+            return None
+        return {"zone_stop": min(above)}  # nearest swing high above entry

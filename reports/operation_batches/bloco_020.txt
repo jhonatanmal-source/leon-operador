@@ -1,0 +1,41 @@
+LEON | REVISAO DE 20 OPERACOES
+=================================
+Bloco: 20
+Periodo: 2026-07-29T09:22:20 ate 2026-07-29T10:54:03
+Operacoes: 20
+Vitorias: 2
+Derrotas: 18
+Taxa de acerto: 10.0%
+RR medio: 1:3.0
+Resultado liquido simulado: -15.0R
+
+Melhores contextos
+- top_down=ALINHADO | 18.18% em 11 operacoes
+- setup=SETUP FRACO | 10.0% em 20 operacoes
+- rr=RR_3_OU_MAIS | 10.0% em 20 operacoes
+- bos=BOS_BULLISH | 5.26% em 19 operacoes
+- choch=CHOCH_BULLISH | 5.26% em 19 operacoes
+
+Contextos para revisar
+- direcao=COMPRA | 0.0% em 18 operacoes
+- smc=BULLISH | 0.0% em 18 operacoes
+- sessao=OVERLAP_LONDRES_NY | 0.0% em 16 operacoes
+- elliott=CORRECAO | 0.0% em 16 operacoes
+- top_down=MISTO | 0.0% em 9 operacoes
+
+Recomendacoes de confianca
+- REDUZIR_CONFIANCA_RECOMENDADA: sessao=OVERLAP_LONDRES_NY (0.0%, amostra 16, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: top_down=ALINHADO (18.18%, amostra 11, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: top_down=MISTO (0.0%, amostra 9, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: direcao=COMPRA (0.0%, amostra 18, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: smc=BULLISH (0.0%, amostra 18, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: elliott=CORRECAO (0.0%, amostra 16, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: setup=SETUP FRACO (10.0%, amostra 20, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: bos=BOS_BULLISH (5.26%, amostra 19, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: choch=CHOCH_BULLISH (5.26%, amostra 19, ajuste sugerido -5)
+- REDUZIR_CONFIANCA_RECOMENDADA: rr=RR_3_OU_MAIS (10.0%, amostra 20, ajuste sugerido -5)
+- 9 recomendacao(oes) foram aplicadas automaticamente.
+
+Protecao
+- Risco, BOS, CHOCH, setup e regras operacionais permanecem inalterados.
+=================================

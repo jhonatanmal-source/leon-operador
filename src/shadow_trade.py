@@ -71,16 +71,40 @@ def register_shadow_trade(
     closed = candles[:-1] if len(candles) > 1 else candles
     entry_candle = closed[-1]
     entry = float(entry_candle["close"])
-    recent = closed[-8:]
 
+    # --- C4: Stop baseado em estrutura (zona), fallback swing expandido ---
     if direction == "COMPRA":
-        stop = min(float(candle["low"]) for candle in recent)
+        try:
+            from src.interest_zone_engine import find_nearest_zone
+            zone = find_nearest_zone(direction, entry, candles)
+            stop = zone["zone_stop"] if (zone and zone.get("zone_stop")) else min(float(c["low"]) for c in candles[-15:])
+        except ImportError:
+            stop = min(float(c["low"]) for c in candles[-15:])
         risk = entry - stop
-        target = entry + risk * 2
     else:
-        stop = max(float(candle["high"]) for candle in recent)
+        try:
+            from src.interest_zone_engine import find_nearest_zone
+            zone = find_nearest_zone(direction, entry, candles)
+            stop = zone["zone_stop"] if (zone and zone.get("zone_stop")) else max(float(c["high"]) for c in candles[-15:])
+        except ImportError:
+            stop = max(float(c["high"]) for c in candles[-15:])
         risk = stop - entry
-        target = entry - risk * 2
+
+    # --- C3: TP baseado em níveis técnicos, fallback risk * 2 ---
+    if direction == "COMPRA":
+        try:
+            from src.smc_price_levels import build_smc_trade_levels
+            levels = build_smc_trade_levels(direction, min_rr=1.0, candles=candles, entry_price=entry)
+            target = levels["tp2"] if (levels and levels.get("tp2")) else entry + risk * 2
+        except ImportError:
+            target = entry + risk * 2
+    else:
+        try:
+            from src.smc_price_levels import build_smc_trade_levels
+            levels = build_smc_trade_levels(direction, min_rr=1.0, candles=candles, entry_price=entry)
+            target = levels["tp2"] if (levels and levels.get("tp2")) else entry - risk * 2
+        except ImportError:
+            target = entry - risk * 2
 
     if risk <= 0:
         return {"ok": False, "error": "INVALID_SHADOW_RISK"}

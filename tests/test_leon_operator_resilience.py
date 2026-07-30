@@ -60,6 +60,42 @@ class LeonOperatorResilienceTests(unittest.TestCase):
         self.assertFalse(result["ok"])
         save_status.assert_not_called()
 
+    def test_config_missing_telegram_saves_timestamp_to_prevent_flood(self):
+        """TELEGRAM_CONFIG_MISSING deve salvar timestamp para nao repetir a
+        cada ciclo de ~30s. Bug #1 — flood de 13k+ linhas em errors.txt."""
+        with patch.object(
+            leon_operator,
+            "enviar_status_operadores",
+            return_value={"ok": False, "error": "TELEGRAM_CONFIG_MISSING"},
+        ), patch.object(
+            leon_operator,
+            "_salvar_status_telegram",
+        ) as save_status, patch.object(leon_operator, "registrar_erro"), patch.object(
+            leon_operator, "registrar_log"
+        ):
+            result = leon_operator.executar_status_telegram(forcar=True)
+
+        self.assertFalse(result["ok"])
+        save_status.assert_called_once()
+        self.assertIsInstance(save_status.call_args.args[0], datetime)
+
+    def test_telegram_disabled_saves_timestamp_to_prevent_flood(self):
+        """TELEGRAM_DISABLED igualmente deve salvar timestamp."""
+        with patch.object(
+            leon_operator,
+            "enviar_status_operadores",
+            return_value={"ok": False, "error": "TELEGRAM_DISABLED"},
+        ), patch.object(
+            leon_operator,
+            "_salvar_status_telegram",
+        ) as save_status, patch.object(leon_operator, "registrar_erro"), patch.object(
+            leon_operator, "registrar_log"
+        ):
+            result = leon_operator.executar_status_telegram(forcar=True)
+
+        self.assertFalse(result["ok"])
+        save_status.assert_called_once()
+
     def test_successful_telegram_send_saves_timestamp(self):
         with patch.object(
             leon_operator,

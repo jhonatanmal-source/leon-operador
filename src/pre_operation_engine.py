@@ -4,6 +4,11 @@
 
 import csv
 import configparser
+import hashlib
+import json
+import os
+import tempfile
+from contextlib import contextmanager
 from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
@@ -18,9 +23,16 @@ except ImportError:
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / "data"
+DEFAULT_DATA_DIR = DATA_DIR
 PRE_OPERATION_FILE = DATA_DIR / "pre_operation_trades.csv"
 CANDLE_HISTORY_FILE = DATA_DIR / "candle_history.csv"
 CONFIG_FILE = ROOT_DIR / "config.ini"
+IDENTITY_VERSION = "LEON_PREOP_ID_V2"
+
+try:
+    import fcntl
+except ImportError:  # pragma: no cover - Windows development fallback
+    fcntl = None
 
 CAMPOS = [
     "id",
@@ -49,6 +61,10 @@ CAMPOS = [
     "structural_gate_version",
     "structural_gate_timestamp",
     "structural_gate_result",
+    "cycle_id",
+    "analysis_id",
+    "identity_version",
+    "legacy_id",
 ]
 
 
@@ -76,30 +92,216 @@ def _ler_registros():
 def _salvar_registros(registros):
 
     _garantir_arquivo()
+    PRE_OPERATION_FILE.parent.mkdir(parents=True, exist_ok=True)
+    descritor, temporario = tempfile.mkstemp(
+        prefix=f".{PRE_OPERATION_FILE.name}.",
+        suffix=".tmp",
+        dir=PRE_OPERATION_FILE.parent,
+    )
+    try:
+        with os.fdopen(descritor, "w", encoding="utf-8", newline="") as arquivo:
+            escritor = csv.DictWriter(arquivo, fieldnames=CAMPOS, delimiter=";")
+            escritor.writeheader()
+            for registro in registros:
+                escritor.writerow({
+                    campo: registro.get(campo, "")
+                    for campo in CAMPOS
+                })
+            arquivo.flush()
+            os.fsync(arquivo.fileno())
+        os.replace(temporario, PRE_OPERATION_FILE)
+        _sync_identity_registry(registros)
+    except Exception:
+        try:
+            os.unlink(temporario)
+        except OSError:
+            pass
+        raise
 
-    with PRE_OPERATION_FILE.open("w", encoding="utf-8", newline="") as arquivo:
-        escritor = csv.DictWriter(arquivo, fieldnames=CAMPOS, delimiter=";")
-        escritor.writeheader()
-        for registro in registros:
-            escritor.writerow({
-                campo: registro.get(campo, "")
-                for campo in CAMPOS
-            })
+
+def _identity_registry_file():
+    return DATA_DIR / "memory_identity_registry.json"
+
+
+def _write_json_atomic(path, payload):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descritor, temporario = tempfile.mkstemp(
+        prefix=f".{path.name}.",
+        suffix=".tmp",
+        dir=path.parent,
+    )
+    try:
+        with os.fdopen(descritor, "w", encoding="utf-8") as arquivo:
+            json.dump(
+                payload,
+                arquivo,
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            )
+            arquivo.write("\n")
+            arquivo.flush()
+            os.fsync(arquivo.fileno())
+        os.replace(temporario, path)
+    except Exception:
+        try:
+            os.unlink(temporario)
+        except OSError:
+            pass
+        raise
+
+
+def _sync_identity_registry(registros):
+    path = _identity_registry_file()
+    payload = {
+        "identity_version": IDENTITY_VERSION,
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "records_total": 0,
+        "records": [],
+    }
+    if path.exists():
+        try:
+            loaded = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                payload.update(loaded)
+        except (OSError, json.JSONDecodeError):
+            pass
+
+    existing = {
+        str(item.get("canonical_id") or ""): dict(item)
+        for item in payload.get("records", [])
+        if isinstance(item, dict) and item.get("canonical_id")
+    }
+    for registro in registros:
+        canonical_id = str(registro.get("id") or "").strip()
+        if (
+            not canonical_id
+            or registro.get("identity_version") != IDENTITY_VERSION
+        ):
+            continue
+        record = existing.get(canonical_id, {})
+        sources = set(record.get("sources") or [])
+        sources.add("CURRENT")
+        record.update({
+            "canonical_id": canonical_id,
+            "legacy_id": str(
+                registro.get("legacy_id") or canonical_id
+            ),
+            "opened_at": str(registro.get("data_abertura") or ""),
+            "region_id": str(registro.get("region_id") or ""),
+            "closed_at": str(registro.get("data_fechamento") or ""),
+            "symbol": str(registro.get("ativo") or ""),
+            "direction": str(registro.get("direcao") or ""),
+            "result": str(registro.get("resultado") or ""),
+            "sources": sorted(sources),
+            "identity_version": IDENTITY_VERSION,
+        })
+        record.pop("record_hash", None)
+        canonical = json.dumps(
+            record,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+        record["record_hash"] = hashlib.sha256(canonical).hexdigest()
+        existing[canonical_id] = record
+
+    records = sorted(
+        existing.values(),
+        key=lambda item: _numeric_id(item.get("canonical_id")),
+    )
+    payload.update({
+        "identity_version": IDENTITY_VERSION,
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "records_total": len(records),
+        "records": records,
+    })
+    _write_json_atomic(path, payload)
+
+
+def _sequence_file():
+    override = str(os.environ.get("LEON_PREOP_SEQUENCE_FILE") or "").strip()
+    if override:
+        return Path(override)
+    if DATA_DIR != DEFAULT_DATA_DIR:
+        return DATA_DIR / "pre_operation_sequence.json"
+    return ROOT_DIR.parent / "config" / "pre_operation_sequence.json"
+
+
+def _numeric_id(value):
+    text = str(value or "").strip()
+    if not text.startswith("PREOP-"):
+        return 0
+    suffix = text.rsplit("-", 1)[-1]
+    return int(suffix) if suffix.isdigit() else 0
+
+
+def _read_sequence(path):
+    if not path.exists():
+        return 0
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return 0
+    return max(
+        int(payload.get("last_value") or 0),
+        _numeric_id(payload.get("last_id")),
+    )
+
+
+def _write_sequence(path, value):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "identity_version": IDENTITY_VERSION,
+        "last_value": int(value),
+        "last_id": f"PREOP-{int(value):06d}",
+        "updated_at": datetime.now().isoformat(timespec="seconds"),
+    }
+    descritor, temporario = tempfile.mkstemp(
+        prefix=f".{path.name}.",
+        suffix=".tmp",
+        dir=path.parent,
+    )
+    try:
+        with os.fdopen(descritor, "w", encoding="utf-8") as arquivo:
+            json.dump(payload, arquivo, ensure_ascii=False, indent=2)
+            arquivo.write("\n")
+            arquivo.flush()
+            os.fsync(arquivo.fileno())
+        os.replace(temporario, path)
+    except Exception:
+        try:
+            os.unlink(temporario)
+        except OSError:
+            pass
+        raise
+
+
+@contextmanager
+def _sequence_lock(path):
+    lock_path = path.with_suffix(path.suffix + ".lock")
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with lock_path.open("a+", encoding="utf-8") as lock_file:
+        if fcntl is not None:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            if fcntl is not None:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
 
 
 def _proximo_id(registros):
-
-    if not registros:
-        return "PREOP-000001"
-
-    ultimo = registros[-1].get("id", "PREOP-000000")
-
-    try:
-        numero = int(ultimo.split("-")[-1])
-    except ValueError:
-        numero = len(registros)
-
-    return f"PREOP-{numero + 1:06d}"
+    sequence_file = _sequence_file()
+    with _sequence_lock(sequence_file):
+        maximum_in_memory = max(
+            (_numeric_id(registro.get("id")) for registro in registros),
+            default=0,
+        )
+        current = max(_read_sequence(sequence_file), maximum_in_memory)
+        next_value = current + 1
+        _write_sequence(sequence_file, next_value)
+    return f"PREOP-{next_value:06d}"
 
 
 def _rr_minimo_operacional():
@@ -134,6 +336,7 @@ def registrar_pre_operacao(
 ):
 
     registros = _ler_registros()
+    new_id = _proximo_id(registros)
     smc_guard = validate_smc_entry(direcao, smc, bos, choch)
     observation_reason = smc_guard["reason"]
     if direcao == "AGUARDAR":
@@ -145,6 +348,7 @@ def registrar_pre_operacao(
 
     structural_gate_ok = True
     structural_gate_result = ""
+    structural_region = {}
     region_id_str = str(region_id or "").strip()
     if operacao is not None and direcao != "AGUARDAR" and region_id_str:
         preop_for_gate = {
@@ -159,11 +363,23 @@ def registrar_pre_operacao(
                 structural_gate_result = "NO_REGION_ID"
         else:
             structural_gate_result = "PASSED"
+            structural_region = gate_result.get("region") or {}
+
+    cycle_id = str(
+        structural_region.get("cycle_id")
+        or os.environ.get("LEON_CYCLE_ID")
+        or ""
+    )
+    analysis_id = str(
+        structural_region.get("analysis_id")
+        or os.environ.get("LEON_ANALYSIS_ID")
+        or ""
+    )
 
     if operacao is None or direcao == "AGUARDAR":
         metodo = obter_metodo()
         registro = {
-            "id": _proximo_id(registros),
+            "id": new_id,
             "data_abertura": datetime.now().isoformat(timespec="seconds"),
             "data_fechamento": "",
             "ativo": ativo,
@@ -207,7 +423,7 @@ def registrar_pre_operacao(
 
         if rr < rr_minimo:
             registro = {
-                "id": _proximo_id(registros),
+                "id": new_id,
                 "data_abertura": datetime.now().isoformat(timespec="seconds"),
                 "data_fechamento": datetime.now().isoformat(timespec="seconds"),
                 "ativo": ativo,
@@ -254,7 +470,7 @@ def registrar_pre_operacao(
                 )
             agora = datetime.now().isoformat(timespec="seconds")
             registro = {
-                "id": _proximo_id(registros),
+                "id": new_id,
                 "data_abertura": agora,
                 "data_fechamento": "" if status_final == "ABERTO" else agora,
                 "ativo": ativo,
@@ -286,6 +502,13 @@ def registrar_pre_operacao(
             }
             if not structural_gate_ok:
                 registro["observacao"] = observacao_final
+
+    registro.update({
+        "cycle_id": cycle_id,
+        "analysis_id": analysis_id,
+        "identity_version": IDENTITY_VERSION,
+        "legacy_id": new_id,
+    })
 
     registros.append(registro)
     _salvar_registros(registros)

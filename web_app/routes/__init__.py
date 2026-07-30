@@ -4,6 +4,7 @@ from .dashboard_routes import dashboard_bp
 from .health_routes import health_bp
 from .leon_routes import leon_bp
 from .user_routes import users_bp
+from .virtual_operations_routes import virtual_operations_bp
 from .weekly_audit_routes import weekly_audit_bp
 
 
@@ -14,5 +15,6 @@ __all__ = [
     "health_bp",
     "leon_bp",
     "users_bp",
+    "virtual_operations_bp",
     "weekly_audit_bp",
 ]

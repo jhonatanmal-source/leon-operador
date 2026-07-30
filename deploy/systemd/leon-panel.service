@@ -1,0 +1,18 @@
+[Unit]
+Description=LEON XAU ELITE AI Panel (Caddy reverse proxy)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+WorkingDirectory=/opt/leon/app
+ExecStart=/usr/bin/caddy run --config /opt/leon/app/config/Caddyfile.panel
+ExecReload=/usr/bin/caddy reload --config /opt/leon/app/config/Caddyfile.panel
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

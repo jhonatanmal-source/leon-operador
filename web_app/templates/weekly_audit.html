@@ -1,111 +1,91 @@
 {% extends "base.html" %}
-{% block title %}Auditoria semanal | LEON WEB COLLAB{% endblock %}
+{% block title %}Auditoria Semanal | LEON XAU ELITE AI{% endblock %}
 {% block content %}
-<section class="page-heading">
+
+<div class="page-head">
   <div>
-    <div class="eyebrow">CONTROLE DE QUALIDADE OPERACIONAL</div>
-    <h1>Auditoria semanal</h1>
-    <p class="muted">
-      Período de {{ audit.period_start }} a {{ audit.period_end }} ·
-      atualizado em {{ audit.generated_at }}
-    </p>
+    <h1>Auditoria Semanal</h1>
+    <p class="muted">Período de {{ audit.period_start }} a {{ audit.period_end }} · atualizado em {{ audit.generated_at }}</p>
   </div>
-  <div class="audit-heading-actions">
-    <span class="badge large {{ 'aprovada' if audit.status == 'OK' else 'pendente' if audit.status == 'ATENCAO' else 'rejeitada' }}">
-      {{ audit.status }}
-    </span>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="badge {{ 'g' if audit.status == 'OK' else 'y' if audit.status == 'ATENCAO' else 'r' }}">{{ audit.status }}</span>
     {% if current_user.role in ['ADMIN', 'SUPERVISOR'] %}
     <form method="post" action="{{ url_for('weekly_audit.generate') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button class="button" type="submit">Salvar relatório</button>
+      <button class="btn btn-gold btn-sm" type="submit">Gerar relatório</button>
     </form>
     {% endif %}
   </div>
-</section>
+</div>
 
-<section class="stats-grid audit-stats">
-  <article class="card stat">
-    <span>Nota da semana</span>
-    <strong class="{{ 'green' if audit.score >= 85 else 'yellow' if audit.score >= 60 else 'red' }}">{{ audit.score }}/100</strong>
-  </article>
-  <article class="card stat"><span>Estudos</span><strong>{{ audit.metrics.studies }}</strong></article>
-  <article class="card stat"><span>Entradas</span><strong>{{ audit.metrics.entries }}</strong></article>
-  <article class="card stat"><span>Bloqueios protetivos</span><strong class="green">{{ audit.metrics.blocks }}</strong></article>
-  <article class="card stat"><span>Erros técnicos</span><strong class="{{ 'red' if audit.metrics.technical_errors else 'green' }}">{{ audit.metrics.technical_errors }}</strong></article>
-</section>
+<!-- STATS -->
+<div class="status-row">
+  <div class="status-box"><div class="status-ico {{ 'g' if audit.score >= 85 else 'y' if audit.score >= 60 else 'r' }}">&#9679;</div><div class="status-txt"><small>Nota</small><strong>{{ audit.score }}/100</strong></div></div>
+  <div class="status-box"><div class="status-ico b">&#9679;</div><div class="status-txt"><small>Estudos</small><strong>{{ audit.metrics.studies }}</strong></div></div>
+  <div class="status-box"><div class="status-ico g">&#9679;</div><div class="status-txt"><small>Entradas</small><strong>{{ audit.metrics.entries }}</strong></div></div>
+  <div class="status-box"><div class="status-ico g">&#9679;</div><div class="status-txt"><small>Bloqueios</small><strong>{{ audit.metrics.blocks }}</strong></div></div>
+  <div class="status-box"><div class="status-ico {{ 'r' if audit.metrics.technical_errors else 'g' }}">&#9679;</div><div class="status-txt"><small>Erros</small><strong>{{ audit.metrics.technical_errors }}</strong></div></div>
+</div>
 
-<section class="card audit-safety">
-  <strong>Proteção:</strong> {{ audit.safety_note }}
-</section>
+<div class="card" style="margin-bottom:16px;border-color:rgba(34,197,94,0.2);background:rgba(34,197,94,0.04)">
+  <b style="color:var(--green)">Proteção:</b> {{ audit.safety_note }}
+</div>
 
-<section class="audit-layout">
-  <div class="stack">
-    <section class="card">
-      <div class="section-title">
-        <h2>Prioridades e correções</h2>
-        <span class="badge {{ 'aprovada' if not audit.findings else 'pendente' }}">{{ audit.findings|length }} grupos</span>
+<div class="g21">
+  <div class="card">
+    <div class="card-head"><h2>Prioridades e Correções</h2><span class="badge {{ 'g' if not audit.findings else 'y' }}">{{ audit.findings|length }} grupos</span></div>
+    {% if audit.findings %}
+    {% for f in audit.findings %}
+    <div class="audit-find sev-{{ f.severity|lower }}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <b style="font-size:0.85rem">{{ f.title }}</b>
+        <span class="badge {{ 'r' if f.severity in ['CRITICO','ALTO'] else 'y' if f.severity == 'MEDIO' else 'g' }}">{{ f.severity }} · {{ f.count }}</span>
       </div>
-      {% if audit.findings %}
-      <div class="audit-findings">
-        {% for finding in audit.findings %}
-        <article class="audit-finding severity-{{ finding.severity|lower }}">
-          <div class="section-title">
-            <h3>{{ finding.title }}</h3>
-            <span class="badge {{ 'rejeitada' if finding.severity in ['CRITICO', 'ALTO'] else 'pendente' if finding.severity == 'MEDIO' else 'aprovada' }}">
-              {{ finding.severity }} · {{ finding.count }}
-            </span>
-          </div>
-          <p>{{ finding.detail }}</p>
-          <p class="correction"><strong>Como corrigir:</strong> {{ finding.correction }}</p>
-          {% if finding["items"] %}
-          <ul class="compact-list">
-            {% for item in finding["items"] %}<li>{{ item }}</li>{% endfor %}
-          </ul>
-          {% endif %}
-        </article>
-        {% endfor %}
-      </div>
-      {% else %}
-      <p class="empty">Nenhum desvio relevante encontrado nesta semana.</p>
+      <p style="font-size:0.82rem;margin:4px 0">{{ f.detail }}</p>
+      <div class="correction"><b>Como corrigir:</b> {{ f.correction }}</div>
+      {% if f["items"] %}
+      <ul style="margin:8px 0 0 16px;color:var(--muted);font-size:0.78rem">
+        {% for item in f["items"] %}<li>{{ item }}</li>{% endfor %}
+      </ul>
       {% endif %}
-    </section>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="empty">Nenhum desvio relevante encontrado.</p>
+    {% endif %}
   </div>
 
-  <aside class="stack">
-    <section class="card">
-      <h2>Resultados operacionais</h2>
-      <dl class="details">
-        <div><dt>Wins</dt><dd>{{ audit.metrics.wins }}</dd></div>
-        <div><dt>Losses</dt><dd>{{ audit.metrics.losses }}</dd></div>
-        <div><dt>Observações</dt><dd>{{ audit.metrics.observations }}</dd></div>
-        <div><dt>Análises humanas</dt><dd>{{ audit.human_analyses.total }}</dd></div>
-        <div><dt>Aprovadas</dt><dd>{{ audit.human_analyses.approved }}</dd></div>
-        <div><dt>Rejeitadas</dt><dd>{{ audit.human_analyses.rejected }}</dd></div>
-      </dl>
-    </section>
+  <div class="stack">
+    <div class="card">
+      <div class="card-head"><h2>Resultados</h2></div>
+      <div class="dl">
+        <div class="dl-item"><dt>Wins</dt><dd class="green">{{ audit.metrics.wins }}</dd></div>
+        <div class="dl-item"><dt>Losses</dt><dd class="red">{{ audit.metrics.losses }}</dd></div>
+        <div class="dl-item"><dt>Observações</dt><dd>{{ audit.metrics.observations }}</dd></div>
+        <div class="dl-item"><dt>Análises</dt><dd>{{ audit.human_analyses.total }}</dd></div>
+        <div class="dl-item"><dt>Aprovadas</dt><dd class="green">{{ audit.human_analyses.approved }}</dd></div>
+        <div class="dl-item"><dt>Rejeitadas</dt><dd class="red">{{ audit.human_analyses.rejected }}</dd></div>
+      </div>
+    </div>
 
-    <section class="card">
-      <h2>Motivos mais frequentes de bloqueio</h2>
+    <div class="card">
+      <div class="card-head"><h2>Bloqueios</h2></div>
       {% if audit.top_block_reasons %}
-      <ol class="reason-list">
+      <ul class="rlist">
         {% for item in audit.top_block_reasons %}
         <li><span>{{ item.reason }}</span><strong>{{ item.count }}</strong></li>
         {% endfor %}
-      </ol>
-      {% else %}
-      <p class="empty">Sem bloqueios registrados no período.</p>
-      {% endif %}
-    </section>
-  </aside>
-</section>
+      </ul>
+      {% else %}<p class="empty">Sem bloqueios.</p>{% endif %}
+    </div>
+  </div>
+</div>
 
-<section class="card">
-  <h2>Resumo por dia</h2>
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr><th>Data</th><th>Estudos</th><th>Entradas</th><th>Bloqueios</th><th>Observações</th><th>Erros</th></tr>
-      </thead>
+<div class="card" style="margin-top:16px">
+  <div class="card-head"><h2>Resumo por Dia</h2></div>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th>Data</th><th>Estudos</th><th>Entradas</th><th>Bloqueios</th><th>Obs</th><th>Erros</th></tr></thead>
       <tbody>
         {% for day in audit.daily %}
         <tr>
@@ -120,5 +100,5 @@
       </tbody>
     </table>
   </div>
-</section>
+</div>
 {% endblock %}

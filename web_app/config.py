@@ -22,3 +22,11 @@ DEFAULT_ADMIN_USERNAME = (
 )
 DEFAULT_ADMIN_PASSWORD = os.getenv("LEON_WEB_ADMIN_PASSWORD", "").strip()
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png"}
+
+MT5_ACCOUNT = os.getenv("MT5_ACCOUNT", "—")
+MT5_SERVER = os.getenv("MT5_SERVER", "—")
+MT5_TYPE = os.getenv("MT5_TYPE", "—")
+
+# Compressão Gzip
+COMPRESS_LEVEL = 6
+COMPRESS_MIN_SIZE = 500

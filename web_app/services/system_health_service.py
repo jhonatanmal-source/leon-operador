@@ -1,11 +1,17 @@
 import configparser
-import configparser
 import csv
 import json
 import subprocess
 import sys
+import threading
+import time
 from datetime import datetime, timedelta
 from pathlib import Path
+
+# Ensure project root is in sys.path so mt5_safe can be imported
+_APP_DIR = Path(__file__).resolve().parent.parent  # /opt/leon/app
+if str(_APP_DIR) not in sys.path:
+    sys.path.insert(0, str(_APP_DIR))
 
 from web_app.config import BASE_DIR
 from web_app.database.db import get_connection
@@ -15,6 +21,11 @@ SRC_DIR = BASE_DIR / "src"
 DATA_DIR = BASE_DIR / "data"
 LOGS_DIR = BASE_DIR / "logs"
 ROOT_CONFIG_FILE = BASE_DIR / "config.ini"
+
+# Cache for _mt5_status to avoid expensive MT5 initialize/shutdown on every health check
+_mt5_cache = {"result": None, "timestamp": 0.0}
+_MT5_CACHE_TTL = 30  # seconds
+_mt5_cache_lock = threading.Lock()
 
 
 def _ensure_src_path():
@@ -30,17 +41,22 @@ def _read_config():
 
 def _process_running(fragment):
     try:
+        import psutil
+
+        for proc in psutil.process_iter(["cmdline"]):
+            try:
+                cmdline = proc.info.get("cmdline")
+                if cmdline and fragment in " ".join(cmdline):
+                    return True
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                continue
+        return False
+    except ImportError:
+        pass
+
+    try:
         result = subprocess.run(
-            [
-                "powershell",
-                "-NoProfile",
-                "-Command",
-                (
-                    "Get-CimInstance Win32_Process | "
-                    f"Where-Object {{ $_.CommandLine -like '*{fragment}*' }} | "
-                    "Select-Object -First 1 -ExpandProperty ProcessId"
-                ),
-            ],
+            ["pgrep", "-f", fragment],
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -72,6 +88,31 @@ def _shadow_summary():
         "wins": sum(str(row.get("result", "")).startswith("WIN") for row in rows),
         "losses": sum(row.get("result") == "LOSS" for row in rows),
     }
+
+
+def _shadow_trades_list():
+    """Retorna lista detalhada de todas as shadow trades."""
+    path = DATA_DIR / "shadow_trades.csv"
+    if not path.exists():
+        return []
+    with path.open("r", encoding="utf-8", errors="replace", newline="") as file:
+        rows = list(csv.DictReader(file, delimiter=";"))
+    trades = []
+    for row in rows:
+        trades.append({
+            "id": row.get("id", "-"),
+            "opened_at": row.get("opened_at", "-"),
+            "closed_at": row.get("closed_at", "-") or "Em aberto",
+            "symbol": row.get("symbol", "-"),
+            "direction": row.get("direction", "-"),
+            "entry": row.get("entry", "-"),
+            "stop": row.get("stop", "-"),
+            "target": row.get("target", "-"),
+            "status": row.get("status", "-"),
+            "result": row.get("result", "-"),
+            "missing_confirmations": row.get("missing_confirmations", ""),
+        })
+    return trades
 
 
 def _latest_entry_block():
@@ -169,65 +210,147 @@ def _active_errors(hours=6, limit=3500):
     return "\n".join(active)[-limit:]
 
 
-def _recent_access_logs(limit=12):
+def _recent_access_logs(page=1, per_page=20):
+    per_page = max(1, min(per_page, 100))
+    offset = (page - 1) * per_page
     with get_connection() as connection:
+        total = connection.execute(
+            "SELECT COUNT(*) as count FROM access_logs"
+        ).fetchone()["count"]
         rows = connection.execute(
             """
             SELECT created_at, username, ip_address, route, action
             FROM access_logs
             ORDER BY id DESC
-            LIMIT ?
+            LIMIT ? OFFSET ?
             """,
-            (limit,),
+            (per_page, offset),
         ).fetchall()
-    return rows
+    return {
+        "rows": rows,
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "total_pages": max(1, (total + per_page - 1) // per_page),
+    }
+
+
+
+def _study_state():
+    path = DATA_DIR / "study_state.txt"
+    if path.exists():
+        return path.read_text(encoding="utf-8", errors="replace").strip()[:200]
+    return None
+
+def _demo_state():
+    path = DATA_DIR / "demo_execution_state.txt"
+    if path.exists():
+        return path.read_text(encoding="utf-8", errors="replace").strip()[:200]
+    return None
+
+def _recent_demo_orders(limit=5):
+    path = DATA_DIR / "mt5_order_memory.csv"
+    if not path.exists():
+        return []
+    with path.open("r", encoding="utf-8", errors="replace", newline="") as f:
+        rows = list(csv.DictReader(f, delimiter=";"))
+    return rows[-limit:]
+
+def _simulated_summary():
+    path = DATA_DIR / "simulated_entries.csv"
+    if not path.exists():
+        return {"total": 0, "wins": 0, "losses": 0}
+    with path.open("r", encoding="utf-8", errors="replace", newline="") as f:
+        rows = list(csv.DictReader(f, delimiter=";"))
+    return {
+        "total": len(rows),
+        "wins": sum(1 for r in rows if str(r.get("resultado", "")).startswith("WIN")),
+        "losses": sum(1 for r in rows if r.get("resultado") == "LOSS"),
+    }
+
+def _performance_summary():
+    path = DATA_DIR / "performance.csv"
+    if not path.exists():
+        return {"total": 0, "wins": 0, "losses": 0}
+    with path.open("r", encoding="utf-8", errors="replace", newline="") as f:
+        rows = list(csv.DictReader(f, delimiter=";"))
+    return {
+        "total": len(rows),
+        "wins": sum(1 for r in rows if str(r.get("resultado", "")).startswith("WIN")),
+        "losses": sum(1 for r in rows if r.get("resultado") == "LOSS"),
+    }
+
 
 
 def _mt5_status():
+    # Try cache first — avoid expensive MT5 initialize/shutdown on every call
+    with _mt5_cache_lock:
+        if _mt5_cache["result"] is not None and (
+            time.monotonic() - _mt5_cache["timestamp"]
+        ) < _MT5_CACHE_TTL:
+            return _mt5_cache["result"]
+
+    # Cache miss — compute fresh status (may involve MT5 init/shutdown)
     try:
-        import mt5linux_compat as mt5
+        import mt5_safe as mt5
     except ImportError:
-        return {
+        result = {
             "status": "INDISPONÍVEL",
             "connected": False,
             "trade_allowed": False,
             "account_mode": "SEM MÓDULO",
         }
+        with _mt5_cache_lock:
+            _mt5_cache["result"] = result
+            _mt5_cache["timestamp"] = time.monotonic()
+        return result
 
     if not mt5.initialize():
-        return {
+        result = {
             "status": "ERRO",
             "connected": False,
             "trade_allowed": False,
             "account_mode": "DESCONHECIDO",
         }
+        with _mt5_cache_lock:
+            _mt5_cache["result"] = result
+            _mt5_cache["timestamp"] = time.monotonic()
+        return result
 
     try:
         account = mt5.account_info()
         terminal = mt5.terminal_info()
         if account is None or terminal is None:
-            return {
+            result = {
                 "status": "ERRO",
                 "connected": False,
                 "trade_allowed": False,
                 "account_mode": "DESCONHECIDO",
             }
-        demo_mode = account.trade_mode == mt5.ACCOUNT_TRADE_MODE_DEMO
-        connected = bool(terminal.connected)
-        trade_allowed = bool(
-            terminal.trade_allowed and not terminal.tradeapi_disabled
-        )
-        return {
-            "status": "OK" if connected and trade_allowed and demo_mode else "ATENÇÃO",
-            "connected": connected,
-            "trade_allowed": trade_allowed,
-            "account_mode": "DEMO" if demo_mode else "NÃO DEMO",
-            "balance": round(float(account.balance), 2),
-            "equity": round(float(account.equity), 2),
-            "open_profit": round(float(account.profit), 2),
-        }
+        else:
+            demo_mode = account.trade_mode == mt5.ACCOUNT_TRADE_MODE_DEMO
+            connected = bool(terminal.connected)
+            trade_allowed = bool(
+                terminal.trade_allowed and not terminal.tradeapi_disabled
+            )
+            result = {
+                "status": "OK" if connected and trade_allowed and demo_mode else "ATENÇÃO",
+                "connected": connected,
+                "trade_allowed": trade_allowed,
+                "account_mode": "DEMO" if demo_mode else "NÃO DEMO",
+                "balance": round(float(account.balance), 2),
+                "equity": round(float(account.equity), 2),
+                "open_profit": round(float(account.profit), 2),
+            }
     finally:
         mt5.shutdown()
+
+    # Store in cache for subsequent requests (TTL = 30s)
+    with _mt5_cache_lock:
+        _mt5_cache["result"] = result
+        _mt5_cache["timestamp"] = time.monotonic()
+
+    return result
 
 
 def _remote_status():
@@ -312,7 +435,7 @@ def build_system_health():
     }
 
 
-def build_leon_panel_context():
+def build_leon_panel_context(access_logs_page=1, access_logs_per_page=20):
     _ensure_src_path()
 
     from autonomy_guard import status_autonomia
@@ -378,5 +501,12 @@ def build_leon_panel_context():
         "remote": health["remote"],
         "processes": health["processes"],
         "system_health": health,
-        "recent_access_logs": _recent_access_logs(),
+        "shadow": _shadow_summary(),
+        "shadow_trades": _shadow_trades_list(),
+        "recent_access_logs": _recent_access_logs(access_logs_page, access_logs_per_page),
+        "study": _study_state(),
+        "demo": _demo_state(),
+        "recent_orders": _recent_demo_orders(),
+        "simulated": _simulated_summary(),
+        "performance": _performance_summary(),
     }

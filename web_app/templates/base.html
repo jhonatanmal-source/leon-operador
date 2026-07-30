@@ -3,52 +3,104 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}LEON WEB COLLAB{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <meta name="description" content="LEON XAU ELITE AI">
+  <meta name="theme-color" content="#0b0f19">
+  <title>{% block title %}LEON XAU ELITE AI{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23d7b24b'/><text x='50' y='70' font-size='52' font-weight='bold' text-anchor='middle' fill='%23161207' font-family='Arial'>LE</text></svg>">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_shell.css') }}?v=2">
+  {% block extra_css %}{% endblock %}
+  {% block extra_head %}{% endblock %}
 </head>
-<body>
-  <header class="topbar">
-    <a class="brand" href="{{ url_for('dashboard.index') if current_user else url_for('auth.login') }}">
-      <span class="brand-mark">LE</span>
-      <span>LEON WEB COLLAB</span>
-    </a>
-    {% if current_user %}
-      <nav class="nav">
-        <a href="{{ url_for('dashboard.index') }}">Painel</a>
-        <a href="{{ url_for('leon.index') }}">Painel Leon</a>
-        <a href="{{ url_for('weekly_audit.index') }}">Auditoria semanal</a>
-        <a href="{{ url_for('health.index') }}">Saúde</a>
-        <a href="{{ url_for('analysis.history') }}">Histórico</a>
-        {% if current_user.role in ['ADMIN', 'SUPERVISOR', 'COLABORADOR'] %}
-          <a href="{{ url_for('analysis.upload') }}">Enviar análise</a>
-        {% endif %}
-        {% if current_user.role == 'ADMIN' %}
-          <a href="{{ url_for('users.list_users') }}">Usuários</a>
-        {% endif %}
-        <a href="{{ url_for('auth.logout') }}">Sair</a>
-      </nav>
-      <div class="identity">
-        <strong>{{ current_user.username }}</strong>
-        <span>{{ current_user.role }}</span>
+<body class="{% block body_class %}{% endblock %}">
+
+{% if current_user %}
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <span class="sb-logo-mark"><i>♛</i><b>LE</b></span>
+      <div class="sb-logo-text"><b>LEON</b><span>XAU ELITE AI</span></div>
+    </div>
+
+    <div class="sb-user">
+      <div class="sb-avatar">{{ current_user.username[0]|upper }}</div>
+      <div class="sb-user-info">
+        <b>{{ current_user.username }} {% if current_user.role == 'ADMIN' %}<span class="vip">VIP</span>{% endif %}</b>
+        <span>ID: {{ current_user.id }}</span>
+        <span class="online-dot">Online</span>
       </div>
-    {% endif %}
-  </header>
+    </div>
 
-  <main class="container">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% for category, message in messages %}
-        <div class="flash {{ category }}">{{ message }}</div>
-      {% endfor %}
-    {% endwith %}
+    <nav class="sb-menu sb-menu-pro">
+      <div class="sb-menu-title">MENU PRINCIPAL</div>
+      <a href="{{ url_for('dashboard.index') }}" class="sb-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}"><i>⌂</i><span>Dashboard</span></a>
 
-    {% if standalone_message %}
-      <section class="card centered">
-        <h1>{{ standalone_message }}</h1>
-        <a class="button" href="{{ url_for('dashboard.index') }}">Voltar ao painel</a>
-      </section>
-    {% else %}
+      <details class="sb-group" {% if request.endpoint and request.endpoint.startswith('analysis.') %}open{% endif %}>
+        <summary class="sb-link"><i>⌁</i><span>Analises</span><em>⌄</em></summary>
+        <div class="sb-submenu">
+          <a href="{{ url_for('analysis.history') }}" class="{% if request.endpoint == 'analysis.history' %}active{% endif %}">Historico</a>
+          {% if current_user.role in ['ADMIN', 'SUPERVISOR', 'COLABORADOR'] %}
+          <a href="{{ url_for('analysis.upload') }}" class="{% if request.endpoint == 'analysis.upload' %}active{% endif %}">Nova analise</a>
+          {% endif %}
+        </div>
+      </details>
+
+      <details class="sb-group" {% if request.endpoint in ['leon.index', 'virtual_operations.index'] %}open{% endif %}>
+        <summary class="sb-link"><i>◉</i><span>Operacoes</span><em>⌄</em></summary>
+        <div class="sb-submenu">
+          <a href="{{ url_for('leon.index') }}" class="{% if request.endpoint == 'leon.index' %}active{% endif %}">Painel LEON</a>
+          <a href="{{ url_for('virtual_operations.index') }}" class="{% if request.endpoint == 'virtual_operations.index' %}active{% endif %}">Central Virtual</a>
+        </div>
+      </details>
+
+      <details class="sb-group" {% if request.endpoint in ['weekly_audit.index', 'health.index'] %}open{% endif %}>
+        <summary class="sb-link"><i>▣</i><span>Supervisao</span><em>⌄</em></summary>
+        <div class="sb-submenu">
+          <a href="{{ url_for('weekly_audit.index') }}" class="{% if request.endpoint == 'weekly_audit.index' %}active{% endif %}">Auditoria semanal</a>
+          <a href="{{ url_for('health.index') }}" class="{% if request.endpoint == 'health.index' %}active{% endif %}">Saude do sistema</a>
+        </div>
+      </details>
+
+      {% if current_user.role == 'ADMIN' %}
+      <details class="sb-group" {% if request.endpoint and 'users' in request.endpoint %}open{% endif %}>
+        <summary class="sb-link"><i>⚙</i><span>Administracao</span><em>⌄</em></summary>
+        <div class="sb-submenu"><a href="{{ url_for('users.list_users') }}" class="{% if request.endpoint and 'users' in request.endpoint %}active{% endif %}">Usuarios</a></div>
+      </details>
+      {% endif %}
+    </nav>
+
+    <div class="sb-account">
+      <div class="sb-acc-title">CONTA ATIVA</div>
+      <div class="sb-acc-row"><span>MetaTrader 5</span><span class="tag-green">Conectado</span></div>
+      <div class="sb-acc-row"><span>Conta</span><b>{{ mt5_account }}</b></div>
+      <div class="sb-acc-row"><span>Corretora</span><b>{{ mt5_server }}</b></div>
+      <div class="sb-acc-row"><span>Servidor</span><b>{{ mt5_type }}</b></div>
+      <button class="sb-btn">ALTERAR CONTA</button>
+    </div>
+
+    <div class="sb-footer">
+      <span>v1.0.0</span>
+      <a href="{{ url_for('auth.logout') }}" class="sb-logout">Sair</a>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="content">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
       {% block content %}{% endblock %}
-    {% endif %}
-  </main>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="auth-page">
+  {% block content_auth %}{% endblock %}
+</div>
+{% endif %}
+
+{% block scripts %}{% endblock %}
 </body>
 </html>

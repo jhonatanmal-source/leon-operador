@@ -1,33 +1,24 @@
 {% extends "base.html" %}
-{% block title %}Enviar análise | LEON WEB COLLAB{% endblock %}
+{% block title %}Enviar Análise | LEON XAU ELITE AI{% endblock %}
 {% block content %}
-<section class="page-heading">
-  <div>
-    <div class="eyebrow">ESTUDO SUPERVISIONADO</div>
-    <h1>Enviar análise humana</h1>
-    <p class="muted">O painel registra o estudo. Ele não executa ordens.</p>
-  </div>
-</section>
 
-<section class="card form-card wide">
-  <form method="post" enctype="multipart/form-data" class="form-grid">
+<div class="page-head">
+  <div><h1>Enviar Análise Humana</h1><p class="muted">O painel registra o estudo. Não executa ordens.</p></div>
+</div>
+
+<div class="card" style="max-width:700px">
+  <form method="post" enctype="multipart/form-data" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>Símbolo<input name="symbol" value="XAUUSD" required></label>
-    <label>Timeframe<select name="timeframe" required>{% for item in timeframes %}<option>{{ item }}</option>{% endfor %}</select></label>
-    <label>Direção<select name="direction" required>{% for item in directions %}<option>{{ item }}</option>{% endfor %}</select></label>
-    <label>Tipo<select name="analysis_type" required>{% for item in analysis_types %}<option>{{ item }}</option>{% endfor %}</select></label>
-    <label class="span-2">
-      Print JPG/JPEG/PNG — máximo 5 MB
-      <input type="file" name="image" accept=".jpg,.jpeg,.png,image/jpeg,image/png">
-    </label>
-    <label class="span-2">
-      Análise
-      <textarea name="text_analysis" rows="11" minlength="20" placeholder="Descreva estrutura, liquidez, Fibonacci, Elliott, CHOCH, BOS, FVG, OB, entrada, stop e alvo..." required></textarea>
-    </label>
-    <div class="span-2 actions">
-      <button class="button" type="submit">Registrar estudo</button>
-      <a class="button secondary" href="{{ url_for('analysis.history') }}">Cancelar</a>
+    <label>Símbolo<input class="form-input" name="symbol" value="XAUUSD" required></label>
+    <label>Timeframe<select class="form-select" name="timeframe" required>{% for item in timeframes %}<option>{{ item }}</option>{% endfor %}</select></label>
+    <label>Direção<select class="form-select" name="direction" required>{% for item in directions %}<option>{{ item }}</option>{% endfor %}</select></label>
+    <label>Tipo<select class="form-select" name="analysis_type" required>{% for item in analysis_types %}<option>{{ item }}</option>{% endfor %}</select></label>
+    <label style="grid-column:span 2">Print (JPG/PNG — máx 5 MB)<input class="form-input" type="file" name="image" accept=".jpg,.jpeg,.png"></label>
+    <label style="grid-column:span 2">Análise<textarea class="form-input" name="text_analysis" rows="8" minlength="20" placeholder="Descreva estrutura, liquidez, Fibonacci, Elliott, CHOCH, BOS, FVG, OB, entrada, stop e alvo..." required></textarea></label>
+    <div style="grid-column:span 2;display:flex;gap:10px">
+      <button class="btn btn-gold" type="submit">Registrar estudo</button>
+      <a class="btn btn-outline" href="{{ url_for('analysis.history') }}">Cancelar</a>
     </div>
   </form>
-</section>
+</div>
 {% endblock %}

@@ -86,6 +86,41 @@ def _gerar_tabela_correcoes(
     return "\n".join(linhas)
 
 
+def _normalizar_decisoes_estruturais(decisoes: list[str]) -> list[str]:
+    """Consolida decisões equivalentes sem reescrever os diários históricos."""
+    resultado: list[str] = []
+    telegram_adicionado = False
+    wrapper_adicionado = False
+
+    for decisao in decisoes:
+        texto = str(decisao or "").strip()
+        if texto.startswith("**Telegram via .env**"):
+            if not telegram_adicionado:
+                resultado.append(
+                    "**Telegram via `.env`**: credenciais lidas prioritariamente "
+                    "de `/opt/leon/config/.env`, com symlink em "
+                    "`/opt/leon/app/.env`; `config.ini` permanece apenas como "
+                    "fallback."
+                )
+                telegram_adicionado = True
+            continue
+
+        if texto.startswith("**Wrapper `_mt5_safe.py`**"):
+            if not wrapper_adicionado:
+                resultado.append(
+                    "**Wrapper `mt5_safe.py`**: interface canônica somente leitura "
+                    "para os MCPs, bloqueando funções de ordem. "
+                    "`_mt5_safe.py` permanece apenas como referência histórica."
+                )
+                wrapper_adicionado = True
+            continue
+
+        if texto and texto not in resultado:
+            resultado.append(texto)
+
+    return resultado
+
+
 def _sincronizar_vault_para_tarefas():
     """Importa arquivos do vault Obsidian que não existem em tarefas/."""
     if not VAULT_DIARIOS.exists():
@@ -115,7 +150,9 @@ def _atualizar_contexto_evolucao(consolidado: dict[str, list[str]]) -> bool:
     padroes = _identificar_padroes_recorrentes(consolidado)
     correcoes = _gerar_tabela_correcoes(consolidado)
     erros = consolidado.get("Erros Encontrados", [])
-    decisoes = consolidado.get("Decisões Tomadas", [])
+    decisoes = _normalizar_decisoes_estruturais(
+        consolidado.get("Decisões Tomadas", [])
+    )
 
     padroes_texto = "\n".join(
         f"- {p}" for p in padroes

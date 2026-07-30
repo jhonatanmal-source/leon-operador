@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Central Virtual — LEON{% endblock %}
+{% block body_class %}central-virtual-mode{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/central_virtual.css') }}?v=2">
+{% endblock %}
+
+{% block content %}
+<div class="cv-workspace">
+  <section
+    class="room"
+    id="room"
+    aria-label="Central operacional isométrica LEON"
+    style="--room-art: url('{{ url_for('static', filename='virtual-room-3d.png') }}')"
+  >
+    <div class="room-shade" aria-hidden="true"></div>
+
+    <!-- Hotspots keep the live inspector interactive over the reference artwork. -->
+    <button class="station" data-agent="leon_coordinator" style="--sx:50%;--sy:12%" type="button" aria-label="Abrir operador Comando"><span class="station-status"></span></button>
+    <button class="station" data-agent="market_context" style="--sx:26%;--sy:34%" type="button" aria-label="Abrir operador Contexto"><span class="station-status"></span></button>
+    <button class="station" data-agent="smc_analyst" style="--sx:40%;--sy:34%" type="button" aria-label="Abrir operador Estrutura"><span class="station-status"></span></button>
+    <button class="station" data-agent="elliott_fibonacci" style="--sx:69%;--sy:33%" type="button" aria-label="Abrir operador Cenários"><span class="station-status"></span></button>
+    <button class="station" data-agent="interest_zones" style="--sx:19.5%;--sy:51%" type="button" aria-label="Abrir operador Zonas"><span class="station-status"></span></button>
+    <button class="station" data-agent="news_shield" style="--sx:29.5%;--sy:68%" type="button" aria-label="Abrir operador Proteção"><span class="station-status"></span></button>
+    <button class="station" data-agent="risk_guardian" style="--sx:47%;--sy:64%" type="button" aria-label="Abrir operador Risco"><span class="station-status"></span></button>
+    <button class="station" data-agent="mt5_execution" style="--sx:77%;--sy:52%" type="button" aria-label="Abrir operador Execução"><span class="station-status"></span></button>
+    <button class="station" data-agent="code_evolution" style="--sx:61%;--sy:75%" type="button" aria-label="Abrir operador Evolução"><span class="station-status"></span></button>
+    <button class="station" data-agent="testing_quality" style="--sx:40%;--sy:82%" type="button" aria-label="Abrir operador Laboratório"><span class="station-status"></span></button>
+
+    <div class="floor-label">
+      <span class="fl-title">VIRTUAL FLOOR 01</span>
+      <span class="fl-sub">Ambiente demonstrativo — nenhum comando operacional disponível</span>
+    </div>
+    <div class="controls">
+      <button class="btn" id="btn-center" type="button">⟲ CENTRALIZAR</button>
+      <button class="btn" id="btn-fs" type="button">⛶ TELA CHEIA</button>
+    </div>
+  </section>
+
+  <aside class="inspector" id="inspector">
+    <div class="insp-hdr">
+      <h2 id="i-title">LEON Coordenador</h2>
+      <p id="i-sub">Coordenação da Central Operacional</p>
+      <div
+        class="data-freshness {{ 'stale' if virtual.side_panel.stale_data else 'fresh' }}"
+        id="data-freshness"
+      >
+        {{ 'DADOS ANTIGOS' if virtual.side_panel.stale_data else 'DADOS ATUAIS' }}
+      </div>
+    </div>
+    <button class="insp-back" id="btn-back" type="button">← Voltar ao LEON Coordenador</button>
+    <div class="insp-body">
+      <div class="insp-sec"><div class="insp-lbl">Status</div><span class="insp-badge" id="i-status">VALIDATING</span></div>
+      <div class="insp-div"></div>
+      <div class="insp-sec"><div class="insp-lbl">Ativo analisado</div><div class="insp-val">XAUUSD</div></div>
+      <div class="insp-div"></div>
+      <div class="insp-sec"><div class="insp-lbl">Timeframe</div><div class="insp-val" id="i-tf">H4 / H1</div></div>
+      <div class="insp-div"></div>
+      <div class="insp-sec"><div class="insp-lbl">Ação atual</div><div class="insp-val" id="i-act">Consolidando o contexto dos agentes</div></div>
+      <div class="insp-div"></div>
+      <div class="insp-sec"><div class="insp-lbl">Região observada</div><div class="insp-val" id="i-reg">-</div></div>
+      <div class="insp-div"></div>
+      <div class="insp-sec"><div class="insp-lbl">Direção persistida</div><div class="insp-val" id="i-dir">-</div></div>
+      <div class="insp-div"></div>
+      <div class="insp-sec"><div class="insp-lbl">SMC / Elliott</div><div class="insp-val" id="i-str">- / -</div></div>
+      <div class="insp-div"></div>
+      <div class="insp-sec"><div class="insp-lbl">Confiança legada</div><div class="insp-val" id="i-conf">-</div><div class="insp-sub">Uso operacional: NÃO</div></div>
+      <div class="insp-div"></div>
+      <div class="insp-sec"><div class="insp-lbl">Alinhamento</div><div class="insp-val" id="i-alig">-</div></div>
+      <div class="insp-div"></div>
+      <div class="insp-sec"><div class="insp-lbl">Contexto</div><div class="insp-val" id="i-ctx">-</div><div class="insp-sub" id="i-ctxd">-</div></div>
+      <div class="insp-div"></div>
+      <div class="insp-sec"><div class="insp-lbl">Risco</div><div class="insp-val" id="i-risk">-</div></div>
+      <div class="insp-div"></div>
+      <div class="insp-sec"><div class="insp-lbl">Shadow Trades</div><div class="insp-val" id="i-sh">-</div><div class="insp-sub" id="i-shd">-</div></div>
+      <div class="insp-div"></div>
+      <div class="insp-sec"><div class="insp-lbl">LAB_LEARNING</div><div class="insp-val" style="color:var(--gold)" id="i-lab">ATIVO</div><div class="insp-sub" id="i-labd">Modo estudos ativo</div></div>
+      <div class="insp-div"></div>
+      <div class="insp-sec"><div class="insp-lbl">Pré-operações</div><div class="insp-val" id="i-pre">-</div></div>
+      <div class="insp-div"></div>
+      <div class="insp-sec">
+        <div class="insp-lbl">Identificadores</div>
+        <div class="id-list">
+          <span><b>cycle_id</b><code id="i-cycle">N/D</code></span>
+          <span><b>analysis_id</b><code id="i-analysis">N/D</code></span>
+          <span><b>region_id</b><code id="i-region-id">N/D</code></span>
+          <span><b>pre_operation_id</b><code id="i-preop-id">N/D</code></span>
+        </div>
+      </div>
+      <div class="insp-div"></div>
+      <div class="insp-sec"><div class="insp-lbl">Processos</div><div class="insp-grid"><span class="insp-p" id="p-op">Operador</span><span class="insp-p" id="p-web">Web</span><span class="insp-p" id="p-tun">Túnel</span><span class="insp-p" id="p-mt5">MT5</span></div></div>
+      <div class="insp-div"></div>
+      <div class="insp-sec"><div class="insp-lbl">Erros</div><div class="insp-val" id="i-err">-</div></div>
+      <div class="insp-div"></div>
+      <div class="insp-sec"><div class="insp-lbl">Última conclusão</div><div class="insp-val" id="i-conc">-</div></div>
+      <div class="insp-div"></div>
+      <div class="insp-sec"><div class="insp-lbl">Próxima ação</div><div class="insp-val" id="i-next">Aguardar validação estrutural</div></div>
+      <div class="insp-div"></div>
+      <div class="insp-sec"><div class="insp-lbl">Atualização da tela</div><div class="insp-val" id="i-time">Agora</div><div class="insp-sub" id="i-source-time">Fonte: N/D</div></div>
+    </div>
+    <div class="insp-foot">COMANDOS INDISPONÍVEIS — READ ONLY</div>
+  </aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script id="cv-data" type="application/json">{{ virtual | tojson }}</script>
+<script>window.__cvSp = {{ virtual.side_panel | tojson }};</script>
+<script src="{{ url_for('static', filename='js/central_virtual.js') }}"></script>
+{% endblock %}

@@ -24,11 +24,12 @@ from src.mt5_window_snapshot import capturar_print_mt5
 from src.trade_chart_snapshot import gerar_print_entrada
 from src.market_context_agent import identificar_sessao
 from src.news_shield import avaliar_news_shield
+from src.operational_study_engine import validate_setup_a_plus, score_operational_context
 from src.smc_entry_guard import validate_smc_entry
 from src.top_down_agent import ultima_leitura_top_down
 from src.autonomy_guard import status_autonomia
 from src.timeframe_policy import evaluate_timeframe_policy
-from src.interest_zone_engine import validate_zone_for_execution, InterestZoneStore
+from src.interest_zone_engine import validate_zone_for_execution
 
 # _mt5_exec is resolved dynamically inside executar_ordem_mt5_pre_operacao()
 # to allow test mocking. It is not imported at module level.
@@ -76,6 +77,7 @@ def _execution_config():
             "lab_min_setup_score": 60,
             "lab_min_live_rr": 0.75,
             "lab_max_entry_drift_points": 3.0,
+            "max_open_positions": 2,
         }
 
     section = config["EXECUTION"]
@@ -107,6 +109,10 @@ def _execution_config():
         "lab_max_entry_drift_points": section.getfloat(
             "lab_max_entry_drift_points",
             fallback=3.0,
+        ),
+        "max_open_positions": section.getint(
+            "max_open_positions",
+            fallback=2,
         ),
     }
 
@@ -664,24 +670,6 @@ def _rr_no_preco_execucao(direcao, preco_execucao, stop, take_profit):
     }
 
 
-def _is_lab_learning_zone(pre_operacao: dict, *, store: InterestZoneStore | None = None) -> bool:
-    """Check if the pre-operation's zone is a LABORATORIO (learning) zone.
-
-    When ``learning_lab_enabled`` and ``demo_only`` are both active, pre-ops
-    created by the bootstrap Rota de Laboratório carry a zone with
-    ``zone_source="LABORATORIO"``.  Those pre-ops are allowed to bypass
-    structural alignment guards (SMC, timeframe policy) so the system can
-    learn by operating in demo with minimal risk.
-    """
-    region_id = str(pre_operacao.get("region_id") or "").strip()
-    if not region_id:
-        return False
-    zone = (store or InterestZoneStore()).get(region_id)
-    if zone is None:
-        return False
-    return str(zone.get("zone_source", "")).upper() == "LABORATORIO"
-
-
 def executar_ordem_mt5_pre_operacao(forcar=False):
 
     config = _execution_config()
@@ -726,7 +714,6 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
     lab_learning_mode = (
         config["demo_only"]
         and config["learning_lab_enabled"]
-        and _is_lab_learning_zone(pre_operacao)
     )
     if lab_learning_mode:
         registrar_log(
@@ -744,6 +731,50 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
             motivo="HIGH_IMPACT_NEWS_WINDOW",
         )
         return _bloqueio("HIGH_IMPACT_NEWS_WINDOW", news_shield)
+
+    # ── Estudo Operacional (score) ────────────────────────────────────
+    _liq_ev = pre_operacao.get("liquidity")
+    if not isinstance(_liq_ev, dict):
+        _liq_ev = {}
+    ctx_estudo = {
+        "direction": "COMPRA" if pre_operacao.get("direcao") == "COMPRA" else "VENDA",
+        "trend": None,
+        "momentum": None,
+        "liquidity_event": _liq_ev.get("type"),
+        "bos": pre_operacao.get("bos"),
+        "choch": pre_operacao.get("choch"),
+        "fvg": pre_operacao.get("fvg"),
+        "poi_score": pre_operacao.get("brain_score", 0),
+        "top_down": None,
+        "session": None,
+        "rr": pre_operacao.get("rr", 0),
+        "high_impact_news": False,
+        "market_state": None,
+    }
+    score_estudo = score_operational_context(ctx_estudo)
+    min_score_estudo = 50 if lab_learning_mode else 70
+    if score_estudo < min_score_estudo:
+        registrar_log(
+            f"MT5 ORDER | score operacional baixo "
+            f"pre-op {pre_operation_id}: "
+            f"score={score_estudo} < {min_score_estudo}"
+        )
+        registrar_relatorio_operacao(
+            pre_operacao,
+            decisao="BLOQUEAR",
+            motivo="SCORE_OPERACIONAL_BAIXO",
+        )
+        return _bloqueio(
+            "SCORE_OPERACIONAL_BAIXO",
+            {
+                "score": score_estudo,
+                "min_score": min_score_estudo,
+            },
+        )
+    registrar_log(
+        f"MT5 ORDER | score operacional ok "
+        f"pre-op {pre_operation_id}: score={score_estudo}"
+    )
 
     # ── SMC Guard ────────────────────────────────────────────────────────
     # Pulado em modo LAB_LEARNING — a zona de laboratorio substitui a
@@ -869,7 +900,12 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
 
     conselho = avaliar_conselho_operadores()
 
-    if conselho["decision"] == "BLOQUEADO":
+    if lab_learning_mode and conselho["decision"] == "BLOQUEADO":
+        registrar_log(
+            f"MT5 ORDER | LAB_LEARNING: conselho bloqueou mas modo "
+            f"laboratorio ignora: {conselho['summary']}"
+        )
+    elif conselho["decision"] == "BLOQUEADO":
         return _bloqueio("OPERATOR_COUNCIL_BLOCKED", conselho)
 
     mt5_inicializado = False
@@ -893,6 +929,22 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
                 "MT5_REAL_ACCOUNT_BLOCKED",
                 "Executor configurado para demo_only.",
             )
+
+        if config["max_open_positions"] > 0:
+            positions = mt5.positions_get()
+            if positions is not None and len(positions) >= config["max_open_positions"]:
+                mt5.shutdown()
+                registrar_log(
+                    f"MT5 ORDER | MAX_OPEN_POSITIONS_REACHED: "
+                    f"{len(positions)} abertas, limite {config['max_open_positions']}"
+                )
+                return _bloqueio(
+                    "MAX_OPEN_POSITIONS_REACHED",
+                    {
+                        "open_positions": len(positions),
+                        "limit": config["max_open_positions"],
+                    },
+                )
 
         ativo = pre_operacao["ativo"]
         direcao = pre_operacao["direcao"]
@@ -1073,7 +1125,7 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
             especificacoes=especificacoes,
         )
 
-        if not plano_risco.get("approved"):
+        if not plano_risco.get("approved") and not lab_learning_mode:
             mt5.shutdown()
             registrar_relatorio_operacao(
                 pre_operacao,
@@ -1087,7 +1139,7 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
         orcamento_risco = avaliar_orcamento_risco_aberto(
             plano_risco["estimated_risk_percent"]
         )
-        if not orcamento_risco.get("approved"):
+        if not orcamento_risco.get("approved") and not lab_learning_mode:
             registrar_relatorio_operacao(
                 pre_operacao,
                 decisao="BLOQUEAR",
@@ -1115,16 +1167,22 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
             )
 
         if lote > config["lot"]:
-            mt5.shutdown()
-            return _bloqueio(
-                "LOT_ABOVE_EXECUTION_LIMIT",
-                {
-                    "lot": lote,
-                    "execution_limit": config["lot"],
-                    "risk_plan": plano_risco,
-                },
-            )
-
+            if lab_learning_mode:
+                lote = config["lot"]
+                registrar_log(
+                    f"MT5 ORDER | LAB_LEARNING: lote acima do limite; "
+                    f"cap para {lote}"
+                )
+            else:
+                mt5.shutdown()
+                return _bloqueio(
+                    "LOT_ABOVE_EXECUTION_LIMIT",
+                    {
+                        "lot": lote,
+                        "execution_limit": config["lot"],
+                        "risk_plan": plano_risco,
+                    },
+                )
         motivo = _motivo_entrada(pre_operacao)
         if laboratorio:
             motivo = (
@@ -1157,8 +1215,29 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
         # Using direct import (not mt5_safe) because mt5_safe blocks order_send.
         import mt5linux_compat as _mt5_exec  # noqa: E402
         resultado = _mt5_exec.order_send(request)
+        if resultado is None:
+            err_code, err_desc = _mt5_exec.last_error()
+            registrar_log(
+                f"MT5 ORDER | order_send retornou None: "
+                f"{err_code} {err_desc}; reconectando..."
+            )
+            _mt5_exec.shutdown()
+            if _mt5_exec.initialize():
+                resultado = _mt5_exec.order_send(request)
+                if resultado is not None:
+                    registrar_log(
+                        "MT5 ORDER | order_send reenviado "
+                        "apos reconexao"
+                    )
+            if resultado is None:
+                mt5.shutdown()
+                mt5_inicializado = False
+                return _bloqueio(
+                    "MT5_ORDER_SEND_FAILED",
+                    _mt5_exec.last_error(),
+                )
         mt5.shutdown()
-
+        mt5_inicializado = False
         retcode = getattr(resultado, "retcode", None)
         ticket = getattr(resultado, "order", None)
         ok = retcode == mt5.TRADE_RETCODE_DONE

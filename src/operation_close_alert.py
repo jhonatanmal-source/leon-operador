@@ -1,7 +1,10 @@
 import json
+import os
+import tempfile
 from pathlib import Path
 
 from src.telegram_engine import enviar_mensagem
+from src.obsidian_sync import sync_closed_trade
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -23,10 +26,24 @@ def _load_sent():
 
 def _save_sent(sent):
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    STATE_FILE.write_text(
-        json.dumps(sorted(sent), ensure_ascii=False, indent=2),
-        encoding="utf-8",
+    descriptor, temporary = tempfile.mkstemp(
+        prefix=f".{STATE_FILE.name}.",
+        suffix=".tmp",
+        dir=DATA_DIR,
     )
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as file:
+            json.dump(sorted(sent), file, ensure_ascii=False, indent=2)
+            file.write("\n")
+            file.flush()
+            os.fsync(file.fileno())
+        os.replace(temporary, STATE_FILE)
+    except Exception:
+        try:
+            os.unlink(temporary)
+        except OSError:
+            pass
+        raise
 
 
 def _outcome_text(result):
@@ -126,13 +143,21 @@ def build_close_message(operation):
 def send_operation_close_alert(operation):
     operation_id = str(operation.get("id") or "").strip()
     result = str(operation.get("resultado") or "").strip()
-    key = f"{operation_id}:{result}"
+    closed_at = str(
+        operation.get("data_fechamento")
+        or operation.get("closed_at")
+        or operation.get("actual_closed_at")
+        or (operation.get("candle") or {}).get("data")
+        or ""
+    ).strip()
+    legacy_key = f"{operation_id}:{result}"
+    key = f"{legacy_key}:{closed_at or 'SEM_TIMESTAMP'}"
 
     if not operation_id or not result:
         return {"ok": False, "error": "INVALID_OPERATION_CLOSE_ALERT"}
 
     sent = _load_sent()
-    if key in sent:
+    if key in sent or (not closed_at and legacy_key in sent):
         return {
             "ok": True,
             "skipped": True,
@@ -144,5 +169,9 @@ def send_operation_close_alert(operation):
     if response.get("ok"):
         sent.add(key)
         _save_sent(sent)
+        try:
+            sync_closed_trade(operation)
+        except Exception as e:
+            registrar_log(f"OBSIDIAN | erro ao sincronizar trade: {e}")
 
     return response

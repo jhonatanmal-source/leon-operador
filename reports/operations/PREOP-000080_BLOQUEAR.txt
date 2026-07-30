@@ -1,18 +1,18 @@
 LEON | RELATORIO POR OPERACAO
 =================================
-Data/hora: 2026-06-17T18:47:23
+Data/hora: 2026-07-24T13:27:59
 Pre-op: PREOP-000080
-Simbolo: XAUUSD
-Direcao planejada: VENDA
-Preco planejado: 4361.57
-Preco real: 4235.86
+Simbolo: Gold_Spot
+Direcao planejada: COMPRA
+Preco planejado: 4076.67
+Preco real: 4077.03
 RR planejado: 3.0
-RR real: 0.85
-Brain Score: 75
-Classificacao: SETUP MODERADO
+RR real: 2.92
+Brain Score: 60
+Classificacao: SETUP FRACO
 Decisao: BLOQUEAR
-Motivo: ENTRY_PRICE_DRIFT_ABOVE_LIMIT
-Contexto SMC: NEUTRO
-Contexto Elliott: ONDA C
-Melhoria sugerida: Recalcular entrada somente quando o preco ainda entregar RR minimo.
+Motivo: MT5_RETCODE_None
+Contexto SMC: BULLISH
+Contexto Elliott: ONDA 5
+Melhoria sugerida: Aguardar confluencia mais forte antes de permitir execucao demo.
 =================================

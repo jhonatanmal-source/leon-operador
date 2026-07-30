@@ -47,10 +47,32 @@ _BLOCKED = frozenset({
     "execute",
 })
 
-# ── MT5 connection state (lazy, set only when initialize is called) ──
+# ── MT5 connection state (lazy initialization) ──
 _MT5_AVAILABLE: bool = False
 _MT5_INIT_ERROR: str = ""
 _MT5_IMPORT_ERROR: str = ""
+_MT5_INITIALIZED: bool = False
+
+
+def _ensure_initialized() -> bool:
+    """Initialize MT5 on first use (lazy initialization).
+
+    Returns True if MT5 is available after attempting initialization,
+    False otherwise. Subsequent calls are no-ops once initialized.
+    """
+    global _MT5_INITIALIZED, _MT5_AVAILABLE, _MT5_INIT_ERROR
+    if _MT5_INITIALIZED:
+        return _MT5_AVAILABLE
+    _MT5_INITIALIZED = True
+    _MT5_AVAILABLE = False
+    try:
+        if not _real_mt5.initialize():
+            _MT5_INIT_ERROR = str(_real_mt5.last_error())
+        else:
+            _MT5_AVAILABLE = True
+    except Exception as exc:
+        _MT5_INIT_ERROR = str(exc)
+    return _MT5_AVAILABLE
 
 
 def _resolve_mt5():
@@ -67,6 +89,9 @@ def __getattr__(name: str):
 
     Blocked functions raise RuntimeError. Private attributes raise
     AttributeError. Everything else is forwarded transparently.
+
+    Lazy initialization: MT5 initialize() is called on the first
+    proxied attribute access, not at import time.
     """
     if name in _BLOCKED:
         raise RuntimeError(
@@ -78,6 +103,8 @@ def __getattr__(name: str):
         )
     if name.startswith("_"):
         raise AttributeError(f"module 'mt5_safe' has no attribute {name!r}")
+    # Lazy init: ensure MT5 is connected before proxying any API call
+    _ensure_initialized()
     target = _resolve_mt5()
     if not hasattr(target, name):
         raise AttributeError(
@@ -107,7 +134,8 @@ def __dir__() -> list[str]:
 # ═══════════════════════════════════════════════════════════════
 
 def check_mt5() -> dict:
-    """Check MT5 availability status."""
+    """Check MT5 availability status (triggers lazy init on first call)."""
+    _ensure_initialized()
     return {
         "available": _MT5_AVAILABLE,
         "error": _MT5_INIT_ERROR if not _MT5_AVAILABLE else "",
@@ -118,6 +146,7 @@ def check_mt5() -> dict:
 
 def safe_symbol_info_tick(symbol: str) -> dict:
     """Get current tick data as a dict (safe)."""
+    _ensure_initialized()
     if not _MT5_AVAILABLE:
         return {"error": "MT5 not available"}
     try:
@@ -139,6 +168,7 @@ def safe_symbol_info_tick(symbol: str) -> dict:
 
 def safe_symbol_info(symbol: str) -> dict:
     """Get symbol info as a dict (safe)."""
+    _ensure_initialized()
     if not _MT5_AVAILABLE:
         return {"error": "MT5 not available"}
     try:
@@ -166,6 +196,7 @@ def safe_symbol_info(symbol: str) -> dict:
 
 def safe_symbols_get() -> dict:
     """Get all symbols as dict list (safe)."""
+    _ensure_initialized()
     if not _MT5_AVAILABLE:
         return {"error": "MT5 not available"}
     try:
@@ -185,6 +216,7 @@ def safe_copy_rates_from_pos(
     symbol: str, timeframe: int, start_pos: int, count: int
 ) -> dict:
     """Copy historical rates as dict list (safe)."""
+    _ensure_initialized()
     if not _MT5_AVAILABLE:
         return {"error": "MT5 not available"}
     try:
@@ -210,6 +242,7 @@ def safe_copy_rates_from_pos(
 
 def safe_account_info() -> dict:
     """Get account info as a dict (safe, read-only)."""
+    _ensure_initialized()
     if not _MT5_AVAILABLE:
         return {"error": "MT5 not available"}
     try:
