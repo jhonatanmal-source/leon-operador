@@ -104,3 +104,5 @@ Contém padrões, decisões, erros e correções acumulados que evoluem o conhec
 - 2026-07-30 | PREOP-000116 | WIN_TP1 ? None | SMC=? Elliott=? Brain=? | Confluencia valida, registrar padrao
 - 2026-07-30 | PREOP-000116 | WIN_TP1 ? None | SMC=? Elliott=? Brain=? | Confluencia valida, registrar padrao
 - 2026-07-30 | PREOP-000116 | WIN_TP1 ? None | SMC=? Elliott=? Brain=? | Confluencia valida, registrar padrao
+- 2026-07-30 | PREOP-000116 | WIN_TP1 ? None | SMC=? Elliott=? Brain=? | Confluencia valida, registrar padrao
+- 2026-07-30 | PREOP-000116 | WIN_TP1 ? None | SMC=? Elliott=? Brain=? | Confluencia valida, registrar padrao
