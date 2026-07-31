@@ -86,3 +86,11 @@ Contém padrões, decisões, erros e correções acumulados que evoluem o conhec
 - Nenhum agente pode remover guards
 - Toda alteração exige diagnóstico, plano, testes, revisão e relatório
 - 2026-07-28 | TEST-000001 | WIN_TP1 COMPRA Gold_Spot | SMC=BULLISH Elliott=ABC_RANGE Brain=65 | Confluencia valida, registrar padrao
+- 2026-07-30 | PREOP-000116 | WIN_TP1 ? None | SMC=? Elliott=? Brain=? | Confluencia valida, registrar padrao
+- 2026-07-30 | PREOP-000116 | WIN_TP1 ? None | SMC=? Elliott=? Brain=? | Confluencia valida, registrar padrao
+- 2026-07-30 | PREOP-000116 | WIN_TP1 ? None | SMC=? Elliott=? Brain=? | Confluencia valida, registrar padrao
+- 2026-07-30 | PREOP-000116 | WIN_TP1 ? None | SMC=? Elliott=? Brain=? | Confluencia valida, registrar padrao
+- 2026-07-30 | PREOP-000116 | WIN_TP1 ? None | SMC=? Elliott=? Brain=? | Confluencia valida, registrar padrao
+- 2026-07-30 | PREOP-000116 | WIN_TP1 ? None | SMC=? Elliott=? Brain=? | Confluencia valida, registrar padrao
+- 2026-07-30 | PREOP-000116 | WIN_TP1 ? None | SMC=? Elliott=? Brain=? | Confluencia valida, registrar padrao
+- 2026-07-30 | PREOP-000116 | WIN_TP1 ? None | SMC=? Elliott=? Brain=? | Confluencia valida, registrar padrao

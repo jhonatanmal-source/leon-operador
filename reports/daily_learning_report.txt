@@ -930,3 +930,57 @@ Aprendizado do LEON
 - O LEON registrou ambiente de conflito e deve preservar paciencia operacional.
 =================================
 
+=================================
+LEON VPS | RELATORIO DIARIO DE APRENDIZADO
+=================================
+Data: 2026-07-30
+
+Resumo do dia
+- Precos coletados: 911
+- Candles coletados: 911
+- Sinais registrados: 232
+- Contextos cerebrais: 550
+- Registros analisados: 232
+- Planos gerados: 232
+- Direcao dominante: AGUARDAR
+- Qualidade dominante: FIBONACCI_LIQUIDEZ_NAO_CONFIRMADOS
+- Confianca dominante: BAIXA
+
+Ultima coleta
+- Ativo: Gold_Spot
+- Bid: 4086.91
+- Ask: 4087.26
+- Candle close: 4086.91
+
+Ultima leitura estrutural
+- Tendencia: BAIXA
+- Score: 100
+- Sinal: OBSERVAR
+
+Leitura SMC + Elliott
+- SMC dominante: BULLISH
+- Elliott dominante: ONDA 3
+- Brain Score medio dos planos: 28.30
+
+Ultimo contexto do cerebro
+- Origem: operator
+- Tipo: coleta_programada
+- Alinhamento: CONFLITO
+- Observacao: Snapshot automatico apos coleta.
+
+Memoria operacional do operador
+- Integridade da memoria: 0.00%
+- Status: PARCIAL
+- PRE_OPERATION atuais: 0
+- Identidades registradas: 1415
+- Contextos vinculados: 0 / 0
+
+Resultados historicos usados no aprendizado
+- Acertos registrados: 5
+- Erros registrados: 26
+- Taxa historica de acerto: 16.13%
+
+Aprendizado do LEON
+- O LEON reforcou que setups fortes aparecem quando SMC e Elliott apontam juntos.
+=================================
+
