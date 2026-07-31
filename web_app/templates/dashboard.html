@@ -10,25 +10,25 @@
     <p>Bem-vindo ao LEON XAU ELITE AI</p>
   </div>
   <div class="pro-top-actions">
-    <div class="pro-license"><i>♜</i><span>Licenca<strong>ATIVA</strong></span></div>
-    <div class="pro-plan"><small>Plano</small><strong>LEON PRO</strong></div>
+    <div class="pro-license"><i>◈</i><span>MT5<strong>{{ system.mt5.status }}</strong></span></div>
+    <div class="pro-plan"><small>Modo</small><strong>{{ system.mt5.type }}</strong></div>
     <a href="{{ url_for('health.index') }}" class="pro-icon-btn" aria-label="Saude do sistema">◎</a>
     <a href="{{ url_for('auth.logout') }}" class="pro-icon-btn" aria-label="Sair">⇥</a>
   </div>
 </header>
 
 <section class="pro-system-row" aria-label="Status dos sistemas">
-  <article class="pro-system-card"><span class="pro-system-icon green">⬡</span><div><b>VPN MIKROTIK</b><strong>CONECTADO</strong><small>Rede local protegida</small></div><i class="signal-waves">◔</i></article>
-  <article class="pro-system-card"><span class="pro-system-icon gold">♕</span><div><b>LICENCA</b><strong>ATIVA</strong><small>Sessao autorizada</small></div><i class="mini-progress"><span></span></i></article>
-  <article class="pro-system-card"><span class="pro-system-icon green">MT5</span><div><b>METATRADER 5</b><strong>MONITORANDO</strong><small>XAUUSD</small></div></article>
-  <article class="pro-system-card"><span class="pro-system-icon gold">LE</span><div><b>LEON AI</b><strong>ATIVO</strong><small>Analisando mercado</small></div><i class="ai-pulse"></i></article>
+  <article class="pro-system-card {{ 'off' if not system.mt5.connected }}"><span class="pro-system-icon {{ 'green' if system.mt5.connected else 'red' }}">MT5</span><div><b>METATRADER 5</b><strong>{{ 'MONITORANDO' if system.mt5.connected else system.mt5.status }}</strong><small>{{ system.mt5.account }} · {{ system.mt5.server }}</small></div></article>
+  <article class="pro-system-card {{ 'off' if not system.processes.operator }}"><span class="pro-system-icon {{ 'green' if system.processes.operator else 'red' }}">OP</span><div><b>OPERADOR LEON</b><strong>{{ 'ONLINE' if system.processes.operator else 'OFF' }}</strong><small>{{ 'Processo ativo' if system.processes.operator else 'Processo parado' }}</small></div></article>
+  <article class="pro-system-card {{ 'off' if not system.processes.web_collab }}"><span class="pro-system-icon {{ 'green' if system.processes.web_collab else 'red' }}">WEB</span><div><b>WEB REMOTO</b><strong>{{ 'ONLINE' if system.processes.web_collab else 'OFF' }}</strong><small>{{ 'Painel web ativo' if system.processes.web_collab else 'Painel web parado' }}</small></div></article>
+  <article class="pro-system-card {{ 'warn' if not system.autonomy.active }}"><span class="pro-system-icon {{ 'gold' if system.autonomy.active else 'yellow' }}">LE</span><div><b>LEON AI</b><strong>{{ 'ATIVO' if system.autonomy.active else 'STANDBY' }}</strong><small>{{ 'Analisando mercado' if system.autonomy.active else 'Sem autonomia' }}</small></div></article>
 </section>
 
 <!-- MODO ESTUDOS -->
 <section class="card" style="margin-bottom:16px;border-color:var(--gold)">
   <div class="card-head">
     <h2>🧪 Modo Estudos (LAB_LEARNING)</h2>
-    <span class="badge g" style="font-size:0.85rem">ATIVO</span>
+    <span class="badge {{ 'g' if system.lab_mode_active else 'y' }}" style="font-size:0.85rem">{{ 'ATIVO' if system.lab_mode_active else 'AGUARDANDO' }}</span>
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;padding:12px 0">
     <div class="status-box">
@@ -183,9 +183,9 @@
   {% endif %}
 </div>
 <footer class="pro-bottom-bar">
-  <span><i></i> Servidor: <b>Conectado</b></span>
-  <span>Ambiente: <b>Local</b></span>
-  <span>Sincronizacao: <b>OK</b></span>
+  <span>MT5: <b>{{ system.mt5.status }}</b></span>
+  <span>Conta: <b>{{ system.mt5.account }}</b></span>
+  <span>Operador: <b>{{ 'ONLINE' if system.processes.operator else 'OFF' }}</b></span>
   <em>♛ LEON XAU ELITE AI — inteligencia operacional supervisionada.</em>
 </footer>
 </div>

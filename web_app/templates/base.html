@@ -71,11 +71,11 @@
 
     <div class="sb-account">
       <div class="sb-acc-title">CONTA ATIVA</div>
-      <div class="sb-acc-row"><span>MetaTrader 5</span><span class="tag-green">Conectado</span></div>
+      <div class="sb-acc-row"><span>MetaTrader 5</span><span class="badge {{ 'g' if mt5_connected else 'r' }}" style="font-size:0.68rem">{{ 'Conectado' if mt5_connected else 'Offline' }}</span></div>
       <div class="sb-acc-row"><span>Conta</span><b>{{ mt5_account }}</b></div>
-      <div class="sb-acc-row"><span>Corretora</span><b>{{ mt5_server }}</b></div>
-      <div class="sb-acc-row"><span>Servidor</span><b>{{ mt5_type }}</b></div>
-      <button class="sb-btn">ALTERAR CONTA</button>
+      <div class="sb-acc-row"><span>Servidor</span><b>{{ mt5_server }}</b></div>
+      <div class="sb-acc-row"><span>Modo</span><b>{{ mt5_type }}</b></div>
+      <span style="display:block;margin-top:6px;font-size:0.62rem;color:var(--muted)">Exibição somente leitura — dados reais do terminal.</span>
     </div>
 
     <div class="sb-footer">

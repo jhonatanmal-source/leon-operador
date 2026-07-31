@@ -1,0 +1,37 @@
+{
+  "mission_id": "MISSION-20260730-WEB-INFO",
+  "classification": "INTERFACE / DADOS",
+  "phase": "REVISAO_CONCLUIDA",
+  "step": 7,
+  "completed_steps": ["TRIAGEM", "DIAGNÓSTICO", "PLANO", "CONVOCAÇÃO", "IMPLEMENTAÇÃO", "TESTES", "REVISÃO"],
+  "current_step": "SEGURANÇA / DOCUMENTAÇÃO / RELATÓRIO",
+  "started_at": "2026-07-30T22:45:00",
+  "findings_count": 9,
+  "status": "QA_APROVADO_E_REVISADO",
+  "qa_verdict": "APROVADO COM RESSALVAS (R1 e R2 resolvidas e validadas)",
+  "review_verdict": "APROVADO COM RESSALVAS (ressalva MÉDIA do dashboard resolvida; demais BAIXO para follow-up)",
+  "testes": "339 passed (334 originais + 5 novos testes M1/lab_mode)",
+  "arquivos_alterados": [
+    "web_app/services/system_health_service.py",
+    "web_app/app.py",
+    "web_app/templates/base.html",
+    "web_app/templates/dashboard.html",
+    "web_app/templates/leon_panel.html",
+    "web_app/routes/dashboard_routes.py",
+    "web_app/static/css/panel_shell.css",
+    "src/mt5_monitor.py",
+    "tests/test_web_shadow_trades.py"
+  ],
+  "ressalvas_resolvidas": [
+    "QA R1: _shadow_summary do serviço agora filtra corrompidos (42 coerente)",
+    "QA R2: fallback do sidebar usa placeholder '—' em vez de .env fake",
+    "Review MÉDIO: dashboard_routes importa _shadow_summary do serviço (elimina duplicata sem filtro) -> dashboard mostra 42/8/31"
+  ],
+  "follow_up_baixo": [
+    "Tornar públicas _performance_summary/_shadow_summary ao importar entre módulos",
+    "Unificar _mt5_cache e _mt5_account_cache",
+    "Remover MT5_ACCOUNT/SERVER/TYPE mortos de web_app/config.py"
+  ],
+  "seguranca": "Nenhum token/credencial no diff; login mascarado; sem mudanças em estratégia/risco/TP/SL/execução/guards",
+  "not_committed": true
+}

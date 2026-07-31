@@ -4,6 +4,11 @@ from flask import Blueprint, render_template
 
 from web_app.database.db import get_connection
 from web_app.services.auth_service import current_user, login_required
+from web_app.services.system_health_service import (
+    _performance_summary,
+    _shadow_summary,
+    get_dashboard_system_status,
+)
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
@@ -34,35 +39,8 @@ def _recent_demo_orders(limit=5):
     return rows[-limit:]
 
 
-def _shadow_summary():
-    path = DATA_DIR / "shadow_trades.csv"
-    if not path.exists():
-        return {"total": 0, "open": 0, "wins": 0, "losses": 0}
-    with path.open("r", encoding="utf-8", errors="replace", newline="") as f:
-        rows = list(csv.DictReader(f, delimiter=";"))
-    return {
-        "total": len(rows),
-        "open": sum(1 for r in rows if r.get("status") == "ABERTO"),
-        "wins": sum(1 for r in rows if str(r.get("result", "")).startswith("WIN")),
-        "losses": sum(1 for r in rows if r.get("result") == "LOSS"),
-    }
-
-
 def _simulated_summary():
     path = DATA_DIR / "simulated_entries.csv"
-    if not path.exists():
-        return {"total": 0, "wins": 0, "losses": 0}
-    with path.open("r", encoding="utf-8", errors="replace", newline="") as f:
-        rows = list(csv.DictReader(f, delimiter=";"))
-    return {
-        "total": len(rows),
-        "wins": sum(1 for r in rows if str(r.get("resultado", "")).startswith("WIN")),
-        "losses": sum(1 for r in rows if r.get("resultado") == "LOSS"),
-    }
-
-
-def _performance_summary():
-    path = DATA_DIR / "performance.csv"
     if not path.exists():
         return {"total": 0, "wins": 0, "losses": 0}
     with path.open("r", encoding="utf-8", errors="replace", newline="") as f:
@@ -139,6 +117,7 @@ def index():
     shadow = _shadow_summary()
     simulated = _simulated_summary()
     performance = _performance_summary()
+    system = get_dashboard_system_status()
 
     return render_template(
         "dashboard.html",
@@ -151,4 +130,5 @@ def index():
         shadow=shadow,
         simulated=simulated,
         performance=performance,
+        system=system,
     )

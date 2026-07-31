@@ -27,6 +27,12 @@ _mt5_cache = {"result": None, "timestamp": 0.0}
 _MT5_CACHE_TTL = 30  # seconds
 _mt5_cache_lock = threading.Lock()
 
+# Cache para get_mt5_account_summary() — usado no context_processor do sidebar
+# (executa em TODA request). TTL 30s evita chamadas caras ao MT5 por request.
+_mt5_account_cache = {"result": None, "timestamp": 0.0}
+_MT5_ACCOUNT_CACHE_TTL = 30  # seconds
+_mt5_account_cache_lock = threading.Lock()
+
 
 def _ensure_src_path():
     if str(SRC_DIR) not in sys.path:
@@ -39,14 +45,38 @@ def _read_config():
     return config
 
 
-def _process_running(fragment):
+def _process_running(fragment, fragments=None):
+    """Detecta se um processo roda na cmdline (Linux).
+
+    `fragment` aceita uma string OU uma lista/tupla de fragmentos
+    (`fragments`). Quando mais de um fragmento é informado, o processo é
+    considerado ativo se QUALQUER fragmento casar — necessário porque o
+    web_app pode rodar como `python3 -m web_app.run` (dev) ou como
+    `waitress-serve --call web_app.app:create_app` (produção).
+    """
+    if fragments is None:
+        if isinstance(fragment, (list, tuple)):
+            fragments = fragment
+            fragment = None
+        else:
+            fragments = [fragment]
+            fragment = None
+    else:
+        fragments = [fragment] + list(fragments)
+
+    def _match(text):
+        for frag in fragments:
+            if frag in text:
+                return True
+        return False
+
     try:
         import psutil
 
         for proc in psutil.process_iter(["cmdline"]):
             try:
                 cmdline = proc.info.get("cmdline")
-                if cmdline and fragment in " ".join(cmdline):
+                if cmdline and _match(" ".join(cmdline)):
                     return True
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
@@ -55,15 +85,17 @@ def _process_running(fragment):
         pass
 
     try:
-        result = subprocess.run(
-            ["pgrep", "-f", fragment],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=10,
-        )
-        return bool(result.stdout.strip())
+        for frag in fragments:
+            result = subprocess.run(
+                ["pgrep", "-f", frag],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=10,
+            )
+            if result.stdout.strip():
+                return True
     except (OSError, subprocess.SubprocessError):
         return False
 
@@ -82,23 +114,78 @@ def _shadow_summary():
         return {"total": 0, "open": 0, "wins": 0, "losses": 0}
     with path.open("r", encoding="utf-8", errors="replace", newline="") as file:
         rows = list(csv.DictReader(file, delimiter=";"))
+
+    # Mesmo filtro de plausibilidade da lista detalhada: registros com entry
+    # corrompido (ex: SHADOW-000041 com 2301.8 quando ouro ~4100) são excluídos
+    # do resumo para que o total do card seja coerente com a tabela exibida.
+    prices = []
+    for row in rows:
+        try:
+            prices.append(float(row.get("entry")))
+        except (TypeError, ValueError):
+            continue
+    if not prices:
+        return {"total": 0, "open": 0, "wins": 0, "losses": 0}
+    median = sorted(prices)[len(prices) // 2]
+
+    def _plausible(value):
+        try:
+            price = float(value)
+        except (TypeError, ValueError):
+            return False
+        if median <= 0:
+            return False
+        ratio = price / median
+        return 0.6 <= ratio <= 1.6
+
+    valid_rows = [row for row in rows if _plausible(row.get("entry"))]
     return {
-        "total": len(rows),
-        "open": sum(row.get("status") == "ABERTO" for row in rows),
-        "wins": sum(str(row.get("result", "")).startswith("WIN") for row in rows),
-        "losses": sum(row.get("result") == "LOSS" for row in rows),
+        "total": len(valid_rows),
+        "open": sum(row.get("status") == "ABERTO" for row in valid_rows),
+        "wins": sum(str(row.get("result", "")).startswith("WIN") for row in valid_rows),
+        "losses": sum(row.get("result") == "LOSS" for row in valid_rows),
     }
 
 
 def _shadow_trades_list():
-    """Retorna lista detalhada de todas as shadow trades."""
+    """Retorna lista detalhada de todas as shadow trades (apenas com preços plausíveis).
+
+    Um registro é considerado corrompido quando seu entry diverge da mediana
+    dos demais entries do arquivo por mais de ~40% (ex: SHADOW-000041 com
+    entry=2301.8 quando os demais estão ~4100). O CSV bruto não é alterado;
+    apenas a exibição no site é filtrada. Abordagem auto-adaptativa: acompanha
+    o nível real do ativo ao longo do tempo sem hardcoded.
+    """
     path = DATA_DIR / "shadow_trades.csv"
     if not path.exists():
         return []
     with path.open("r", encoding="utf-8", errors="replace", newline="") as file:
         rows = list(csv.DictReader(file, delimiter=";"))
+
+    prices = []
+    for row in rows:
+        try:
+            prices.append(float(row.get("entry")))
+        except (TypeError, ValueError):
+            continue
+    if not prices:
+        return []
+    median = sorted(prices)[len(prices) // 2]
+
+    def _plausible(value):
+        try:
+            price = float(value)
+        except (TypeError, ValueError):
+            return False
+        if median <= 0:
+            return False
+        ratio = price / median
+        return 0.6 <= ratio <= 1.6
+
     trades = []
     for row in rows:
+        if not _plausible(row.get("entry")):
+            continue
         trades.append({
             "id": row.get("id", "-"),
             "opened_at": row.get("opened_at", "-"),
@@ -169,6 +256,19 @@ def _last_success(marker):
     return last
 
 
+def _telegram_missing_credentials():
+    """True quando config.ini não tem token/chat_id do Telegram.
+
+    Nesse caso o erro "TOKEN ou CHAT_ID nao configurado" é um estado de
+    configuração permanente conhecido, não um erro ativo — deve ser ocultado
+    do painel de erros do site (o operador continua gravando no errors.txt).
+    """
+    config = _read_config()
+    token = config.get("TELEGRAM", "token", fallback="").strip()
+    chat_id = config.get("TELEGRAM", "chat_id", fallback="").strip()
+    return not token or not chat_id
+
+
 def _active_errors(hours=6, limit=3500):
     path = LOGS_DIR / "errors.txt"
     if not path.exists():
@@ -179,6 +279,7 @@ def _active_errors(hours=6, limit=3500):
     cutoff = datetime.now() - timedelta(hours=hours)
     active = []
     inherited_timestamp = None
+    telegram_missing = _telegram_missing_credentials()
 
     for line in path.read_text(
         encoding="utf-8",
@@ -201,6 +302,8 @@ def _active_errors(hours=6, limit=3500):
             and effective_timestamp <= last_telegram
             and "telegram" in line.lower()
         ):
+            continue
+        if telegram_missing and "TOKEN ou CHAT_ID nao configurado" in line:
             continue
         active.append(line)
 
@@ -269,16 +372,31 @@ def _simulated_summary():
     }
 
 def _performance_summary():
+    """Resumo honesto de performance.
+
+    performance.csv registra desfechos de sinais na coluna "resultado"
+    (ERRO/ACERTO), não WIN/LOSS de trades fechados. Contar todas as linhas
+    como "total" é enganoso — 26 ERRO de engine não são resultado de trade.
+    Decisão (documentada): quando não existem WIN/LOSS, a métrica exibida é
+    o total de acertos reais (ACERTO); erros de engine ficam de fora.
+    """
     path = DATA_DIR / "performance.csv"
     if not path.exists():
         return {"total": 0, "wins": 0, "losses": 0}
     with path.open("r", encoding="utf-8", errors="replace", newline="") as f:
         rows = list(csv.DictReader(f, delimiter=";"))
-    return {
-        "total": len(rows),
-        "wins": sum(1 for r in rows if str(r.get("resultado", "")).startswith("WIN")),
-        "losses": sum(1 for r in rows if r.get("resultado") == "LOSS"),
-    }
+    wins = sum(1 for r in rows if str(r.get("resultado", "")).startswith("WIN"))
+    losses = sum(
+        1 for r in rows if str(r.get("resultado", "")).startswith("LOSS")
+    )
+    if wins or losses:
+        # CSV possui desfechos WIN/LOSS reais de trades — total conta tudo
+        return {"total": len(rows), "wins": wins, "losses": losses}
+    # CSV sem WIN/LOSS (apenas ERRO/ACERTO): métrica honesta = acertos reais
+    hits = sum(
+        1 for r in rows if str(r.get("resultado", "")).upper() == "ACERTO"
+    )
+    return {"total": hits, "wins": hits, "losses": 0}
 
 
 
@@ -365,12 +483,128 @@ def _remote_status():
                 end = line.find(" ", start)
                 remote_url = line[start:] if end == -1 else line[start:end]
                 break
+    # Fragmentos compatíveis com Linux (cmdlines reais: python3 -m web_app.run,
+    # waitress-serve --call web_app.app:create_app, python3 src/leon_operator.py,
+    # cloudflared). Fragmentos Windows nunca casavam no Ubuntu 24.04 e o painel
+    # mostrava Operador/Web/Túnel OFF mesmo rodando. Web aceita 2 fragmentos pois
+    # o serviço pode iniciar como dev (web_app.run) ou produção (waitress/web_app.app).
     return {
-        "web_running": _process_running("web_app\\app.py"),
-        "tunnel_running": _process_running("cloudflared.exe"),
-        "legacy_panel_running": _process_running("src\\leon_panel.py"),
-        "operator_running": _process_running("src\\leon_operator.py"),
+        "web_running": _process_running(
+            ["web_app.run", "web_app.app", "waitress-serve"]
+        ),
+        "tunnel_running": _process_running("cloudflared"),
+        "legacy_panel_running": _process_running("leon_panel.py"),
+        "operator_running": _process_running("leon_operator.py"),
         "remote_url": remote_url,
+    }
+
+
+def _mt5_config_fallback():
+    """Fallback para quando MT5 está indisponível (não quebra o template).
+
+    Usa placeholders "—" em vez dos valores do .env (que podem ser falsos/
+    desatualizados, ex: MT5_ACCOUNT=12345678) para nunca exibir dados que
+    não são do terminal real.
+    """
+    return {
+        "account": "—",
+        "server": "—",
+        "type": "—",
+        "status": "INDISPONÍVEL",
+        "connected": False,
+        "balance": None,
+        "equity": None,
+    }
+
+
+def get_mt5_account_summary():
+    """Resumo da conta MT5 REAL (login mascarado, servidor, modo) com cache TTL 30s.
+
+    Usado no context_processor do sidebar para exibir dados reais do terminal
+    em vez dos valores estáticos do .env. Se MT5 indisponível, cai para os
+    valores de config sem quebrar. A função NÃO faz chamadas MT5 caras por
+    request graças ao cache com threading.Lock + time.monotonic (padrão
+    já existente em _mt5_cache).
+    """
+    with _mt5_account_cache_lock:
+        if _mt5_account_cache["result"] is not None and (
+            time.monotonic() - _mt5_account_cache["timestamp"]
+        ) < _MT5_ACCOUNT_CACHE_TTL:
+            return _mt5_account_cache["result"]
+
+    result = None
+    _ensure_src_path()
+    try:
+        from mt5_monitor import get_mt5_monitor_status
+
+        status = get_mt5_monitor_status()
+        account = status.get("account") or {}
+        if status.get("connected") and account:
+            result = {
+                "account": account.get("login") or "SEM CONTA",
+                "server": account.get("server") or "SEM DADOS",
+                "type": account.get("mode") or "SEM DADOS",
+                "status": status.get("status", "OK"),
+                "connected": True,
+                "balance": account.get("balance"),
+                "equity": account.get("equity"),
+            }
+    except Exception:
+        result = None
+
+    if result is None:
+        result = _mt5_config_fallback()
+
+    with _mt5_account_cache_lock:
+        _mt5_account_cache["result"] = result
+        _mt5_account_cache["timestamp"] = time.monotonic()
+    return result
+
+
+def _lab_mode_active():
+    """LAB_LEARNING ativo quando study ou demo execution tem estado recente (< 1 dia)."""
+    now = datetime.now()
+    for name in ("study_state.txt", "demo_execution_state.txt"):
+        path = DATA_DIR / name
+        if not path.exists():
+            continue
+        content = path.read_text(encoding="utf-8", errors="replace").strip()
+        try:
+            timestamp = datetime.fromisoformat(content[:19])
+        except ValueError:
+            continue
+        if now - timestamp < timedelta(days=1):
+            return True
+    return False
+
+
+def get_dashboard_system_status():
+    """Status leve e real para o dashboard (cards de sistema).
+
+    Reusa o cache MT5 de 30s de get_mt5_account_summary() e a detecção barata
+    de processos do psutil. NÃO chama build_leon_panel_context() (pesado, com
+    imports de src e chamadas MT5 não-cacheadas) a cada request do dashboard.
+    """
+    mt5 = get_mt5_account_summary()
+    remote = _remote_status()
+    autonomy_active = False
+    _ensure_src_path()
+    try:
+        from autonomy_guard import status_autonomia
+
+        autonomy_active = bool(status_autonomia().get("active"))
+    except Exception:
+        autonomy_active = False
+    return {
+        "mt5": mt5,
+        "processes": {
+            "operator": remote["operator_running"],
+            "web_collab": remote["web_running"],
+            "cloudflare_tunnel": remote["tunnel_running"],
+            "legacy_panel": remote["legacy_panel_running"],
+        },
+        "autonomy": {"active": autonomy_active},
+        "lab_mode_active": _lab_mode_active(),
     }
 
 
@@ -506,6 +740,7 @@ def build_leon_panel_context(access_logs_page=1, access_logs_per_page=20):
         "recent_access_logs": _recent_access_logs(access_logs_page, access_logs_per_page),
         "study": _study_state(),
         "demo": _demo_state(),
+        "lab_mode_active": _lab_mode_active(),
         "recent_orders": _recent_demo_orders(),
         "simulated": _simulated_summary(),
         "performance": _performance_summary(),

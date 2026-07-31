@@ -58,6 +58,7 @@ def get_mt5_monitor_status(symbol="XAUUSD"):
         import mt5_safe as mt5
     except ImportError:
         return {
+            "status": "ERRO",
             "connected": False,
             "error": "MT5_IMPORT_ERROR",
             "positions": [],
@@ -66,6 +67,7 @@ def get_mt5_monitor_status(symbol="XAUUSD"):
 
     if not mt5.initialize():
         return {
+            "status": "ERRO",
             "connected": False,
             "error": "MT5_INITIALIZE_FAILED",
             "details": str(mt5.last_error()),
@@ -94,9 +96,16 @@ def get_mt5_monitor_status(symbol="XAUUSD"):
             for position in positions
         ]
 
+        connected = bool(terminal and terminal.connected)
+        trade_allowed = bool(terminal and terminal.trade_allowed)
+
         return {
-            "connected": bool(terminal and terminal.connected),
-            "trade_allowed": bool(terminal and terminal.trade_allowed),
+            "status": (
+                "OK" if connected and trade_allowed else
+                ("ATENÇÃO" if connected else "ERRO")
+            ),
+            "connected": connected,
+            "trade_allowed": trade_allowed,
             "account": {
                 "login": _masked_login(account.login) if account else "SEM CONTA",
                 "fingerprint": _account_fingerprint(account),
@@ -133,6 +142,7 @@ def get_mt5_monitor_status(symbol="XAUUSD"):
         }
     except Exception as error:
         return {
+            "status": "ERRO",
             "connected": False,
             "error": "MT5_MONITOR_FAILED",
             "details": str(error),

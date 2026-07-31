@@ -38,12 +38,24 @@ def create_app(test_config=None):
 
     @app.context_processor
     def inject_current_user():
+        mt5_summary = {}
+        try:
+            # Import lazy evita import circular (app.py -> services)
+            from web_app.services.system_health_service import (
+                get_mt5_account_summary,
+            )
+
+            mt5_summary = get_mt5_account_summary()
+        except Exception:
+            mt5_summary = {}
         return {
             "current_user": current_user(),
             "csrf_token": csrf_token,
-            "mt5_account": config.MT5_ACCOUNT,
-            "mt5_server": config.MT5_SERVER,
-            "mt5_type": config.MT5_TYPE,
+            "mt5_account": mt5_summary.get("account") or "—",
+            "mt5_server": mt5_summary.get("server") or "—",
+            "mt5_type": mt5_summary.get("type") or "—",
+            "mt5_connected": bool(mt5_summary.get("connected")),
+            "mt5_status": mt5_summary.get("status") or "—",
         }
 
     @app.errorhandler(400)
