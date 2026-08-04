@@ -78,6 +78,19 @@ class TestDailyLearningSync(TestCase):
         resultado = dls._extrair_secao(texto, "Erros Encontrados")
         self.assertEqual(resultado, ["Erro 1", "Erro 2"])
 
+    def test_extrair_secao_aceita_h3(self):
+        """Diários modernos usam ### (h3) nas subseções — deve extrair igualmente."""
+        texto = (
+            "## Operacao\n"
+            "### Erros Encontrados\n"
+            "- Erro A\n"
+            "- Erro B\n"
+            "### Padrões Identificados\n"
+            "- Padrão X\n"
+        )
+        resultado = dls._extrair_secao(texto, "Erros Encontrados")
+        self.assertEqual(resultado, ["Erro A", "Erro B"])
+
     def test_extrair_secao_sem_itens(self):
         texto = "## Erros Encontrados\n## Outra Seção\n"
         resultado = dls._extrair_secao(texto, "Erros Encontrados")
@@ -145,6 +158,27 @@ class TestDailyLearningSync(TestCase):
         self.assertIn("Dias registrados: 2", resultado)
         contexto = self._contexto_path().read_text(encoding="utf-8")
         self.assertIn("Erro recorrente de path", contexto)
+
+    def test_nao_sobrescreve_contexto_curado_manualmente(self):
+        """CONTEXTO marcado como CURADO_MANUALMENTE não pode ser regravado pelo sync."""
+        self._criar_aprendizado("2026-07-22", {
+            "Padrões Identificados": ["Padrão auto-gerado"]
+        })
+        # Cria um CONTEXTO curado manualmente com conteúdo que o sync removeria.
+        curado = self._contexto_path()
+        curado.write_text(
+            "# Contexto de Evolução\n\n"
+            "## Como usar\n"
+            "- Curadoria manual\n"
+            "<!-- CURADO_MANUALMENTE: este arquivo recebe curadoria humana. -->\n\n"
+            "## Padrões Identificados\n\n"
+            "- **Padrão curado à mão** que não está nos diários\n",
+            encoding="utf-8",
+        )
+        dls.executar_sincronizacao()
+        conteudo = curado.read_text(encoding="utf-8")
+        self.assertIn("Padrão curado à mão", conteudo)
+        self.assertIn("CURADO_MANUALMENTE", conteudo)
 
     def test_indice_atualizado(self):
         self._criar_aprendizado("2026-07-22", {

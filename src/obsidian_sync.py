@@ -125,11 +125,25 @@ def update_daily_learning(trade_note_path):
         filepath.write_text(header)
 
     note_title = trade_note_path.stem
+    entry = f"- [[{note_title}]] — fechada em {hoje}\n"
+
+    # Idempotência: nunca duplicar a mesma operação no diário do dia.
+    if entry in filepath.read_text():
+        return False
+
     with filepath.open("a") as f:
-        f.write(f"- [[{note_title}]] — fechada em {hoje}\n")
+        f.write(entry)
+    return True
 
 
 def update_contexto_evolucao(operation):
+    """DEPRECATED — operações individuais NÃO devem ser appendadas ao CONTEXTO.
+
+    O CONTEXTO_EVOLUCAO.md é regenerado integralmente por daily_learning_sync.py
+    a partir dos diários diários. Append aqui conflita com a regravação completa
+    e gerou 16+ duplicatas de PREOP-000116 (2026-08-04). Mantida somente para
+    compatibilidade de API; não é mais chamada por sync_closed_trade().
+    """
     result = operation.get("resultado")
     smc = operation.get("smc", "?")
     elliott = operation.get("elliott", "?")
@@ -151,19 +165,24 @@ def update_contexto_evolucao(operation):
             f"| Confluencia valida, registrar padrao"
         )
     else:
-        return
+        return False
 
     if not CONTEXTO_FILE.exists():
-        base = CONTEXTO_FILE.read_text() if CONTEXTO_FILE.exists() else "# Contexto de Evolucao\n\n"
-        CONTEXTO_FILE.write_text(base)
+        CONTEXTO_FILE.write_text("# Contexto de Evolucao\n\n")
+
+    # Idempotência: não duplicar a mesma entrada de operação.
+    if entry in CONTEXTO_FILE.read_text():
+        return False
 
     with CONTEXTO_FILE.open("a") as f:
         f.write(entry + "\n")
+    return True
 
 
 def sync_closed_trade(operation):
     _ensure_dirs()
     path = save_trade_note(operation)
     update_daily_learning(path)
-    update_contexto_evolucao(operation)
+    # update_contexto_evolucao(operation) — removido: CONTEXTO é gerido por
+    # daily_learning_sync (regravação completa). Append aqui causava duplicatas.
     return path

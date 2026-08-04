@@ -1,9 +1,22 @@
 {
-  "mission_id": "MISSION-20260730-MELHORIAS",
+  "mission_id": "MISSION-20260804-APRENDIZADO",
   "status": "CONCLUÍDO",
   "writer": "Engineering Director",
-  "reserved_files": [],
-  "started_at": "2026-07-30T14:30:00",
-  "completed_at": "2026-07-30T15:45:00",
-  "notes": "8 correções implementadas (C1-C8). Sistema em modo estudo para coleta de dados. Pendente: filtro de entrada em zona + BE progressivo (próxima missão após ~20-30 operações)."
+  "reserved_files": [
+    "src/obsidian_sync.py",
+    "src/daily_learning_sync.py",
+    "tarefas/aprendizados_diarios/CONTEXTO_EVOLUCAO.md",
+    "obsidian_vault/aprendizados_diarios/CONTEXTO_EVOLUCAO.md",
+    "obsidian_vault/aprendizados_diarios/2026-07-30.md",
+    "tarefas/aprendizados_diarios/2026-07-31.md",
+    "tarefas/aprendizados_diarios/2026-08-03.md",
+    "tarefas/aprendizados_diarios/2026-08-04.md",
+    "tarefas/aprendizados_diarios/INDICE.md",
+    "obsidian_vault/aprendizados_diarios/INDICE.md",
+    "tests/test_obsidian_sync_idempotency.py",
+    "tests/test_daily_learning_sync.py"
+  ],
+  "started_at": "2026-08-04T00:10:00",
+  "completed_at": "2026-08-04T00:45:00",
+  "notes": "P1: limpeza de 16 duplicatas PREOP-000116 no CONTEXTO + deduplicação do diário 30/07 (42 linhas) + idempotência em obsidian_sync.py + proteção de curadoria em daily_learning_sync.py (h3 + CURADO_MANUALMENTE). P2: diários 31/07, 03/08, 04/08 + INDICE atualizado. Bônus: senhas do usuário removidas do diário 30/07 (presentes no histórico git LOCAL 1a78157 — nunca pusheadas; reescrever histórico antes do push). 8 testes novos, 20/20 passando. APROVADO COM RESSALVAS (follow-ups: stats idempotente, gitleaks pré-commit, .trade_stats.json no gitignore)."
 }

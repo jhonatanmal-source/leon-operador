@@ -7,6 +7,7 @@ Contém padrões, decisões, erros e correções acumulados que evoluem o conhec
 - Leia este arquivo no início de cada missão
 - Adicione novos aprendizados ao final do dia em `tarefas/aprendizados_diarios/YYYY-MM-DD.md`
 - Apenas padrões recorrentes e decisões estruturais devem ser promovidos para cá
+<!-- CURADO_MANUALMENTE: este arquivo recebe curadoria humana/diretor. O sync não deve regravá-lo integralmente; apenas diários diários são auto-gerados. -->
 
 ---
 
@@ -21,6 +22,7 @@ Contém padrões, decisões, erros e correções acumulados que evoluem o conhec
 - **Ícones**: Unicode em vez de font icons ou imagens para status indicators (✓✗⚠)
 - **Segurança**: CSP centralizado em config.py, CSRF via `before_request` global, rate limit login/IP+username
 - **Imports sempre com prefixo `src.`**: Todos os módulos devem usar `from src.xxx import Y`. Evitar `from xxx import Y` para módulos dentro de `src/`, pois só funciona quando `PYTHONPATH` inclui `src/` explicitamente.
+- **Single-writer por arquivo gerado**: Arquivos gerados/regenerados por um processo (ex: `CONTEXTO_EVOLUCAO.md` regenerado por `daily_learning_sync`) não devem receber append de outro processo. Append sem idempotência de operações individuais gerou 16+ duplicatas PREOP-000116 (2026-08-04). Verificador: se um arquivo tem um gerador, nenhum outro módulo deve escrever nele — ou, se necessário, com idempotência + single-writer.
 
 ## Decisões Estruturais
 
@@ -85,12 +87,4 @@ Contém padrões, decisões, erros e correções acumulados que evoluem o conhec
 - Nenhum agente pode enviar ordens MT5
 - Nenhum agente pode remover guards
 - Toda alteração exige diagnóstico, plano, testes, revisão e relatório
-- 2026-07-28 | TEST-000001 | WIN_TP1 COMPRA Gold_Spot | SMC=BULLISH Elliott=ABC_RANGE Brain=65 | Confluencia valida, registrar padrao
-- 2026-07-30 | PREOP-000116 | WIN_TP1 ? None | SMC=? Elliott=? Brain=? | Confluencia valida, registrar padrao
-- 2026-07-30 | PREOP-000116 | WIN_TP1 ? None | SMC=? Elliott=? Brain=? | Confluencia valida, registrar padrao
-- 2026-07-30 | PREOP-000116 | WIN_TP1 ? None | SMC=? Elliott=? Brain=? | Confluencia valida, registrar padrao
-- 2026-07-30 | PREOP-000116 | WIN_TP1 ? None | SMC=? Elliott=? Brain=? | Confluencia valida, registrar padrao
-- 2026-07-30 | PREOP-000116 | WIN_TP1 ? None | SMC=? Elliott=? Brain=? | Confluencia valida, registrar padrao
-- 2026-07-30 | PREOP-000116 | WIN_TP1 ? None | SMC=? Elliott=? Brain=? | Confluencia valida, registrar padrao
-- 2026-07-30 | PREOP-000116 | WIN_TP1 ? None | SMC=? Elliott=? Brain=? | Confluencia valida, registrar padrao
-- 2026-07-30 | PREOP-000116 | WIN_TP1 ? None | SMC=? Elliott=? Brain=? | Confluencia valida, registrar padrao
+- **2026-07-28 | TEST-000001**: operação de teste fechada WIN_TP1 (COMPRA Gold_Spot, SMC=BULLISH Elliott=ABC_RANGE Brain=65). Registro de confluência válida — mantido aqui como referência histórica do 1º fechamento de teste.

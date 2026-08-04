@@ -15,6 +15,7 @@ config.ini
 data/
 logs/
 backups/
+obsidian_vault/.trade_stats.json
 web_app/database/admin_bootstrap.json
 web_app/database/leon_web.db
 web_app/static/uploads/*

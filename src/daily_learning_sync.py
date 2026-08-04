@@ -37,11 +37,13 @@ def _extrair_secao(texto: str, secao: str) -> list[str]:
     dentro = False
     itens = []
     for linha in linhas:
-        if linha.strip().startswith("## ") and secao.lower() in linha.lower():
+        # Aceita cabeçalhos h2 (##) e h3 (###) — diários usam ambos.
+        eh_heading = re.match(r"^#{2,3}\s", linha.strip()) is not None
+        if eh_heading and secao.lower() in linha.lower():
             dentro = True
             continue
         if dentro:
-            if linha.strip().startswith("## "):
+            if eh_heading:
                 break
             item = linha.strip()
             item = re.sub(r"^[-*]\s+", "", item)
@@ -162,6 +164,15 @@ def _atualizar_contexto_evolucao(consolidado: dict[str, list[str]]) -> bool:
         f"- {d}" for d in decisoes
     ) or "*(Nenhuma decisão registrada ainda)*"
 
+    # Curação manual: se o CONTEXTO já foi curado manualmente (não é o template
+    # auto-gerado), NÃO regravar integralmente — perderia padrões/decisões que
+    # não vêm das seções extraíveis dos diários. Foi o que aconteceu em
+    # 2026-08-04 (sync destruiu curadoria) antes desta proteção.
+    if CONTEXTO_FILE.exists():
+        existente = CONTEXTO_FILE.read_text(encoding="utf-8")
+        if "<!-- CURADO MANUALMENTE --" in existente or "CURADO_MANUALMENTE" in existente:
+            return False
+
     novo = f"""# Contexto de Evolução — Aprendizados Acumulados
 
 Este arquivo é carregado por todos os agentes ao iniciar uma missão.
@@ -171,6 +182,7 @@ Contém padrões, decisões, erros e correções acumulados que evoluem o conhec
 - Leia este arquivo no início de cada missão
 - Adicione novos aprendizados ao final do dia em `tarefas/aprendizados_diarios/YYYY-MM-DD.md`
 - Apenas padrões recorrentes e decisões estruturais devem ser promovidos para cá
+<!-- CURADO_MANUALMENTE: este arquivo recebe curadoria humana/diretor. O sync não deve regravá-lo integralmente; apenas diários diários são auto-gerados. -->
 
 ---
 
