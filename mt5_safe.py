@@ -215,7 +215,13 @@ def safe_symbols_get() -> dict:
 def safe_copy_rates_from_pos(
     symbol: str, timeframe: int, start_pos: int, count: int
 ) -> dict:
-    """Copy historical rates as dict list (safe)."""
+    """Copy historical rates as dict list (safe).
+
+    NOTE: `copy_rates_from_pos` retorna um `numpy.ndarray` de `numpy.void`
+    (campos acessíveis por chave, ex: r["time"]), NÃO um namedtuple.
+    O acesso por atributo (r.time) falha com
+    "'numpy.void' object has no attribute 'time'".
+    """
     _ensure_initialized()
     if not _MT5_AVAILABLE:
         return {"error": "MT5 not available"}
@@ -223,17 +229,25 @@ def safe_copy_rates_from_pos(
         rates = _real_mt5.copy_rates_from_pos(symbol, timeframe, start_pos, count)
         if rates is None or len(rates) == 0:
             return {"error": f"No rates for {symbol} TF={timeframe}", "rates": []}
+
+        def _field(row, name):
+            # numpy.void -> acesso por chave; namedtuple/netref -> atributo.
+            try:
+                return row[name]
+            except (TypeError, KeyError, IndexError):
+                return getattr(row, name)
+
         result = []
         for r in rates:
             result.append({
-                "time": str(r.time),
-                "open": r.open,
-                "high": r.high,
-                "low": r.low,
-                "close": r.close,
-                "tick_volume": r.tick_volume,
-                "real_volume": r.real_volume,
-                "spread": r.spread,
+                "time": str(_field(r, "time")),
+                "open": float(_field(r, "open")),
+                "high": float(_field(r, "high")),
+                "low": float(_field(r, "low")),
+                "close": float(_field(r, "close")),
+                "tick_volume": int(_field(r, "tick_volume")),
+                "real_volume": int(_field(r, "real_volume")),
+                "spread": int(_field(r, "spread")),
             })
         return {"symbol": symbol, "timeframe": timeframe, "count": len(result), "rates": result}
     except Exception as e:
