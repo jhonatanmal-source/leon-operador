@@ -195,7 +195,7 @@ def _winrate_shadows_recentes(ultimas_n=20):
     if not fechados:
         return {"winrate": 0, "fechados": 0, "wins": 0, "losses": 0}
 
-    wins = sum(1 for r in fechados if r.get("result") == "WIN_2R")
+    wins = sum(1 for r in fechados if str(r.get("result") or "").startswith("WIN"))
     losses = sum(1 for r in fechados if r.get("result") == "LOSS")
     total = wins + losses
     winrate = round(wins / total * 100, 1) if total else 0

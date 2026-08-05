@@ -72,6 +72,14 @@ def register_shadow_trade(
     entry_candle = closed[-1]
     entry = float(entry_candle["close"])
 
+    # --- S2: Guard de sanidade de preço ---
+    # Rejeita entry divergente da mediana dos últimos closes (dado corrompido
+    # ou símbolo trocado) antes de qualquer cálculo de níveis.
+    recent_closes = sorted(float(c["close"]) for c in candles[-15:])
+    median_close = recent_closes[len(recent_closes) // 2]
+    if median_close and abs(entry - median_close) / max(entry, median_close) > 0.30:
+        return {"ok": False, "error": "UNREALISTIC_ENTRY_PRICE"}
+
     # --- C4: Stop baseado em estrutura (zona), fallback swing expandido ---
     if direction == "COMPRA":
         try:
@@ -90,24 +98,20 @@ def register_shadow_trade(
             stop = max(float(c["high"]) for c in candles[-15:])
         risk = stop - entry
 
-    # --- C3: TP baseado em níveis técnicos, fallback risk * 2 ---
-    if direction == "COMPRA":
-        try:
-            from src.smc_price_levels import build_smc_trade_levels
-            levels = build_smc_trade_levels(direction, min_rr=1.0, candles=candles, entry_price=entry)
-            target = levels["tp2"] if (levels and levels.get("tp2")) else entry + risk * 2
-        except ImportError:
-            target = entry + risk * 2
-    else:
-        try:
-            from src.smc_price_levels import build_smc_trade_levels
-            levels = build_smc_trade_levels(direction, min_rr=1.0, candles=candles, entry_price=entry)
-            target = levels["tp2"] if (levels and levels.get("tp2")) else entry - risk * 2
-        except ImportError:
-            target = entry - risk * 2
-
     if risk <= 0:
         return {"ok": False, "error": "INVALID_SHADOW_RISK"}
+
+    # --- C3: TP baseado em níveis técnicos (sem fallback risk*2) ---
+    # Paridade com entry_price_engine: sem níveis técnicos, o shadow trade
+    # NÃO é registrado (contrato "TP técnico" e "RR calculado após níveis").
+    try:
+        from src.smc_price_levels import build_smc_trade_levels
+        levels = build_smc_trade_levels(direction, min_rr=1.0, candles=candles, entry_price=entry)
+    except ImportError:
+        return {"ok": False, "error": "NO_TECHNICAL_TP"}
+    if levels is None or not levels.get("tp2"):
+        return {"ok": False, "error": "NO_TECHNICAL_TP"}
+    target = levels["tp2"]
 
     row = {
         "id": _next_id(rows),
@@ -151,6 +155,7 @@ def evaluate_shadow_trades(candles):
         stop = float(row["stop"])
         target = float(row["target"])
         direction = row["direction"]
+        entry = float(row["entry"])
 
         for candle in later:
             stop_hit = (
@@ -169,7 +174,10 @@ def evaluate_shadow_trades(candles):
 
             row["status"] = "FECHADO"
             row["closed_at"] = candle.get("time") or datetime.now().isoformat(timespec="seconds")
-            row["result"] = "LOSS" if stop_hit else "WIN_2R"
+            # S3: rotular pelo RR técnico real (TP e SL vieram dos níveis),
+            # em vez do rótulo fixo WIN_2R.
+            rr = abs(target - entry) / abs(stop - entry) if abs(stop - entry) > 0 else 0.0
+            row["result"] = "LOSS" if stop_hit else f"WIN_RR_{rr:.2f}"
             updated.append(row["id"])
             break
 

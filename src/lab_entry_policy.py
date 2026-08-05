@@ -83,7 +83,7 @@ def shadow_evidence(rows=None):
         if missing and missing.issubset(ALLOWED_MISSING_CONFIRMATIONS):
             eligible.append(row)
 
-    wins = sum(row.get("result") == "WIN_2R" for row in eligible)
+    wins = sum(str(row.get("result") or "").startswith("WIN") for row in eligible)
     losses = sum(row.get("result") == "LOSS" for row in eligible)
     decided = wins + losses
     winrate = round(wins / decided * 100, 2) if decided else 0

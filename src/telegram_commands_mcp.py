@@ -581,7 +581,7 @@ def _formatar_status(args: str = "") -> str:
             delimiter=";",
         ))
         fechadas = [r for r in rows if r.get("status") == "FECHADO"]
-        s_wins = sum(1 for r in fechadas if r.get("result") == "WIN_2R")
+        s_wins = sum(1 for r in fechadas if str(r.get("result") or "").startswith("WIN"))
         s_losses = sum(1 for r in fechadas if r.get("result") == "LOSS")
         s_total = s_wins + s_losses
         s_wr = round(s_wins / s_total * 100, 1) if s_total else 0

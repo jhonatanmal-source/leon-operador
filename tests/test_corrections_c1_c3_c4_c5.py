@@ -72,13 +72,17 @@ class TestC1EventSignature(unittest.TestCase):
 
         # Registra primeira shadow com signature T1|T2
         with patch("src.shadow_trade.SHADOW_FILE", Path(tempfile.mktemp(suffix=".csv"))):
-            r1 = register_shadow_trade(candles, "COMPRA", ["FIB"], "T1|T2")
-            self.assertTrue(r1.get("ok"), "Primeiro registro deve funcionar")
+            with patch("src.interest_zone_engine.find_nearest_zone",
+                       return_value={"zone_stop": 2295.0}):
+                with patch("src.smc_price_levels.build_smc_trade_levels",
+                           return_value={"tp2": 2350.0, "stop": 2295.0}):
+                    r1 = register_shadow_trade(candles, "COMPRA", ["FIB"], "T1|T2")
+                    self.assertTrue(r1.get("ok"), "Primeiro registro deve funcionar")
 
-            # Tenta registrar segunda shadow com MESMA signature (direção diferente)
-            r2 = register_shadow_trade(candles, "VENDA", ["FIB"], "T1|T2")
-            self.assertFalse(r2.get("ok"), "Segundo registro com mesma signature deve ser rejeitado")
-            self.assertEqual(r2.get("error"), "SHADOW_EVENT_ALREADY_REGISTERED")
+                    # Tenta registrar segunda shadow com MESMA signature (direção diferente)
+                    r2 = register_shadow_trade(candles, "VENDA", ["FIB"], "T1|T2")
+                    self.assertFalse(r2.get("ok"), "Segundo registro com mesma signature deve ser rejeitado")
+                    self.assertEqual(r2.get("error"), "SHADOW_EVENT_ALREADY_REGISTERED")
 
 
 # ========================================================================
@@ -103,6 +107,66 @@ def _make_candles(n=20, base_price=2300.0, direction="COMPRA"):
     return candles
 
 
+def _smc_compra_candles():
+    """Série COMPRA sintética: FVG [100,105] no início + rally sobreposto.
+
+    Estrutura verificada:
+    - swing_highs = [107, 112, 115, 121]
+    - swing_lows  = [102]
+    - FVG bullish  = {start: 100, end: 105}
+    - Entry 104 → tp1=107, tp2=112 (tp1 < tp2)
+    """
+    def candle(t, o, h, l, cl):
+        return {"time": t, "open": o, "high": h, "low": l, "close": cl}
+
+    return [
+        candle("t0",  100, 100,  98,  99),
+        candle("t1",   99, 102,  99, 101),
+        candle("t2",  101, 106, 105, 105),
+        candle("t3",  105, 107, 102, 106),
+        candle("t4",  106, 105, 104, 105),
+        candle("t5",  105, 109, 104, 108),
+        candle("t6",  108, 112, 104, 111),
+        candle("t7",  111, 110, 108, 109),
+        candle("t8",  109, 115, 108, 114),
+        candle("t9",  114, 113, 109, 112),
+        candle("t10", 112, 118, 111, 117),
+        candle("t11", 117, 121, 112, 120),
+        candle("t12", 120, 119, 117, 118),
+    ]
+
+
+def _smc_venda_candles():
+    """Série VENDA sintética (espelhada da COMPRA): FVG bearish.
+
+    Estrutura verificada:
+    - swing_highs = [128]
+    - swing_lows  = [118, 123]
+    - FVG bearish = {start: 128, end: 124}
+    - Entry 126 → tp1=123, tp2=118 (tp2 < tp1)
+    """
+    def candle(t, o, h, l, cl):
+        return {"time": t, "open": o, "high": h, "low": l, "close": cl}
+
+    # Espelho da série COMPRA em torno de 114: close' = 228 - close
+    mirror = [
+        (120, 119, 117, 118),
+        (117, 121, 112, 120),
+        (112, 118, 111, 117),
+        (114, 113, 109, 112),
+        (109, 115, 108, 114),
+        (111, 110, 108, 109),
+        (108, 112, 104, 111),
+        (105, 109, 104, 108),
+        (106, 105, 104, 105),
+        (105, 107, 102, 106),
+        (101, 106, 105, 105),
+        (99, 102, 99, 101),
+        (100, 100, 98, 99),
+    ]
+    return [candle(f"v{i}", o, h, l, c) for i, (o, h, l, c) in enumerate(mirror)]
+
+
 # ========================================================================
 # C3: RR baseado em níveis técnicos
 # ========================================================================
@@ -110,28 +174,26 @@ def _make_candles(n=20, base_price=2300.0, direction="COMPRA"):
 class TestC3TechnicalTP(unittest.TestCase):
     """C3: Garantir que TP use níveis técnicos com fallback seguro."""
 
-    def test_tp_fallback_risk_x2(self):
-        """Verifica fallback para risk * 2 quando build_smc_trade_levels falha."""
+    def test_tp_sem_tecnico_bloqueia(self):
+        """Verifica que register_shadow_trade BLOQUEIA sem níveis técnicos.
+
+        Paridade com entry_price_engine: sem TP técnico (levels None), o
+        shadow trade não é registrado. Não existe mais fallback risk*2.
+        """
         from src.shadow_trade import register_shadow_trade
 
         candles = _make_candles(20, base_price=2300.0, direction="COMPRA")
-        entry = float(candles[-2]["close"])  # last closed candle
-
-        fake_stop = entry - 5.0
-        expected_risk = entry - fake_stop
-        expected_target = entry + expected_risk * 2
 
         with patch("src.shadow_trade.SHADOW_FILE", Path(tempfile.mktemp(suffix=".csv"))):
             with patch("src.interest_zone_engine.find_nearest_zone",
-                       return_value={"zone_stop": fake_stop}):
+                       return_value={"zone_stop": 2295.0}):
                 with patch("src.smc_price_levels.build_smc_trade_levels",
                            return_value=None):
                     result = register_shadow_trade(candles, "COMPRA", ["FIB"], "SIG")
 
-        self.assertTrue(result.get("ok"))
-        shadow = result["shadow_trade"]
-        self.assertAlmostEqual(float(shadow["target"]), expected_target, delta=0.1,
-                               msg="TP deve ser entry + risk * 2 quando não há níveis técnicos")
+        self.assertFalse(result.get("ok"))
+        self.assertEqual(result.get("error"), "NO_TECHNICAL_TP",
+                         "Sem níveis técnicos o shadow trade deve ser bloqueado")
 
     def test_tp_usando_niveis_tecnicos(self):
         """Verifica que TP usa build_smc_trade_levels quando disponível."""
@@ -177,6 +239,206 @@ class TestC3TechnicalTP(unittest.TestCase):
 
 
 # ========================================================================
+# T3: Testes diretos de build_smc_trade_levels / detect_latest_fvg
+# ========================================================================
+
+class TestSmcPriceLevels(unittest.TestCase):
+    """T3: Garantias estruturais do TP técnico (M1, M2, M4)."""
+
+    def test_tp1_neq_tp2(self):
+        """M2: tp1 e tp2 não podem colapsar (tp1 < tp2 em COMPRA)."""
+        from src.smc_price_levels import build_smc_trade_levels
+
+        candles = _smc_compra_candles()
+        levels = build_smc_trade_levels("COMPRA", min_rr=1.0, candles=candles, entry_price=104.0)
+
+        self.assertIsNotNone(levels)
+        self.assertLess(levels["tp1"], levels["tp2"],
+                        "tp1 deve ser menor que tp2 em COMPRA (não colapsar)")
+
+    def test_zona_referencia_usa_entry(self):
+        """M1: referência de zona usa entry quando fornecido."""
+        from src.smc_price_levels import build_smc_trade_levels
+
+        candles = _smc_compra_candles()
+        last_close = float(candles[-1]["close"])  # 118 — fora do FVG [100,105]
+
+        # Entry dentro do FVG e last close fora → levels válidos (M1 usa entry)
+        levels_inside = build_smc_trade_levels("COMPRA", min_rr=1.0, candles=candles, entry_price=104.0)
+        self.assertIsNotNone(levels_inside,
+                             "Entry dentro do FVG deve passar mesmo com last close fora")
+
+        # Cenário inverso: entry fora do FVG → None
+        levels_outside = build_smc_trade_levels("COMPRA", min_rr=1.0, candles=candles, entry_price=108.0)
+        self.assertIsNone(levels_outside,
+                          "Entry fora do FVG deve ser bloqueado")
+
+    def test_fvg_exclui_vela_formacao(self):
+        """M4: FVG cuja terceira vela é a última (em formação) não é detectado."""
+        from src.smc_price_levels import detect_latest_fvg
+
+        def candle(t, o, h, l, cl):
+            return {"time": t, "open": o, "high": h, "low": l, "close": cl}
+
+        # FVG [104,109]: third = última vela (em formação)
+        series = [
+            candle("u0", 100, 102,  99, 101),
+            candle("u1", 101, 103, 100, 102),
+            candle("u2", 102, 104, 102, 103),
+            candle("u3", 103, 105, 103, 104),
+            candle("u4", 104, 110, 109, 109),
+        ]
+        self.assertIsNone(detect_latest_fvg(series, "COMPRA"),
+                          "FVG com terceira vela sendo a última deve ser ignorado")
+
+        # Com >=1 candle de confirmação, o mesmo FVG passa a ser detectado
+        confirmed = series + [candle("u5", 109, 113, 110, 112)]
+        fvg = detect_latest_fvg(confirmed, "COMPRA")
+        self.assertIsNotNone(fvg)
+        self.assertEqual(fvg["type"], "FVG_BULLISH")
+
+    def test_m3_cap_rr_maximo(self):
+        """M3: alvos com RR acima de MAX_TECHNICAL_RR (8.0) são descartados."""
+        from src.smc_price_levels import build_smc_trade_levels, MAX_TECHNICAL_RR
+
+        candles = _smc_compra_candles()
+        # FVG válido [100,105]; entry 104 dentro da zona.
+        fake_fvg = {"type": "FVG_BULLISH", "start": 100.0, "end": 105.0}
+
+        # Caso 1: alvo mais próximo paga 8R exato (cap inclusivo) → níveis OK.
+        # entry=104, stop=102 → risk=2.0; alvo em 120 → (120-104)/2 = 8.0.
+        with patch("src.smc_price_levels.detect_latest_fvg", return_value=fake_fvg):
+            with patch("src.smc_price_levels.detect_swing_levels",
+                       return_value=([107.0, 120.0], [102.0])):
+                levels = build_smc_trade_levels("COMPRA", min_rr=1.0,
+                                                candles=candles, entry_price=104.0)
+                # tp1=107 (1.5R), tp2=120 (8R exato) → aceito
+                self.assertIsNotNone(levels)
+
+        # Caso 2: único alvo paga 16R (> cap) → todos descartados → None.
+        with patch("src.smc_price_levels.detect_latest_fvg", return_value=fake_fvg):
+            with patch("src.smc_price_levels.detect_swing_levels",
+                       return_value=([136.0], [102.0])):
+                levels = build_smc_trade_levels("COMPRA", min_rr=1.0,
+                                                candles=candles, entry_price=104.0)
+                # (136-104)/2 = 16R > 8R → descartado
+                self.assertIsNone(levels)
+
+        self.assertGreater(MAX_TECHNICAL_RR, 0)
+
+    def test_m2_tp1_abaixo_min_rr_bloqueia(self):
+        """M2: quando o primeiro alvo estrutural paga < min_rr, bloqueia mesmo
+        que um alvo distante pague bem (evita over-blocking mal calibrado)."""
+        from src.smc_price_levels import build_smc_trade_levels
+
+        candles = _smc_compra_candles()
+        fake_fvg = {"type": "FVG_BULLISH", "start": 100.0, "end": 105.0}
+
+        # entry=104, stop=102 → risk=2.0. tp1 em 105.5 → 0.75R (< 1.0), tp2 em 110 → 3R.
+        with patch("src.smc_price_levels.detect_latest_fvg", return_value=fake_fvg):
+            with patch("src.smc_price_levels.detect_swing_levels",
+                       return_value=([105.5, 110.0], [102.0])):
+                levels = build_smc_trade_levels("COMPRA", min_rr=1.0,
+                                                candles=candles, entry_price=104.0)
+                self.assertIsNone(levels,
+                                  "tp1 com RR < min_rr deve bloquear mesmo com tp2 bom")
+
+    def test_m2_tp2_venda_menor_que_tp1(self):
+        """M2 (VENDA): tp2 deve ser estritamente menor que tp1 em VENDA."""
+        from src.smc_price_levels import build_smc_trade_levels
+
+        # Série espelhada: FVG bearish; entry 126; stop 128; alvos 123 e 118.
+        candles = _smc_venda_candles()
+        fake_fvg = {"type": "FVG_BEARISH", "start": 128.0, "end": 124.0}
+
+        with patch("src.smc_price_levels.detect_latest_fvg", return_value=fake_fvg):
+            with patch("src.smc_price_levels.detect_swing_levels",
+                       return_value=([128.0], [118.0, 123.0])):
+                levels = build_smc_trade_levels("VENDA", min_rr=1.0,
+                                                candles=candles, entry_price=126.0)
+                self.assertIsNotNone(levels)
+                # VENDA: stop=128 > entry=126; targets ordenados desc -> [123, 118]
+                self.assertLess(levels["tp2"], levels["tp1"],
+                                "Em VENDA tp2 deve ser menor que tp1 (não colapsar)")
+                self.assertGreater(levels["stop"], levels["entry"])
+
+
+class TestShadowResultLabeling(unittest.TestCase):
+    """T3: Rotulação pelo RR técnico real (S3) e guard de sanidade (S2)."""
+
+    def _row(self, entry="100.0", stop="90.0", target="103.8", direction="COMPRA"):
+        return {
+            "id": "SHADOW-000001",
+            "opened_at": "2026-07-30T09:00:00",
+            "closed_at": "",
+            "symbol": "Gold_Spot",
+            "direction": direction,
+            "entry": entry,
+            "stop": stop,
+            "target": target,
+            "missing_confirmations": "",
+            "event_signature": "SIG",
+            "status": "ABERTO",
+            "result": "EM_ESTUDO",
+        }
+
+    def test_shadow_rotula_rr_real(self):
+        """S3: resultado reflete o RR técnico real (ex: WIN_RR_0.38)."""
+        from src.shadow_trade import _write, _read, evaluate_shadow_trades
+
+        shadow_file = Path(tempfile.mktemp(suffix=".csv"))
+        with patch("src.shadow_trade.SHADOW_FILE", shadow_file):
+            _write([self._row()])  # entry=100, stop=90, target=103.8 → RR 0.38
+
+            later = [
+                {"time": "2026-07-30T09:05:00", "open": "101", "high": "104.0",
+                 "low": "100.5", "close": "103"},
+            ]
+            evaluated = evaluate_shadow_trades(later)
+
+            self.assertEqual(evaluated["updated"], ["SHADOW-000001"])
+            self.assertEqual(_read()[0]["result"], "WIN_RR_0.38",
+                             "Resultado deve carregar o RR técnico real")
+
+    def test_shadow_rotula_loss(self):
+        """S3: perda continua sendo LOSS."""
+        from src.shadow_trade import _write, _read, evaluate_shadow_trades
+
+        shadow_file = Path(tempfile.mktemp(suffix=".csv"))
+        with patch("src.shadow_trade.SHADOW_FILE", shadow_file):
+            _write([self._row()])
+
+            later = [
+                {"time": "2026-07-30T09:05:00", "open": "99", "high": "100.0",
+                 "low": "89.0", "close": "95"},
+            ]
+            evaluated = evaluate_shadow_trades(later)
+
+            self.assertEqual(evaluated["updated"], ["SHADOW-000001"])
+            self.assertEqual(_read()[0]["result"], "LOSS")
+
+    def test_shadow_rejeita_preco_surreal(self):
+        """S2: entry divergente >30% da mediana é rejeitado."""
+        from src.shadow_trade import register_shadow_trade
+
+        candles = [
+            {"time": f"2026-07-30T09:{i:02d}:00",
+             "open": "100", "high": "102", "low": "98",
+             "close": str(100.0 + i * 0.5)}
+            for i in range(15)
+        ]
+        # Última vela fechada com preço absurdo (fora da faixa)
+        candles[-2]["close"] = "200.0"
+
+        with patch("src.shadow_trade.SHADOW_FILE", Path(tempfile.mktemp(suffix=".csv"))):
+            result = register_shadow_trade(candles, "COMPRA", ["FIB"], "SIG")
+
+        self.assertFalse(result.get("ok"))
+        self.assertEqual(result.get("error"), "UNREALISTIC_ENTRY_PRICE",
+                         "Entry surreal deve ser rejeitado antes de calcular níveis")
+
+
+# ========================================================================
 # C4: Stop loss baseado em estrutura
 # ========================================================================
 
@@ -194,7 +456,9 @@ class TestC4StructuralStop(unittest.TestCase):
         with patch("src.shadow_trade.SHADOW_FILE", Path(tempfile.mktemp(suffix=".csv"))):
             with patch("src.interest_zone_engine.find_nearest_zone",
                        return_value={"zone_stop": fake_stop}):
-                result = register_shadow_trade(candles, "COMPRA", ["FIB"], "SIG")
+                with patch("src.smc_price_levels.build_smc_trade_levels",
+                           return_value={"tp2": 2360.0, "stop": fake_stop}):
+                    result = register_shadow_trade(candles, "COMPRA", ["FIB"], "SIG")
 
         self.assertTrue(result.get("ok"))
         shadow = result["shadow_trade"]
@@ -210,7 +474,9 @@ class TestC4StructuralStop(unittest.TestCase):
         with patch("src.shadow_trade.SHADOW_FILE", Path(tempfile.mktemp(suffix=".csv"))):
             with patch("src.interest_zone_engine.find_nearest_zone",
                        return_value=None):  # zona retorna None
-                result = register_shadow_trade(candles, "COMPRA", ["FIB"], "SIG")
+                with patch("src.smc_price_levels.build_smc_trade_levels",
+                           return_value={"tp2": 2360.0, "stop": 2304.5}):
+                    result = register_shadow_trade(candles, "COMPRA", ["FIB"], "SIG")
 
         self.assertTrue(result.get("ok"))
         shadow = result["shadow_trade"]
@@ -231,7 +497,9 @@ class TestC4StructuralStop(unittest.TestCase):
         with patch("src.shadow_trade.SHADOW_FILE", Path(tempfile.mktemp(suffix=".csv"))):
             with patch("src.interest_zone_engine.find_nearest_zone",
                        return_value=None):
-                result = register_shadow_trade(candles, "COMPRA", ["FIB"], "SIG")
+                with patch("src.smc_price_levels.build_smc_trade_levels",
+                           return_value={"tp2": 2360.0, "stop": 2280.0}):
+                    result = register_shadow_trade(candles, "COMPRA", ["FIB"], "SIG")
 
         self.assertTrue(result.get("ok"))
         shadow = result["shadow_trade"]
