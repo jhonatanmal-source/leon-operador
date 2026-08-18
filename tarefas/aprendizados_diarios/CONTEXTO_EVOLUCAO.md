@@ -89,6 +89,7 @@ Contém padrões, decisões, erros e correções acumulados que evoluem o conhec
 | 2026-08-18 | `src/mt5_order_executor.py` | SMC guard sempre ativo — LAB_LEARNING não pula mais o guard |
 | 2026-08-18 | `src/interest_zone_engine.py` | Typo `kilzone_name` → `killzone_name` em `create_lab_zone` (linha 1386), agora consistente com as demais 2 ocorrências do arquivo |
 | 2026-08-18 | `src/leon_operator.py` | Padronizado import de `obter_status_operadores`: removidos 2 imports locais `from operator_status import ...` (sem prefixo `src.`, criavam módulo duplicado em memória junto do global `from src.operator_status import ...`) e o import local redundante em `executar_analise_programada`; agora usa só o import global do topo |
+| 2026-08-18 | `src/telegram_commands_mcp.py` | `_formatar_status()` (`/status`): `from market_reader import detectar_ativo` (função inexistente nesse módulo, `ImportError` mascarado por `except Exception`) → `from asset_detector import detectar_ativo` (mesmo padrão de `mt5_monitor.py`/`leon.py`); `/status` deixa de sempre mostrar `Gold_Spot` fixo por fallback |
 
 ## Contratos Protegidos (relembre)
 - Conta real sempre bloqueada

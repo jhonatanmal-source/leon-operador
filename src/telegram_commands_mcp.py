@@ -637,7 +637,7 @@ def _formatar_status(args: str = "") -> str:
 
     # ── Símbolo ────────────────────────────────────────────────
     try:
-        from market_reader import detectar_ativo
+        from asset_detector import detectar_ativo
         ativo = detectar_ativo()
     except Exception:
         ativo = "Gold_Spot"
