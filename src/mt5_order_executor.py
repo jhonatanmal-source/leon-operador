@@ -706,9 +706,10 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
         return _bloqueio(structural_gate.get("error", "STRUCTURAL_GATE_FAILED"), structural_gate)
 
     # ── Modo LAB_LEARNING ────────────────────────────────────────────────
-    # Pre-ops com zona de laboratorio (zone_source=LABORATORIO) podem pular
-    # guards de alinhamento estrutural (SMC guard, timeframe_policy) para
-    # que o sistema aprenda operando em demo com risco minimo (lote 0.01).
+    # Pre-ops com zona de laboratorio (zone_source=LABORATORIO) relaxam
+    # apenas o timeframe_policy (top-down) para aprendizado em demo com
+    # risco minimo (lote 0.01). Corrigido em 2026-08-18 (pendencia #10):
+    # o SMC guard NAO e pulado — permanece sempre ativo em qualquer rota.
     # Todos os guards de SEGURANCA permanecem ativos (conta real, daily
     # loss, noticias, conselho, limite diario, spread maximo).
     lab_learning_mode = (
@@ -718,8 +719,8 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
     if lab_learning_mode:
         registrar_log(
             f"MT5 ORDER | LAB_LEARNING: pre-op {pre_operation_id} "
-            "usando zona de laboratorio — guards de alinhamento "
-            "substituidos por regras do laboratorio."
+            "usando zona de laboratorio — SMC guard sempre ativo, "
+            "timeframe_policy relaxado pelo laboratorio."
         )
 
     # ── News Shield (sempre ativo) ───────────────────────────────────────
@@ -777,27 +778,22 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
     )
 
     # ── SMC Guard ────────────────────────────────────────────────────────
-    # Pulado em modo LAB_LEARNING — a zona de laboratorio substitui a
-    # necessidade de confirmacao SMC para fins de aprendizado em demo.
-    if not lab_learning_mode:
-        smc_guard = validate_smc_entry(
-            pre_operacao.get("direcao"),
-            pre_operacao.get("smc"),
-            pre_operacao.get("bos"),
-            pre_operacao.get("choch"),
+    # Sempre ativo — inclusive em modo LAB_LEARNING (correção 2026-08-18,
+    # pendência #10). A zona de laboratorio NÃO substitui a confirmacao SMC;
+    # comprar topo / vender fundo permanece bloqueado em qualquer rota.
+    smc_guard = validate_smc_entry(
+        pre_operacao.get("direcao"),
+        pre_operacao.get("smc"),
+        pre_operacao.get("bos"),
+        pre_operacao.get("choch"),
+    )
+    if not smc_guard["approved"]:
+        registrar_relatorio_operacao(
+            pre_operacao,
+            decisao="BLOQUEAR",
+            motivo="SMC_STRUCTURE_NOT_CONFIRMED",
         )
-        if not smc_guard["approved"]:
-            registrar_relatorio_operacao(
-                pre_operacao,
-                decisao="BLOQUEAR",
-                motivo="SMC_STRUCTURE_NOT_CONFIRMED",
-            )
-            return _bloqueio("SMC_STRUCTURE_NOT_CONFIRMED", smc_guard)
-    else:
-        registrar_log(
-            f"MT5 ORDER | LAB_LEARNING: SMC guard skipped para "
-            f"pre-op {pre_operation_id} (zona de laboratorio)"
-        )
+        return _bloqueio("SMC_STRUCTURE_NOT_CONFIRMED", smc_guard)
 
     sessao = identificar_sessao()
     if sessao == "MANUTENCAO":

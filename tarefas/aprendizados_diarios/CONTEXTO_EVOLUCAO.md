@@ -60,6 +60,9 @@ Contém padrões, decisões, erros e correções acumulados que evoluem o conhec
 - **`sys.exit()` em testes**: `test_leon_brain.py` usa `sys.exit(0)` no final do módulo, causando `INTERNALERROR: SystemExit` no pytest. Impede execução em lote da suíte. Verificador: em testes, usar `pytest.fail()` ou `raise AssertionError`; nunca `sys.exit()`.
 - **Hardcoded absolute paths Linux**: Apesar de Windows paths (`C:/XAU_ELITE_AI/`) terem sido removidos, ~20+ arquivos ainda usam `/opt/leon/app/data/...` hardcoded em vez do helper `paths.py`. Verificador: usar `from paths import DATA_DIR, LOGS_DIR, REPORTS_DIR` em vez de caminhos absolutos.
 - **Mocks de teste incompletos**: Quando novas chaves de configuração são adicionadas ao código, os mocks de teste correspondentes não são atualizados. Como os imports quebrados mascaram essas falhas, elas ficam invisíveis até que a cadeia de import seja corrigida. Verificador: ao adicionar nova chave em config no código, atualizar TODOS os mocks que mockam aquela config.
+- **Gatilho de entrada por rompimento confirma no topo/fundo**: `close > max(high recente)` (COMPRA) confirma exatamente no topo — o viés "comprar topo / vender fundo" (pendência #10). Verificador: confirmação de entrada deve exigir sweep de liquidez do extremo oposto + reclaim no mesmo candle, e NUNCA perseguir rompimento (`structure_break` não confirma sozinho).
+- **Testes que documentam bypass de guard**: testes que afirmam "LAB_LEARNING não bloqueia quando guard falha" documentavam uma brecha de segurança. Ao reforçar um guard, atualizar os testes para o novo contrato (ex.: `test_lab_bypasses_smc_guard` → `test_lab_respects_smc_guard`) e registrar a mudança de contrato no relatório.
+- **Zona "fabricada" sem promoção real**: se uma função cria zona com status executável (`CONFIRMADA`) sem evidência estrutural real, é brecha. Se o fluxo de criação não alimenta `monitor_zone` com evidência para promover, a zona fica bloqueada — registrar impacto operacional (ex.: execução LAB via bootstrap permanentemente bloqueada até existir mecanismo de confirmação).
 
 ## Correções Aplicadas (Histórico)
 
@@ -81,6 +84,9 @@ Contém padrões, decisões, erros e correções acumulados que evoluem o conhec
 | 2026-07-27 | `web_app/config.py` | CSP directives centralizadas |
 | 2026-07-28 | `src/operational_study_engine.py` | `from study_engine import ...` → `from src.study_engine import ...` (import sem prefixo quebrava a cadeia) |
 | 2026-07-28 | `tests/test_mt5_order_executor.py` | Adicionado `test_operational_study_engine_importa` (teste de regressão para o import) |
+| 2026-08-18 | `src/mt5_execution_refiner.py` | `_micro_trigger` reescrito: confirmação NUNCA por rompimento — exige sweep de liquidez + reclaim + displacement (anti comprar topo/vender fundo) |
+| 2026-08-18 | `src/interest_zone_engine.py` | `create_lab_zone`: não fabrica `CONFIRMADA` (nasce `AGUARDANDO_ESTRUTURA`, sem confirmações falsas) |
+| 2026-08-18 | `src/mt5_order_executor.py` | SMC guard sempre ativo — LAB_LEARNING não pula mais o guard |
 
 ## Contratos Protegidos (relembre)
 - Conta real sempre bloqueada

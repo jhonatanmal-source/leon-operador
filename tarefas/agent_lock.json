@@ -1,21 +1,20 @@
 {
-  "mission_id": "MISSION-20260817-BASE-DIAS-CORRIDOS",
-  "status": "CONCLUIDO",
+  "mission_id": "MISSION-20260818-CORRECAO-ENTRADA-SMC",
+  "status": "IMPLEMENTACAO_CONCLUIDA_AGUARDANDO_APROVACAO",
   "writer": "Engineering Director",
   "reserved_files": [
-    "config.ini",
-    "config.ini.example",
-    "src/baseline_window.py",
-    "src/learning_bootstrap.py",
-    "src/operation_readiness.py",
-    "src/pre_operation_engine.py",
-    "src/operation_batch_review.py",
-    "src/lab_entry_policy.py",
-    "src/leon_panel.py",
-    "tests/test_baseline_window.py",
-    "tests/test_performance_engine.py"
+    "src/mt5_execution_refiner.py",
+    "src/interest_zone_engine.py",
+    "src/mt5_order_executor.py",
+    "tests/test_execution_refiner.py",
+    "tests/test_mt5_order_executor.py",
+    "tests/test_interest_zone_engine.py",
+    "tarefas/agent_lock.json",
+    "tarefas/handoff_atual.md",
+    "tarefas/missoes/PLANO_CORRECAO_ENTRADA_SMC_20260817.md",
+    "tarefas/aprendizados_diarios/2026-08-18.md"
   ],
-  "started_at": "2026-08-17T20:44:00",
-  "completed_at": "2026-08-17T21:30:00",
-  "notes": "MISSION-20260817-BASE-DIAS-CORRIDOS CONCLUIDA E APROVADA. Base por janela de dias corridos (window_days=30). 373 testes passando. Incidente tratado: test_performance_engine.py truncava CSV real - corrigido com isolamento tmp_path. Gap de dados 12-17/08 documentado (197 operacoes fechadas nao recuperaveis pelo workspace). COMMIT REALIZADO: 510f1b9 (feat baseline window_days) + push origin/main em 2026-08-17 (autorizado pelo usuario)."
+  "started_at": "2026-08-18T05:50:00",
+  "completed_at": null,
+  "notes": "Pendencia #10 (CRITICA). Escopo escolhido pelo usuario: A + C (sem B, sem guard de posicao 3.2). A = gatilho M5 de reteste (sweep+reclaim+displacement, NUNCA rompimento) em _micro_trigger. C = create_lab_zone honesta (AGUARDANDO_ESTRUTURA, sem confirmacoes fabricadas) + SMC guard sempre ativo (LAB_LEARNING nao pula mais). Reviewer: APROVADO COM RESSALVAS, ressalvas 1-2 corrigidas + teste de borda adicionado. 387 testes passando (--ignore test_leon_brain). Impacto operacional: caminho de execucao demo LAB via bootstrap fica bloqueado ate existir mecanismo de confirmacao estrutural real (follow-up). Nenhuma ordem real, conta real bloqueada, sem alteracao de estrategia/risco/TP/SL. Aguardando autorizacao do usuario para commit."
 }

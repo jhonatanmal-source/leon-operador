@@ -350,9 +350,9 @@ def mock_lab_config():
 
 class TestLabLearning:
 
-    def test_lab_bypasses_smc_guard(self, mock_mt5, mock_lab_config, mock_deps,
+    def test_lab_respects_smc_guard(self, mock_mt5, mock_lab_config, mock_deps,
                                      mock_pre_op_csv, mock_csv, mock_risk_config):
-        """LAB_LEARNING nao bloqueia quando SMC guard falha."""
+        """LAB_LEARNING NAO pode pular o SMC guard (correcao pendencia #10)."""
         from src.mt5_order_executor import executar_ordem_mt5_pre_operacao
         with patch("src.mt5_order_executor.calcular_plano_risco",
                    return_value={"approved": True, "lot": 0.01,
@@ -362,8 +362,8 @@ class TestLabLearning:
                 with patch("src.mt5_order_executor.validate_smc_entry",
                            return_value={"approved": False}):
                     result = executar_ordem_mt5_pre_operacao(forcar=False)
-                    assert result.get("ok") is True
-                    assert result.get("order", {}).get("status") == "ENVIADA"
+                    assert result.get("ok") is False
+                    assert result.get("error") == "SMC_STRUCTURE_NOT_CONFIRMED"
 
     def test_lab_bypasses_top_down(self, mock_mt5, mock_lab_config, mock_deps,
                                     mock_pre_op_csv, mock_csv, mock_risk_config):

@@ -83,39 +83,56 @@ def load_execution_candles(
 
 
 def _micro_trigger(candles, direction):
+    """Gatilho M5 de RETESTE/SWEEP+RECLAIM (anti viés comprar topo / vender fundo).
+
+    A confirmacao NAO pode ocorrer por rompimento de estrutura (structure_break).
+    Para COMPRA: exige varredura de liquidez abaixo do low recente (sweep),
+    fechamento acima do low varrido (reclaim) e corpo favoravel, sem romper o
+    high recente (nao perseguir o preco para cima).
+    Para VENDA: espelho — sweep acima do high recente, reclaim abaixo, sem
+    romper o low recente.
+
+    Retorna o mesmo contrato de antes (confirmed, structure_break, reaction,
+    displacement, trigger_price, trigger_time, reason) e adiciona campos de
+    observabilidade (sweep, reclaim, swing_low, swing_high) sem quebrar
+    consumidores existentes.
+    """
     closed = candles[:-1] if len(candles) > 1 else candles
     if len(closed) < 5:
         return {"confirmed": False, "reason": "M5_SEM_CANDLES_FECHADOS"}
 
     current = closed[-1]
-    previous = closed[-2]
     recent = closed[-5:-1]
+    swing_high = max(candle["high"] for candle in recent)
+    swing_low = min(candle["low"] for candle in recent)
     body = abs(current["close"] - current["open"])
     range_size = current["high"] - current["low"]
     displacement = range_size > 0 and body / range_size >= 0.55
 
     if direction == "COMPRA":
-        structure_break = current["close"] > max(candle["high"] for candle in recent)
-        reaction = (
-            current["close"] > current["open"]
-            and current["close"] > previous["high"]
-        )
+        swept = current["low"] < swing_low
+        reclaimed = current["close"] > swing_low
+        reaction = reclaimed and current["close"] > current["open"]
+        structure_break = current["close"] > swing_high
     else:
-        structure_break = current["close"] < min(candle["low"] for candle in recent)
-        reaction = (
-            current["close"] < current["open"]
-            and current["close"] < previous["low"]
-        )
+        swept = current["high"] > swing_high
+        reclaimed = current["close"] < swing_high
+        reaction = reclaimed and current["close"] < current["open"]
+        structure_break = current["close"] < swing_low
 
-    confirmed = structure_break or (reaction and displacement)
+    confirmed = swept and reaction and displacement and not structure_break
     return {
         "confirmed": confirmed,
         "structure_break": structure_break,
         "reaction": reaction,
         "displacement": displacement,
+        "sweep": swept,
+        "reclaim": reclaimed,
+        "swing_low": swing_low,
+        "swing_high": swing_high,
         "trigger_price": current["close"],
         "trigger_time": current["time"],
-        "reason": "M5_CONFIRMADO" if confirmed else "M5_AGUARDANDO_REACAO",
+        "reason": "M5_RETESTE_SWEEP_RECLAIM_CONFIRMADO" if confirmed else "M5_AGUARDANDO_RETESTE",
     }
 
 

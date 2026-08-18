@@ -9,6 +9,7 @@ from pathlib import Path
 from src.interest_zone_engine import (
     InterestZoneStore,
     build_zone_from_context,
+    create_lab_zone,
     monitor_zone,
     validate_zone_for_execution,
 )
@@ -299,6 +300,51 @@ class InterestZoneEngineTests(unittest.TestCase):
             zone = monitor_zone(zone, current_price=4005.0, evidence=ev)
             self.assertEqual(zone["region_id"], rid)
         self.assertEqual(zone["region_status"], "CONFIRMADA")
+
+    # ── LAB zone honesty (correção pendência #10) ───────────────────
+
+    def test_lab_zone_nao_nasce_confirmada(self):
+        """Zona de laboratorio nao pode fabricar region_status=CONFIRMADA."""
+        zone = create_lab_zone(
+            symbol="XAUUSD",
+            direction="COMPRA",
+            entry_price=4030.0,
+            stop_price=4020.0,
+            tp1_price=4045.0,
+            tp2_price=4060.0,
+            brain_score=60,
+            pre_operation_id="PREOP-LAB-1",
+        )
+        self.assertIsNotNone(zone)
+        self.assertEqual(zone["zone_source"], "LABORATORIO")
+        self.assertEqual(zone["region_status"], "AGUARDANDO_ESTRUTURA")
+        self.assertNotIn(zone["region_status"], {"CONFIRMADA", "PRE_TRADE_VALID"})
+        self.assertEqual(zone["structural_confirmations"], [])
+        self.assertEqual(zone["valid_confirmations"], [])
+        self.assertEqual(zone["lab_brain_score"], 60)
+
+    def test_lab_zone_e_bloqueada_pelo_guard_de_execucao(self):
+        """validate_zone_for_execution bloqueia zona LAB sem confirmacao real."""
+        zone = create_lab_zone(
+            symbol="XAUUSD",
+            direction="VENDA",
+            entry_price=4030.0,
+            stop_price=4040.0,
+            tp1_price=4015.0,
+            tp2_price=4000.0,
+            brain_score=55,
+            pre_operation_id="PREOP-LAB-2",
+        )
+        self.store.upsert(zone)
+        preop = {
+            "id": "PREOP-LAB-2",
+            "pre_operation_id": "PREOP-LAB-2",
+            "ativo": "XAUUSD",
+            "region_id": zone["region_id"],
+        }
+        result = validate_zone_for_execution(preop, store=self.store)
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error"], "REGION_NOT_CONFIRMED")
 
 
 if __name__ == "__main__":

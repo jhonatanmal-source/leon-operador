@@ -1298,12 +1298,22 @@ def create_lab_zone(
     """Create a temporary zone for laboratory (bootstrap) operation.
 
     The zone uses the current price as region bounds (tight band around
-    entry) and contains all fields required by *validate_zone_for_execution*
-    and *evaluate_live_confirmation_gate* so that the structural gate passes
-    for demo-only , lab-approved entries.
+    entry) and carries ``zone_source=\"LABORATORIO\"`` so other system
+    components can distinguish it from production SMC zones.
 
-    **Safety** — the zone carries ``zone_source=\"LABORATORIO\"`` so other
-    system components can distinguish it from production SMC zones.
+    **Safety (correção 2026-08-18, pendência #10)** — a zona LAB **não** nasce
+    em estado executável: ``region_status`` é ``AGUARDANDO_ESTRUTURA`` e não
+    há confirmação estrutural fabricada (``structural_confirmations`` e
+    ``valid_confirmations`` vazios). O guard ``validate_zone_for_execution``
+    bloqueia a zona até que uma confirmação estrutural real eleve o estado.
+    Isto impede a brecha que permitia executar ordens demo LAB sem estrutura
+    SMC confirmada (comprar topo / vender fundo).
+
+    **Nota operacional** — a partir desta correção o caminho de execução demo
+    LAB via bootstrap fica efetivamente bloqueado: o fluxo ``leon.py`` cria a
+    zona mas ainda não alimenta evidência estrutural real para promovê-la a
+    ``CONFIRMADA``. A reativação do aprendizado LAB exige um mecanismo de
+    confirmação estrutural real (follow-up planejado).
     """
     if not symbol or not direction:
         return None
@@ -1342,30 +1352,17 @@ def create_lab_zone(
         "created_before_touch": True,
         "invalidation_price": low if canon_dir == "BULLISH" else high,
         "target_prices": [float(tp1_price) if tp1_price else entry, float(tp2_price) if tp2_price else entry],
-        "region_status": "CONFIRMADA",
+        "region_status": "AGUARDANDO_ESTRUTURA",
         "region_valid": True,
         "region_invalidated": False,
         "monitoring_enabled": True,
-        "monitoring_state": "AGUARDANDO_ENTRADA",
-        "state_machine_state": "AGUARDANDO_ENTRADA",
+        "monitoring_state": "AGUARDANDO_ESTRUTURA",
+        "state_machine_state": "AGUARDANDO_ESTRUTURA",
         "zone_source": "LABORATORIO",
         "confluences": ["BOOTSTRAP_LAB"],
-        "structural_confirmations": [
-            {
-                "type": "LAB_APPROVED",
-                "source": "learning_bootstrap",
-                "brain_score": int(brain_score),
-                "confirmed_at": now,
-            }
-        ],
-        "valid_confirmations": [
-            {
-                "type": "LAB_ENTRY",
-                "source": "learning_bootstrap",
-                "brain_score": int(brain_score),
-                "confirmed_at": now,
-            }
-        ],
+        "lab_brain_score": int(brain_score) if brain_score else 0,
+        "structural_confirmations": [],
+        "valid_confirmations": [],
         "monitor_timeline": [
             {
                 "event": "ZONE_CREATED",
