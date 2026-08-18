@@ -1383,7 +1383,7 @@ def create_lab_zone(
         "provenance_hash": "",
         "smc_sources": ["learning_bootstrap"],
         "strategy_version": "1.0.0-laboratorio",
-        "kilzone_name": "",
+        "killzone_name": "",
         "killzone_start": "",
         "killzone_end": "",
         "inside_killzone": False,

@@ -87,6 +87,8 @@ Contém padrões, decisões, erros e correções acumulados que evoluem o conhec
 | 2026-08-18 | `src/mt5_execution_refiner.py` | `_micro_trigger` reescrito: confirmação NUNCA por rompimento — exige sweep de liquidez + reclaim + displacement (anti comprar topo/vender fundo) |
 | 2026-08-18 | `src/interest_zone_engine.py` | `create_lab_zone`: não fabrica `CONFIRMADA` (nasce `AGUARDANDO_ESTRUTURA`, sem confirmações falsas) |
 | 2026-08-18 | `src/mt5_order_executor.py` | SMC guard sempre ativo — LAB_LEARNING não pula mais o guard |
+| 2026-08-18 | `src/interest_zone_engine.py` | Typo `kilzone_name` → `killzone_name` em `create_lab_zone` (linha 1386), agora consistente com as demais 2 ocorrências do arquivo |
+| 2026-08-18 | `src/leon_operator.py` | Padronizado import de `obter_status_operadores`: removidos 2 imports locais `from operator_status import ...` (sem prefixo `src.`, criavam módulo duplicado em memória junto do global `from src.operator_status import ...`) e o import local redundante em `executar_analise_programada`; agora usa só o import global do topo |
 
 ## Contratos Protegidos (relembre)
 - Conta real sempre bloqueada

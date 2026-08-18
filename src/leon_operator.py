@@ -57,6 +57,7 @@ from src.setup_audit import generate_setup_audit
 from src.operation_report import registrar_relatorio_operacao
 from src.operation_close_alert import send_operation_close_alert
 from src.operation_batch_review import process_operation_batches
+from src.operator_status import obter_status_operadores
 from src.mt5_operation_close_monitor import check_mt5_closed_operations
 from src.smc_study_engine import analyze_smc_context
 from src.elliott_study_engine import study_elliott_context
@@ -575,8 +576,6 @@ def _deve_estudar(agora, intervalo_minutos):
 
 def _assinatura_conflito():
 
-    from operator_status import obter_status_operadores
-
     operadores = obter_status_operadores()["operators"]
     alinhamento = operadores["alignment"]
     estrutura = operadores["structure"]
@@ -609,8 +608,6 @@ def _salvar_conflito(assinatura):
 
 
 def _assinatura_dados_antigos():
-
-    from operator_status import obter_status_operadores
 
     coletor = obter_status_operadores()["operators"]["collector"]
 
@@ -1062,7 +1059,6 @@ def executar_analise_programada(forcar=False):
 def _gerar_resumo_memoria_pre_operacao():
 
     try:
-        from src.operator_status import obter_status_operadores
         status = obter_status_operadores()
         estrutura = status["operators"]["structure"]
         setup = status["operators"]["setup"]
