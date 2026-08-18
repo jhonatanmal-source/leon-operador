@@ -1,6 +1,14 @@
 # Handoff Atual
 
-## 🎯 Última Missão Concluída: MISSION-20260818-FIX-MCP-MARKET (bug #12)
+## 🎯 Última Missão Concluída: Pendência #2 — Telegram alinhado DESABILITADO (config + doc)
+- **Estado corrigido**: `config.ini` `[TELEGRAM] enabled = true` → `false` — runtime agora reporta `TELEGRAM_ENABLED = False` e `enviar_mensagem()` retorna `TELEGRAM_DISABLED` (antes: `enabled=true` sem token → `TELEGRAM_CONFIG_MISSING`, estado inconsistente com o handoff).
+- **Causa da inconsistência**: `telegram_config.py` lê `ROOT_DIR/.env` (= `/opt/leon/app/.env`, arquivo real sem chaves Telegram) + `config.ini` como fallback. O `/opt/leon/config/.env` (com `LEON_TELEGRAM_ENABLED=false` + token placeholder `COLAR_...`) **NÃO é lido pelo runtime** — o symlink `app/.env -> config/.env` documentado em 22/07 foi sobrescrito em 27/07 por `.env` real (chaves web).
+- **Risco documentado**: NÃO recriar o symlink enquanto o token em `/opt/leon/config/.env` for placeholder `COLAR_...` (seria lido como token configurado → POST inválido). Reativação exige token real do BotFather + `enabled = true` + teste de envio real.
+- **Testes**: 39 telegram + suíte completa **398 passed** (`--ignore=tests/test_leon_brain.py`). Runtime validado: `TELEGRAM_ENABLED=False`, `TELEGRAM_DISABLED` no guard.
+- **Arquivos**: `config.ini` (`enabled=false`), `tarefas/aprendizados_diarios/CONTEXTO_EVOLUCAO.md` (linha Telegram atualizada), `tarefas/aprendizados_diarios/2026-08-18.md` (aprendizado), `tarefas/handoff_atual.md` (este).
+- **Sem commit** (aguardando autorização). Nenhuma alteração em código operacional, MT5, risco, TP/SL ou execução.
+
+## 🎯 Missão Anterior: MISSION-20260818-FIX-MCP-MARKET (bug #12)
 - **Bug corrigido**: `leon_market_mcp.py` importava `_MT5_AVAILABLE` por valor (cópia `False` no import) → todos os tools de mercado exceto `check_mt5_status` retornavam "MT5 não disponível" mesmo com MT5 saudável. Mesmo padrão em `leon_backtest_mcp.py`.
 - **Correção**: helper `_mt5_disponivel()` → `check_mt5().get("available")` (dispara `_ensure_initialized()` real) nos 6 handlers do market MCP; backtest usa `check_mt5().get("available")` no lugar da flag estática.
 - **Status**: ✅ IMPLEMENTADA + TESTADA + VALIDADA EM PRODUÇÃO (aguardando commit)
@@ -56,7 +64,7 @@
 
 ## 📋 Pendências Pós-Missão
 1. **Rotacionar senha do usuário `jhonatan`** (dashboard web) — comprometida em 30/07
-2. **Telegram desabilitado** — `LEON_TELEGRAM_ENABLED=false` (token comprometido)
+2. **Telegram desabilitado** — ✅ ALINHADO (2026-08-18): `config.ini` `enabled=false` → runtime `TELEGRAM_DISABLED`. Aguardando **token real do BotFather** para reativar (token atual em `/opt/leon/config/.env` é placeholder `COLAR_...`; NÃO recriar symlink enquanto placeholder; ver handoff acima para fluxo de reativação).
 3. **Backtest MCP** — ainda simulação estrutural (`candles_analyzed: 0`)
 4. **Persistir razão do bloqueio de auto-simulate** (achado C5) — hoje só vai ao stdout
 5. **Renovar autorização demo semanalmente** — operador NÃO renova automaticamente quando `AUTONOMY_EXPIRED`

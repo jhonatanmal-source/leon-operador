@@ -37,7 +37,7 @@ Contém padrões, decisões, erros e correções acumulados que evoluem o conhec
 - **rpyc 6.0.2 > rpyc 5.2.3**: Servidor wine MT5 roda rpyc 6.0.2. Cliente venv foi downgrade para 5.2.3 pelo mt5linux. Solução: reinstalar rpyc==6.0.2. mt5linux declara `rpyc==5.2.3` como dependência mas funciona com 6.0.2.
 - **systemd --user**: Usuário `leon` não tem sudo. Serviço instalado como `systemd-run --user --unit=leon-operator` (transient, não persistente após reboot). Alternativa: usar crontab @reboot ou solicitar configuração de sudo NOPASSWD.
 - **Autonomy scope**: Config.ini tinha `scope = execution`, código exige `scope = demo_execution` ou `learning_and_demo`. Corrigido em config.ini e `autonomy_state.json`.
-- **Telegram via `.env`**: credenciais lidas prioritariamente de `/opt/leon/config/.env`, com symlink em `/opt/leon/app/.env`; `config.ini` permanece apenas como fallback.
+- **Telegram desabilitado (estado atual 2026-08-18)**: credenciais Telegram AUSENTES do runtime. `telegram_config.py` lê `ROOT_DIR/.env` (= `/opt/leon/app/.env`, arquivo real sem chaves Telegram) + `config.ini` como fallback; `config.ini` `[TELEGRAM] enabled = false`. **O `/opt/leon/config/.env` NÃO é lido pelo runtime** (contém placeholder `COLAR_...` + comentário de aguardando token — não criar symlink `app/.env -> config/.env` enquanto o token for placeholder, senão o placeholder seria lido como token "configurado"). Para reativar: preencher token real do BotFather em `/opt/leon/config/.env` e garantir que o runtime o leia (env var ou app/.env), setar `config.ini` `enabled = true` e testar envio real. Verificado: com `enabled = false` o `enviar_mensagem()` retorna `TELEGRAM_DISABLED`; suíte 398 passed.
 - Usar obsidian-headless (CLI oficial) em vez de app GUI (servidor headless)
 - Vault Obsidian como complemento, não substituto, do sistema de aprendizado diário
 - Sincronização bidirecional entre `obsidian_vault/aprendizados_diarios/` e `tarefas/aprendizados_diarios/`
@@ -60,6 +60,9 @@ Contém padrões, decisões, erros e correções acumulados que evoluem o conhec
 - **`sys.exit()` em testes**: `test_leon_brain.py` usa `sys.exit(0)` no final do módulo, causando `INTERNALERROR: SystemExit` no pytest. Impede execução em lote da suíte. Verificador: em testes, usar `pytest.fail()` ou `raise AssertionError`; nunca `sys.exit()`.
 - **Hardcoded absolute paths Linux**: Apesar de Windows paths (`C:/XAU_ELITE_AI/`) terem sido removidos, ~20+ arquivos ainda usam `/opt/leon/app/data/...` hardcoded em vez do helper `paths.py`. Verificador: usar `from paths import DATA_DIR, LOGS_DIR, REPORTS_DIR` em vez de caminhos absolutos.
 - **Mocks de teste incompletos**: Quando novas chaves de configuração são adicionadas ao código, os mocks de teste correspondentes não são atualizados. Como os imports quebrados mascaram essas falhas, elas ficam invisíveis até que a cadeia de import seja corrigida. Verificador: ao adicionar nova chave em config no código, atualizar TODOS os mocks que mockam aquela config.
+- **Gatilho de entrada por rompimento confirma no topo/fundo**: `close > max(high recente)` (COMPRA) confirma exatamente no topo — o viés "comprar topo / vender fundo" (pendência #10). Verificador: confirmação de entrada deve exigir sweep de liquidez do extremo oposto + reclaim no mesmo candle, e NUNCA perseguir rompimento (`structure_break` não confirma sozinho).
+- **Testes que documentam bypass de guard**: testes que afirmam "LAB_LEARNING não bloqueia quando guard falha" documentavam uma brecha de segurança. Ao reforçar um guard, atualizar os testes para o novo contrato (ex.: `test_lab_bypasses_smc_guard` → `test_lab_respects_smc_guard`) e registrar a mudança de contrato no relatório.
+- **Zona "fabricada" sem promoção real**: se uma função cria zona com status executável (`CONFIRMADA`) sem evidência estrutural real, é brecha. Se o fluxo de criação não alimenta `monitor_zone` com evidência para promover, a zona fica bloqueada — registrar impacto operacional (ex.: execução LAB via bootstrap permanentemente bloqueada até existir mecanismo de confirmação).
 
 ## Correções Aplicadas (Histórico)
 
@@ -81,6 +84,9 @@ Contém padrões, decisões, erros e correções acumulados que evoluem o conhec
 | 2026-07-27 | `web_app/config.py` | CSP directives centralizadas |
 | 2026-07-28 | `src/operational_study_engine.py` | `from study_engine import ...` → `from src.study_engine import ...` (import sem prefixo quebrava a cadeia) |
 | 2026-07-28 | `tests/test_mt5_order_executor.py` | Adicionado `test_operational_study_engine_importa` (teste de regressão para o import) |
+| 2026-08-18 | `src/mt5_execution_refiner.py` | `_micro_trigger` reescrito: confirmação NUNCA por rompimento — exige sweep de liquidez + reclaim + displacement (anti comprar topo/vender fundo) |
+| 2026-08-18 | `src/interest_zone_engine.py` | `create_lab_zone`: não fabrica `CONFIRMADA` (nasce `AGUARDANDO_ESTRUTURA`, sem confirmações falsas) |
+| 2026-08-18 | `src/mt5_order_executor.py` | SMC guard sempre ativo — LAB_LEARNING não pula mais o guard |
 
 ## Contratos Protegidos (relembre)
 - Conta real sempre bloqueada
