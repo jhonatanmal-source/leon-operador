@@ -1,6 +1,14 @@
 # Handoff Atual
 
-## 🎯 Última Missão Concluída: Pendência #2 — Telegram alinhado DESABILITADO (config + doc)
+## 🎯 Última Missão Concluída: Pendência #2 — Telegram REATIVADO (token real do BotFather)
+- **Estado**: Telegram **ATIVO e operacional** — token real + chat_id configurados em `/opt/leon/app/.env` (`LEON_TELEGRAM_TOKEN`, `LEON_TELEGRAM_CHAT_ID=-1004376165028`, `LEON_TELEGRAM_ENABLED=true`); `config.ini` `[TELEGRAM] enabled = true`.
+- **Validação em 3 camadas**: (1) `getMe` → `LeonXauEliteBot` válido; (2) `getChat` → supergrupo "LEON XAU AI - Estudos" válido; (3) envio real → `message_id 3364` entregue + log do operador `TELEGRAM | mensagem enviada com sucesso`.
+- **Operador**: reiniciado (PID **3457923**) — processo vivo envia mensagens com sucesso.
+- **⚠️ Decisão estrutural**: NÃO criar symlink `app/.env -> config/.env` — o `app/.env` tem chaves web reais (SECRET_KEY, admin) que não existem no `config/.env`; o placeholder antigo `COLAR_...` do `config/.env` seria lido como token. Fonte única efetiva: `/opt/leon/app/.env` + `config.ini`.
+- **Arquivos**: `/opt/leon/app/.env` (credenciais, ignorado pelo git), `config.ini` (`enabled=true`, ignorado pelo git), `tarefas/aprendizados_diarios/CONTEXTO_EVOLUCAO.md`, `tarefas/aprendizados_diarios/2026-08-18.md`, `tarefas/handoff_atual.md` (este).
+- **Sem commit** (aguardando autorização). Nenhuma alteração em MT5, risco, TP/SL ou execução.
+
+## 🎯 Missão Anterior: Pendência #2 — Telegram alinhado DESABILITADO (config + doc)
 - **Estado corrigido**: `config.ini` `[TELEGRAM] enabled = true` → `false` — runtime agora reporta `TELEGRAM_ENABLED = False` e `enviar_mensagem()` retorna `TELEGRAM_DISABLED` (antes: `enabled=true` sem token → `TELEGRAM_CONFIG_MISSING`, estado inconsistente com o handoff).
 - **Causa da inconsistência**: `telegram_config.py` lê `ROOT_DIR/.env` (= `/opt/leon/app/.env`, arquivo real sem chaves Telegram) + `config.ini` como fallback. O `/opt/leon/config/.env` (com `LEON_TELEGRAM_ENABLED=false` + token placeholder `COLAR_...`) **NÃO é lido pelo runtime** — o symlink `app/.env -> config/.env` documentado em 22/07 foi sobrescrito em 27/07 por `.env` real (chaves web).
 - **Risco documentado**: NÃO recriar o symlink enquanto o token em `/opt/leon/config/.env` for placeholder `COLAR_...` (seria lido como token configurado → POST inválido). Reativação exige token real do BotFather + `enabled = true` + teste de envio real.
@@ -64,7 +72,7 @@
 
 ## 📋 Pendências Pós-Missão
 1. **Rotacionar senha do usuário `jhonatan`** (dashboard web) — comprometida em 30/07
-2. **Telegram desabilitado** — ✅ ALINHADO (2026-08-18): `config.ini` `enabled=false` → runtime `TELEGRAM_DISABLED`. Aguardando **token real do BotFather** para reativar (token atual em `/opt/leon/config/.env` é placeholder `COLAR_...`; NÃO recriar symlink enquanto placeholder; ver handoff acima para fluxo de reativação).
+2. **Telegram** — ✅ REATIVADO (2026-08-18): token real do BotFather + chat_id `-1004376165028` configurados em `/opt/leon/app/.env`; `config.ini` `enabled=true`; envio real validado (`message_id 3364`, grupo "LEON XAU AI - Estudos"). ⚠️ NÃO criar symlink `app/.env -> config/.env` (placeholder antigo `COLAR_...` no `config/.env` seria lido como token; `app/.env` tem chaves web reais).
 3. **Backtest MCP** — ainda simulação estrutural (`candles_analyzed: 0`)
 4. **Persistir razão do bloqueio de auto-simulate** (achado C5) — hoje só vai ao stdout
 5. **Renovar autorização demo semanalmente** — operador NÃO renova automaticamente quando `AUTONOMY_EXPIRED`
