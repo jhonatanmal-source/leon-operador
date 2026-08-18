@@ -177,13 +177,18 @@ def avaliar_entradas_simuladas(candles):
     return {"ok": True, "updated": updated}
 
 
-def _winrate_shadows_recentes(ultimas_n=20):
+def _winrate_shadows_recentes(ultimas_n=20, window_days=None):
     """Calcula winrate das últimas N shadow trades fechadas.
 
     Usado pelo bootstrap para decidir se continua simulando.
     Se winrate muito baixa, o bootstrap pausa para evitar perdas em sequência.
+
+    window_days: quando fornecido, filtra as shadows fechadas por closed_at
+    dentro da janela de dias corridos ANTES de pegar as últimas N.
+    Default None = sem filtro (compatibilidade).
     """
     import csv
+    from src.baseline_window import dentro_da_janela
     shadow_file = DATA_DIR / "shadow_trades.csv"
     if not shadow_file.exists():
         return {"winrate": 0, "fechados": 0, "wins": 0, "losses": 0}
@@ -191,7 +196,13 @@ def _winrate_shadows_recentes(ultimas_n=20):
     with shadow_file.open("r", encoding="utf-8", newline="") as f:
         rows = list(csv.DictReader(f, delimiter=";"))
 
-    fechados = [r for r in rows if r.get("status") == "FECHADO"][-ultimas_n:]
+    fechados = [r for r in rows if r.get("status") == "FECHADO"]
+    if window_days:
+        fechados = [
+            r for r in fechados
+            if dentro_da_janela(r.get("closed_at"), window_days)
+        ]
+    fechados = fechados[-ultimas_n:]
     if not fechados:
         return {"winrate": 0, "fechados": 0, "wins": 0, "losses": 0}
 
@@ -225,7 +236,8 @@ def auto_simulate_permitido(brain_score=0, winrate_min=None):
         return False, f"BRAIN_SCORE_BAIXO ({brain_score} < {limiares['auto_simulate_min_score']})"
 
     wr_min = winrate_min if winrate_min is not None else limiares.get("auto_simulate_min_winrate", 30)
-    recente = _winrate_shadows_recentes(ultimas_n=20)
+    from src.baseline_window import obter_window_days
+    recente = _winrate_shadows_recentes(ultimas_n=20, window_days=obter_window_days())
 
     # Sem dados fechados ainda → permite (fase de coleta)
     if recente["fechados"] == 0:

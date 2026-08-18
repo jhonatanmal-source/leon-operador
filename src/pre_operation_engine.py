@@ -13,6 +13,7 @@ from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
 
+from src.baseline_window import dentro_da_janela
 from src.risk_method_engine import obter_metodo
 from src.smc_entry_guard import validate_smc_entry
 try:
@@ -725,7 +726,17 @@ def avaliar_pre_operacoes_abertas():
     }
 
 
-def resumo_pre_operacao():
+def resumo_pre_operacao(window_days=None):
+    """Resumo das pre-operacoes.
+
+    window_days: janela de dias corridos aplicada APENAS as metricas de
+    desempenho (fechados/wins/losses/taxa/decididos/win_rate_decidido),
+    filtrando por data_fechamento. Os campos total, abertos, simulacoes,
+    observacoes e ultimo permanecem GLOBAIS para nao quebrar o estado atual
+    (posicoes abertas antigas e plano de risco).
+
+    Default None = sem filtro (compatibilidade com chamadores existentes).
+    """
 
     registros = _ler_registros()
 
@@ -741,6 +752,14 @@ def resumo_pre_operacao():
     ]
     fechados = [r for r in registros if r.get("status") == "FECHADO"]
     abertos = [r for r in registros if r.get("status") == "ABERTO"]
+
+    fechados_total_global = len(fechados)
+    if window_days:
+        fechados = [
+            r
+            for r in fechados
+            if dentro_da_janela(r.get("data_fechamento"), window_days)
+        ]
     wins = [r for r in fechados if str(r.get("resultado", "")).startswith("WIN")]
     losses = [r for r in fechados if r.get("resultado") == "LOSS"]
 
@@ -762,10 +781,12 @@ def resumo_pre_operacao():
         "simulacoes": len(simulacoes),
         "abertos": len(abertos),
         "fechados": len(fechados),
+        "fechados_global": fechados_total_global,
         "wins": len(wins),
         "losses": len(losses),
         "taxa": taxa,
         "decididos": decididos,
         "win_rate_decidido": win_rate_decidido,
+        "window_days": window_days,
         "ultimo": ultimo,
     }

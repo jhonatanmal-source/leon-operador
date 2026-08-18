@@ -5,6 +5,8 @@ import os
 from datetime import datetime
 from pathlib import Path
 
+from src.baseline_window import dentro_da_janela, obter_window_days
+
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 CONFIG_FILE = ROOT_DIR / "config.ini"
@@ -67,12 +69,21 @@ def _read_shadow_rows():
         return []
 
 
-def shadow_evidence(rows=None):
+def shadow_evidence(rows=None, window_days=None):
+    """Evidência de shadows fechadas elegíveis.
+
+    window_days: quando fornecido, filtra por closed_at dentro da janela de
+    dias corridos. Default None = sem filtro (compatibilidade; testes que
+    passam rows sem closed_at não são afetados quando window_days é None).
+    """
     rows = rows if rows is not None else _read_shadow_rows()
     eligible = []
 
     for row in rows:
         if row.get("status") != "FECHADO":
+            continue
+
+        if window_days and not dentro_da_janela(row.get("closed_at"), window_days):
             continue
 
         missing = {
@@ -144,7 +155,10 @@ def evaluate_lab_entry(
     rows=None,
 ):
     config = _config()
-    evidence = shadow_evidence(rows)
+    # Janela de dias apenas no caminho de produção (rows lido do CSV com closed_at).
+    # Quando rows é fornecido (testes), não aplica janela para preservar contrato.
+    window_days = obter_window_days() if rows is None else None
+    evidence = shadow_evidence(rows, window_days=window_days)
     effective_min_closed = _progressive_min_closed(evidence["winrate"])
     missing = set(missing_confirmations)
     only_allowed_missing = (

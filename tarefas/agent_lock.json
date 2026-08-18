@@ -1,17 +1,21 @@
 {
-  "mission_id": "MISSION-20260805-CORRECAO-TP",
-  "status": "CONCLUIDO_AGUARDANDO_COMMIT",
+  "mission_id": "MISSION-20260817-BASE-DIAS-CORRIDOS",
+  "status": "CONCLUIDO",
   "writer": "Engineering Director",
   "reserved_files": [
-    "src/smc_price_levels.py",
-    "src/shadow_trade.py",
-    "src/lab_entry_policy.py",
+    "config.ini",
+    "config.ini.example",
+    "src/baseline_window.py",
     "src/learning_bootstrap.py",
-    "src/telegram_commands_mcp.py",
-    "tests/test_corrections_c1_c3_c4_c5.py",
-    "src/teste_shadow_trade_learning.py"
+    "src/operation_readiness.py",
+    "src/pre_operation_engine.py",
+    "src/operation_batch_review.py",
+    "src/lab_entry_policy.py",
+    "src/leon_panel.py",
+    "tests/test_baseline_window.py",
+    "tests/test_performance_engine.py"
   ],
-  "started_at": "2026-08-05T11:30:00",
-  "completed_at": "2026-08-05T12:05:00",
-  "notes": "Implementação concluída: M1-M4 + S1-S3 + consumidores + testes T1-T4 + testes de fronteira (cap 8R, tp1<min_rr, VENDA). 356 passed. QA PASS COM RESSALVAS. Reviewer APROVADO COM RESSALVAS (ressalvas resolvidas: testes de fronteira adicionados, M2 VENDA testado, M4 fvg_engine_v2 documentado). Aguardando autorização do usuário para commit."
+  "started_at": "2026-08-17T20:44:00",
+  "completed_at": "2026-08-17T21:30:00",
+  "notes": "MISSION-20260817-BASE-DIAS-CORRIDOS CONCLUIDA E APROVADA. Base por janela de dias corridos (window_days=30). 373 testes passando. Incidente tratado: test_performance_engine.py truncava CSV real - corrigido com isolamento tmp_path. Gap de dados 12-17/08 documentado (197 operacoes fechadas nao recuperaveis pelo workspace). Nenhum commit/push realizado (aguarda autorizacao)."
 }

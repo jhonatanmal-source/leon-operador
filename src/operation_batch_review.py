@@ -4,6 +4,8 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
+from src.baseline_window import dentro_da_janela, obter_window_days
+
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / "data"
@@ -48,7 +50,12 @@ def _float(value):
         return 0.0
 
 
-def _closed_operations():
+def _closed_operations(window_days=None):
+    """Operacoes fechadas (LOSS/WIN) ordenadas por data_fechamento.
+
+    window_days: quando fornecido, mantem apenas operacoes com data_fechamento
+    dentro da janela de dias corridos. Default None = todas (compatibilidade).
+    """
     contexts = {}
     for context in _read_csv(CONTEXT_FILE):
         operation_id = context.get("pre_operation_id")
@@ -59,6 +66,11 @@ def _closed_operations():
     for operation in _read_csv(PRE_OPERATION_FILE):
         result = str(operation.get("resultado", ""))
         if result != "LOSS" and not result.startswith("WIN"):
+            continue
+
+        if window_days and not dentro_da_janela(
+            operation.get("data_fechamento"), window_days
+        ):
             continue
 
         item = dict(operation)
@@ -315,20 +327,77 @@ def _review_batch(batch, batch_number):
     return review
 
 
-def process_operation_batches():
-    operations = _closed_operations()
-    complete_batches = len(operations) // BATCH_SIZE
-    state = _load_json(STATE_FILE, {"processed_batches": []})
-    processed = set(state.get("processed_batches", []))
-    generated = []
+def _seed_from_existing_reports():
+    """Migracao: coleta operation_ids e maior numero de bloco dos relatorios ja gerados.
 
-    for index in range(complete_batches):
-        batch_number = index + 1
-        if batch_number in processed:
+    Necessario porque o state antigo indexava apenas por numero de bloco. Sem
+    este seed, a mudanca para janela de dias reprocessaria e sobrescreveria os
+    blocos historicos com composicao diferente.
+    """
+    processed_ids = set()
+    last_batch = 0
+
+    if not REPORTS_DIR.exists():
+        return processed_ids, last_batch
+
+    for path in sorted(REPORTS_DIR.glob("bloco_*.json")):
+        review = _load_json(path, {})
+        for operation_id in review.get("operation_ids") or []:
+            if operation_id:
+                processed_ids.add(operation_id)
+        try:
+            last_batch = max(last_batch, int(review.get("batch") or 0))
+        except (TypeError, ValueError):
             continue
 
+    return processed_ids, last_batch
+
+
+def _load_review_state():
+    """Carrega o state com dedup por operation_ids, migrando o formato antigo."""
+    state = _load_json(STATE_FILE, {})
+    processed_ids = set(state.get("processed_operation_ids") or [])
+    try:
+        last_batch = int(state.get("last_batch_number") or 0)
+    except (TypeError, ValueError):
+        last_batch = 0
+
+    if not processed_ids:
+        seeded_ids, seeded_last = _seed_from_existing_reports()
+        processed_ids = seeded_ids
+        legacy_batches = state.get("processed_batches") or [0]
+        try:
+            legacy_max = max(int(item) for item in legacy_batches)
+        except (TypeError, ValueError):
+            legacy_max = 0
+        last_batch = max(last_batch, seeded_last, legacy_max)
+
+    return state, processed_ids, last_batch
+
+
+def process_operation_batches(window_days=None):
+    """Revisa operacoes fechadas em blocos de BATCH_SIZE dentro da janela de dias.
+
+    A janela de dias corridos define quais operacoes entram na base. O controle
+    de reprocessamento usa operation_ids (nao numero de bloco), porque a janela
+    deslizante muda a composicao dos blocos ao longo do tempo.
+    """
+    window = window_days if window_days is not None else obter_window_days()
+    operations = _closed_operations(window_days=window)
+    state, processed_ids, last_batch = _load_review_state()
+    pending = [
+        operation
+        for operation in operations
+        if operation.get("id") not in processed_ids
+    ]
+    complete_batches = len(pending) // BATCH_SIZE
+    generated = []
+    batch_number = last_batch
+
+    for index in range(complete_batches):
         start = index * BATCH_SIZE
-        batch = operations[start:start + BATCH_SIZE]
+        batch = pending[start:start + BATCH_SIZE]
+        batch_number += 1
         review = _review_batch(batch, batch_number)
 
         REPORTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -357,7 +426,10 @@ def process_operation_batches():
         )
         _save_json(RECOMMENDATIONS_FILE, recommendations)
 
-        processed.add(batch_number)
+        for operation in batch:
+            operation_id = operation.get("id")
+            if operation_id:
+                processed_ids.add(operation_id)
         generated.append({
             "batch": batch_number,
             "report_path": str(report_path),
@@ -370,10 +442,11 @@ def process_operation_batches():
         })
 
     state = {
-        "processed_batches": sorted(processed),
-        "closed_operations": len(operations),
-        "complete_batches": complete_batches,
-        "pending_for_next_batch": len(operations) % BATCH_SIZE,
+        "processed_operation_ids": sorted(processed_ids),
+        "last_batch_number": batch_number,
+        "closed_operations_in_window": len(operations),
+        "window_days": window,
+        "pending_for_next_batch": len(pending) % BATCH_SIZE if pending else 0,
         "updated_at": datetime.now().isoformat(timespec="seconds"),
     }
     _save_json(STATE_FILE, state)
@@ -389,9 +462,10 @@ def latest_batch_status():
     return _load_json(
         STATE_FILE,
         {
-            "processed_batches": [],
-            "closed_operations": 0,
-            "complete_batches": 0,
+            "processed_operation_ids": [],
+            "last_batch_number": 0,
+            "closed_operations_in_window": 0,
+            "window_days": None,
             "pending_for_next_batch": 0,
         },
     )

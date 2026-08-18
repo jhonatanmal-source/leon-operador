@@ -1,6 +1,7 @@
 from src.operator_status import obter_status_operadores
 from src.pre_operation_engine import resumo_pre_operacao
 from src.learning_bootstrap import modo_bootstrap_ativo, obter_limiares
+from src.baseline_window import obter_window_days
 
 MIN_PRE_OPERATION_CLOSED = 20
 MIN_PRE_OPERATION_WINRATE = 70
@@ -10,7 +11,7 @@ def avaliar_prontidao_operacional():
 
     status = obter_status_operadores()
     operadores = status["operators"]
-    pre_operacao = resumo_pre_operacao()
+    pre_operacao = resumo_pre_operacao(window_days=obter_window_days())
 
     bootstrap = modo_bootstrap_ativo()
     limiares = obter_limiares() if bootstrap else {}
@@ -71,5 +72,6 @@ def avaliar_prontidao_operacional():
             "min_winrate": min_winrate,
             "target_closed": MIN_PRE_OPERATION_CLOSED,
             "target_winrate": MIN_PRE_OPERATION_WINRATE,
+            "window_days": pre_operacao.get("window_days"),
         },
     }

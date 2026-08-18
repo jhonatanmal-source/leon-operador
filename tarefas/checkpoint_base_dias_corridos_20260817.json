@@ -1,0 +1,84 @@
+{
+  "mission_id": "MISSION-20260817-BASE-DIAS-CORRIDOS",
+  "date": "2026-08-17",
+  "type": "OPERACIONAL LEON / DADOS",
+  "description": "Trocar base de desempenho de contagem de operações para janela de dias corridos (ex.: 30 dias) no cálculo de winrate e liberação da base",
+  "status": "CONCLUIDA (APROVADO COM RESSALVAS - ressalvas corrigidas)",
+  "phases": {
+    "triage": "COMPLETED",
+    "diagnosis": "COMPLETED",
+    "plan": "COMPLETED (APROVADO COM AJUSTES pelo Software Architect)",
+    "convocation": "COMPLETED (Software Architect + Engineering Reviewer)",
+    "implementation": "COMPLETED (6 modulos + config + 2 arquivos novos)",
+    "tests": "COMPLETED (373 passed, 0 falhas, CSV real intacto)",
+    "review": "COMPLETED (APROVADO COM RESSALVAS; 2 ressalvas corrigidas: timezone + leon_panel)",
+    "security": "COMPLETED (nenhum arquivo proibido tocado; conta real bloqueada)",
+    "documentation": "COMPLETED (missao + checkpoint + aprendizados 2026-08-17 + relatorio)",
+    "report": "COMPLETED",
+    "approval": "APROVADO"
+  },
+  "architect_verdict": "APROVADO COM AJUSTES",
+  "reviewer_verdict": "APROVADO COM RESSALVAS (corrigidas)",
+  "mandatory_adjustments": [
+    "operation_batch_review: resolver state file (deduplicar por operation_ids ou resetar quando janela mudar) - FEITO",
+    "resumo_pre_operacao: manter ultimo/total/abertos globais ao filtrar por janela - FEITO",
+    "Testes novos obrigatorios: resumo_pre_operacao, avaliar_prontidao_operacional, process_operation_batches - FEITO (17 testes)"
+  ],
+  "reviewer_conditions": [
+    "Normalizar timezone em parse_datetime/dentro_da_janela + teste aware - FEITO",
+    "Atualizar leon_panel.py para novas chaves do state batch_learning - FEITO"
+  ],
+  "approach": "default compativel (window_days=None = todos) para resumo_pre_operacao, _winrate_shadows_recentes, shadow_evidence",
+  "helper": "src/baseline_window.py: obter_window_days() fallback 30, parse_datetime() tolerante, dentro_da_janela()",
+  "date_columns": {
+    "shadow_trades.csv": "closed_at",
+    "pre_operation_trades.csv": "data_fechamento"
+  },
+  "date_parser": "datetime.fromisoformat + fallback espaco; datas invalidas excluidas da janela; tzinfo normalizado para naive",
+  "config_example": "config.ini.example recebeu secao [BASELINE]",
+  "technical_debt": [
+    "_consecutive_losses() mesmo padrao de contagem - fora de escopo",
+    "Consumidores fora de escopo: performance_engine, risk_method_engine, telegram_commands_mcp, daily_learning_report",
+    "tests/test_leon_brain.py usa sys.exit(0) no modulo - suíte exige --ignore"
+  ],
+  "incident": {
+    "severity": "ALTA",
+    "what": "pytest truncou data/pre_operation_trades.csv real (370 linhas -> header) em 2026-08-17T21:03",
+    "root_cause": "tests/test_performance_engine.py escrevia/apagava no data/ real (DATA = parent.parent/data), sem tmp_path",
+    "fix": "fixture autouse _isolar_csv(tmp_path, monkeypatch) redireciona PRE_OPERATION_FILE e globais DATA/CSV",
+    "recovery": "NAO recuperavel integralmente; nenhum CSV residual tem resultado/data_fechamento dos IDs perdidos; backups ate 05/08",
+    "integrity": "sequence_file preservou numeração (novo = PREOP-003478, sem colisao)",
+    "operator": "ONLINE, autonomia ATIVA, CSV repopulando"
+  },
+  "scope_approved_by_user": "Janela de dias corridos (ex.: últimos 30 dias) para winrate e liberação de base",
+  "files_modified": [
+    "src/baseline_window.py (NOVO)",
+    "tests/test_baseline_window.py (NOVO, 17 testes)",
+    "src/pre_operation_engine.py (resumo_pre_operacao window_days)",
+    "src/learning_bootstrap.py (_winrate_shadows_recentes window_days)",
+    "src/operation_readiness.py (window_days no resumo + rules)",
+    "src/lab_entry_policy.py (shadow_evidence window_days)",
+    "src/operation_batch_review.py (janela + dedup por operation_ids + seed migracao)",
+    "src/leon_panel.py (novas chaves batch_learning)",
+    "tests/test_performance_engine.py (isolamento tmp_path - correcao incidente)",
+    "config.ini + config.ini.example (secao [BASELINE] window_days=30)"
+  ],
+  "out_of_scope": [
+    "Estratégia, risco, TP, SL, MT5 execution",
+    "_micro_trigger (mt5_execution_refiner.py) - missão separada",
+    "Conta real",
+    "Envio de ordens",
+    "Commit/push sem autorização"
+  ],
+  "evidence": {
+    "current_baseline": "contagem (20 shadows / batch 20 / min_closed 20)",
+    "anomaly_blocks_100pct": "blocos 4,6,7,8 com timestamps idênticos 2026-07-23T23:50:01",
+    "days_without_data": ["2026-08-11", "2026-08-15", "2026-08-16"],
+    "today_volume": "163 preops, 108 fechadas, winrate 16.7%",
+    "learning_recommendation": "ciclo contínuo de ~30 dias (aprendizado 07-31)"
+  },
+  "security_verified": true,
+  "mt5_affected": false,
+  "real_account_affected": false,
+  "strategy_risk_tp_sl_affected": false
+}

@@ -3,14 +3,38 @@ from pathlib import Path
 
 import pytest
 
+import src.performance_engine as performance_engine
 from src.performance_engine import (
     METRIC_INSUFFICIENT_DATA,
     METRIC_NOT_AVAILABLE,
     analisar_performance,
 )
 
+# ISOLAMENTO OBRIGATORIO: nunca escrever no data/ real.
+# DATA/CSV sao redefinidos por fixture autouse para um tmp_path por teste.
+# (Historico: este teste truncava data/pre_operation_trades.csv real ao rodar
+# a suite - MISSION-20260817-BASE-DIAS-CORRIDOS.)
 DATA = Path(__file__).resolve().parent.parent / "data"
 CSV = DATA / "pre_operation_trades.csv"
+
+
+@pytest.fixture(autouse=True)
+def _isolar_csv(tmp_path, monkeypatch):
+    """Redireciona o CSV de pre-operacoes para um diretorio temporario.
+
+    Protege o arquivo operacional real de qualquer escrita/unlink dos testes,
+    tanto no modulo (PRE_OPERATION_FILE) quanto nos globais deste modulo de teste.
+    """
+    global DATA, CSV
+    data_tmp = tmp_path / "data"
+    data_tmp.mkdir(parents=True, exist_ok=True)
+    csv_tmp = data_tmp / "pre_operation_trades.csv"
+
+    DATA = data_tmp
+    CSV = csv_tmp
+    monkeypatch.setattr(performance_engine, "PRE_OPERATION_FILE", csv_tmp)
+    monkeypatch.setattr(performance_engine, "ROOT_DIR", tmp_path, raising=False)
+    yield
 
 
 def _escrever_csv(linhas: list[list[str]]):
