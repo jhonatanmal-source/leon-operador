@@ -1,16 +1,9 @@
 {
   "mission_id": "MISSION-20260818-FIX-MCP-MARKET",
-  "status": "IMPLEMENTACAO_CONCLUIDA_AGUARDANDO_COMMIT",
+  "status": "CONCLUIDA_APROVADA_COMMITADA",
   "writer": "Engineering Director",
-  "reserved_files": [
-    "src/mcp/leon_market_mcp.py",
-    "src/mcp/leon_backtest_mcp.py",
-    "tests/test_market_mcp_availability.py",
-    "tarefas/agent_lock.json",
-    "tarefas/handoff_atual.md",
-    "tarefas/aprendizados_diarios/2026-08-18.md"
-  ],
+  "reserved_files": [],
   "started_at": "2026-08-18T06:58:00",
-  "completed_at": null,
-  "notes": "Bug #12 RESOLVIDO. Correcao: helper _mt5_disponivel() -> check_mt5().get('available') (dispara _ensure_initialized() real) nos 6 handlers do market MCP; leon_backtest_mcp.py usa check_mt5().get('available'). 11 testes novos (test_market_mcp_availability.py), suite completa 398 passed. Validado em producao via JSON-RPC: account info real (balance 10100.54), preco Gold_Spot real (bid 4393.67). Simbolo ativo da corretora: Gold_Spot. Seguranca: somente leitura, nenhuma ordem exposta, conta real bloqueada. Aguardando autorizacao do usuario para commit."
+  "completed_at": "2026-08-18T06:58:45-0300",
+  "notes": "Bug #12 RESOLVIDO E COMMITADO (b8a0c22). Helper _mt5_disponivel() -> check_mt5().get('available') nos 6 handlers do market MCP; backtest MCP usa check_mt5().get('available'). 11 testes novos, suite 398 passed. Validado em producao via JSON-RPC (account real, Gold_Spot real). Simbolo ativo: Gold_Spot. Seguranca: somente leitura, conta real bloqueada. Missao encerrada."
 }
