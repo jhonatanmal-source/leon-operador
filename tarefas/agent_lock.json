@@ -1,6 +1,6 @@
 {
   "mission_id": "MISSION-20260818-TELEGRAM-REATIVADO",
-  "status": "CONCLUIDA_AGUARDANDO_COMMIT",
+  "status": "CONCLUIDA_APROVADA_COMMITADA",
   "writer": "Engineering Director",
   "reserved_files": [
     ".env",
@@ -10,6 +10,6 @@
     "tarefas/handoff_atual.md"
   ],
   "started_at": "2026-08-18T09:55:00",
-  "completed_at": "2026-08-18T10:10:00-0300",
-  "notes": "Pendencia #2: Telegram REATIVADO com token real do BotFather. getMe valido (LeonXauEliteBot), getChat valido (supergrupo LEON XAU AI - Estudos, chat_id -1004376165028). Credenciais em /opt/leon/app/.env (LEON_TELEGRAM_TOKEN/CHAT_ID/ENABLED=true) + config.ini enabled=true. Envio real validado: message_id 3364. Operador reiniciado (PID 3457923), log 'mensagem enviada com sucesso'. Decisao: NAO criar symlink app/.env -> config/.env (placeholder COLAR_ antigo seria lido como token; app/.env tem chaves web reais). Sem commit (aguardando autorizacao). Nenhuma alteracao em MT5/risco/TP/SL/execucao."
+  "completed_at": "2026-08-18T10:15:00-0300",
+  "notes": "Pendencia #2: Telegram REATIVADO com token real do BotFather. getMe valido (LeonXauEliteBot), getChat valido (supergrupo LEON XAU AI - Estudos, chat_id -1004376165028). Credenciais em /opt/leon/app/.env (LEON_TELEGRAM_TOKEN/CHAT_ID/ENABLED=true) + config.ini enabled=true. Envio real validado: message_id 3364. Operador reiniciado (PID 3457923), log 'mensagem enviada com sucesso'. Decisao: NAO criar symlink app/.env -> config/.env (placeholder COLAR_ antigo seria lido como token; app/.env tem chaves web reais). COMMITADO (600d628). Nenhuma alteracao em MT5/risco/TP/SL/execucao."
 }
