@@ -17,5 +17,5 @@
   ],
   "started_at": "2026-08-17T20:44:00",
   "completed_at": "2026-08-17T21:30:00",
-  "notes": "MISSION-20260817-BASE-DIAS-CORRIDOS CONCLUIDA E APROVADA. Base por janela de dias corridos (window_days=30). 373 testes passando. Incidente tratado: test_performance_engine.py truncava CSV real - corrigido com isolamento tmp_path. Gap de dados 12-17/08 documentado (197 operacoes fechadas nao recuperaveis pelo workspace). Nenhum commit/push realizado (aguarda autorizacao)."
+  "notes": "MISSION-20260817-BASE-DIAS-CORRIDOS CONCLUIDA E APROVADA. Base por janela de dias corridos (window_days=30). 373 testes passando. Incidente tratado: test_performance_engine.py truncava CSV real - corrigido com isolamento tmp_path. Gap de dados 12-17/08 documentado (197 operacoes fechadas nao recuperaveis pelo workspace). COMMIT REALIZADO: 510f1b9 (feat baseline window_days) + push origin/main em 2026-08-17 (autorizado pelo usuario)."
 }
