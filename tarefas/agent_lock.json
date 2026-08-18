@@ -1,6 +1,6 @@
 {
   "mission_id": "MISSION-20260818-TELEGRAM-DESABILITADO",
-  "status": "CONCLUIDA_AGUARDANDO_COMMIT",
+  "status": "CONCLUIDA_APROVADA_COMMITADA",
   "writer": "Engineering Director",
   "reserved_files": [
     "config.ini",
@@ -9,6 +9,6 @@
     "tarefas/handoff_atual.md"
   ],
   "started_at": "2026-08-18T09:30:00",
-  "completed_at": "2026-08-18T09:45:00-0300",
-  "notes": "Pendencia #2: Telegram alinhado como DESABILITADO. config.ini [TELEGRAM] enabled=true -> false. Runtime validado: TELEGRAM_ENABLED=False, enviar_mensagem() retorna TELEGRAM_DISABLED. Suite 398 passed. Documentado que /opt/leon/config/.env NAO e lido pelo runtime (symlink sobrescrito em 27/07) e que NAO recriar symlink enquanto token for placeholder COLAR_. Reativacao exige token real do BotFather. Sem commit (aguardando autorizacao). Nenhuma alteracao em MT5/risco/TP/SL/execucao."
+  "completed_at": "2026-08-18T09:50:00-0300",
+  "notes": "Pendencia #2: Telegram alinhado como DESABILITADO. config.ini [TELEGRAM] enabled=true -> false. Runtime validado: TELEGRAM_ENABLED=False, enviar_mensagem() retorna TELEGRAM_DISABLED. Operador reiniciado (PID 3452563), log vivo 'envio bloqueado: modulo desativado'. Suite 398 passed. Documentado que /opt/leon/config/.env NAO e lido pelo runtime (symlink sobrescrito em 27/07) e que NAO recriar symlink enquanto token for placeholder COLAR_. Reativacao exige token real do BotFather. COMMITADO (a4dc927). Nenhuma alteracao em MT5/risco/TP/SL/execucao."
 }
