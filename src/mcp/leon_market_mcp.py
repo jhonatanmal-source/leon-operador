@@ -38,8 +38,18 @@ from mt5_safe import (
     safe_symbols_get,
     safe_copy_rates_from_pos,
     safe_account_info,
-    _MT5_AVAILABLE
 )
+
+
+def _mt5_disponivel() -> bool:
+    """Consulta disponibilidade REAL do MT5 (dispara _ensure_initialized()).
+
+    IMPORTANTE: NÃO usar `from mt5_safe import _MT5_AVAILABLE` — isso copia
+    o valor `False` no import e a flag nunca é atualizada neste módulo.
+    `check_mt5()` retorna o status atual e força a inicialização lazy.
+    """
+    status = check_mt5()
+    return bool(status.get("available", False))
 
 
 class MarketMCPHandler(MCPBaseHandler):
@@ -175,17 +185,17 @@ class MarketMCPHandler(MCPBaseHandler):
         return check_mt5()
 
     def handle_get_current_price(self, symbol: str) -> dict:
-        if not _MT5_AVAILABLE:
+        if not _mt5_disponivel():
             return {"error": "MT5 não disponível", "symbol": symbol}
         return safe_symbol_info_tick(symbol)
 
     def handle_get_symbol_info(self, symbol: str) -> dict:
-        if not _MT5_AVAILABLE:
+        if not _mt5_disponivel():
             return {"error": "MT5 não disponível", "symbol": symbol}
         return safe_symbol_info(symbol)
 
     def handle_get_ohlc(self, symbol: str, timeframe: int = 15, count: int = 20) -> dict:
-        if not _MT5_AVAILABLE:
+        if not _mt5_disponivel():
             return {"error": "MT5 não disponível", "symbol": symbol}
         
         # Convert timeframe minutes to MT5 constant
@@ -208,7 +218,7 @@ class MarketMCPHandler(MCPBaseHandler):
         return safe_copy_rates_from_pos(symbol, mt5_tf, 0, count)
 
     def handle_list_symbols(self, filter: str = "") -> dict:
-        if not _MT5_AVAILABLE:
+        if not _mt5_disponivel():
             return {"error": "MT5 não disponível"}
         
         result = safe_symbols_get()
@@ -223,7 +233,7 @@ class MarketMCPHandler(MCPBaseHandler):
         return result
 
     def handle_get_account_info(self) -> dict:
-        if not _MT5_AVAILABLE:
+        if not _mt5_disponivel():
             return {"error": "MT5 não disponível"}
         return safe_account_info()
 
@@ -232,7 +242,7 @@ class MarketMCPHandler(MCPBaseHandler):
             ativo = detectar_ativo()
             symbols = [ativo]
         
-        if not _MT5_AVAILABLE:
+        if not _mt5_disponivel():
             return {"error": "MT5 não disponível", "symbols": symbols}
         
         snapshot = {}

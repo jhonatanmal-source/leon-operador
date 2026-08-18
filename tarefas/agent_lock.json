@@ -1,20 +1,16 @@
 {
-  "mission_id": "MISSION-20260818-CORRECAO-ENTRADA-SMC",
-  "status": "IMPLEMENTACAO_CONCLUIDA_AGUARDANDO_APROVACAO",
+  "mission_id": "MISSION-20260818-FIX-MCP-MARKET",
+  "status": "IMPLEMENTACAO_CONCLUIDA_AGUARDANDO_COMMIT",
   "writer": "Engineering Director",
   "reserved_files": [
-    "src/mt5_execution_refiner.py",
-    "src/interest_zone_engine.py",
-    "src/mt5_order_executor.py",
-    "tests/test_execution_refiner.py",
-    "tests/test_mt5_order_executor.py",
-    "tests/test_interest_zone_engine.py",
+    "src/mcp/leon_market_mcp.py",
+    "src/mcp/leon_backtest_mcp.py",
+    "tests/test_market_mcp_availability.py",
     "tarefas/agent_lock.json",
     "tarefas/handoff_atual.md",
-    "tarefas/missoes/PLANO_CORRECAO_ENTRADA_SMC_20260817.md",
     "tarefas/aprendizados_diarios/2026-08-18.md"
   ],
-  "started_at": "2026-08-18T05:50:00",
+  "started_at": "2026-08-18T06:58:00",
   "completed_at": null,
-  "notes": "Pendencia #10 (CRITICA). Escopo escolhido pelo usuario: A + C (sem B, sem guard de posicao 3.2). A = gatilho M5 de reteste (sweep+reclaim+displacement, NUNCA rompimento) em _micro_trigger. C = create_lab_zone honesta (AGUARDANDO_ESTRUTURA, sem confirmacoes fabricadas) + SMC guard sempre ativo (LAB_LEARNING nao pula mais). Reviewer: APROVADO COM RESSALVAS, ressalvas 1-2 corrigidas + teste de borda adicionado. 387 testes passando (--ignore test_leon_brain). Impacto operacional: caminho de execucao demo LAB via bootstrap fica bloqueado ate existir mecanismo de confirmacao estrutural real (follow-up). Nenhuma ordem real, conta real bloqueada, sem alteracao de estrategia/risco/TP/SL. Aguardando autorizacao do usuario para commit."
+  "notes": "Bug #12 RESOLVIDO. Correcao: helper _mt5_disponivel() -> check_mt5().get('available') (dispara _ensure_initialized() real) nos 6 handlers do market MCP; leon_backtest_mcp.py usa check_mt5().get('available'). 11 testes novos (test_market_mcp_availability.py), suite completa 398 passed. Validado em producao via JSON-RPC: account info real (balance 10100.54), preco Gold_Spot real (bid 4393.67). Simbolo ativo da corretora: Gold_Spot. Seguranca: somente leitura, nenhuma ordem exposta, conta real bloqueada. Aguardando autorizacao do usuario para commit."
 }

@@ -326,8 +326,10 @@ class BacktestMCPHandler(MCPBaseHandler):
         
         # Try to use MT5 data if available
         try:
-            from mt5_safe import safe_copy_rates_from_pos, _MT5_AVAILABLE
-            if _MT5_AVAILABLE:
+            from mt5_safe import safe_copy_rates_from_pos, check_mt5
+            # NOTE: NÃO usar `_MT5_AVAILABLE` importado por valor (bug #12) —
+            # `check_mt5()` dispara a inicialização lazy e retorna o status real.
+            if check_mt5().get("available"):
                 # Map timeframe
                 tf_map = {1: 1, 5: 5, 15: 15, 30: 30, 60: 60, 240: 240, 1440: 1440}
                 mt5_tf = tf_map.get(timeframe, 15)

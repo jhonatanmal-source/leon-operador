@@ -1,6 +1,22 @@
 # Handoff Atual
 
-## 🎯 Última Missão Concluída: MISSION-20260818-BACKUP-RESGATE-DADOS
+## 🎯 Última Missão Concluída: MISSION-20260818-FIX-MCP-MARKET (bug #12)
+- **Bug corrigido**: `leon_market_mcp.py` importava `_MT5_AVAILABLE` por valor (cópia `False` no import) → todos os tools de mercado exceto `check_mt5_status` retornavam "MT5 não disponível" mesmo com MT5 saudável. Mesmo padrão em `leon_backtest_mcp.py`.
+- **Correção**: helper `_mt5_disponivel()` → `check_mt5().get("available")` (dispara `_ensure_initialized()` real) nos 6 handlers do market MCP; backtest usa `check_mt5().get("available")` no lugar da flag estática.
+- **Status**: ✅ IMPLEMENTADA + TESTADA + VALIDADA EM PRODUÇÃO (aguardando commit)
+- **Testes**: 11 novos em `tests/test_market_mcp_availability.py`; suíte completa **398 passed** (`--ignore=tests/test_leon_brain.py`)
+- **Validação em produção (MCP real via JSON-RPC)**: `get_account_info` → balance 10100.54, equity 10097.06, leverage 100 (antes: "MT5 não disponível"); `get_current_price Gold_Spot` → bid 4393.67/ask 4393.99; `get_ohlc` M15 real; `list_symbols` → Gold_Spot encontrado. Símbolo ativo da corretora: **Gold_Spot** (não XAUUSD).
+- **Segurança**: nenhuma função de ordem exposta; somente leitura; conta real bloqueada.
+- **Arquivos**: `src/mcp/leon_market_mcp.py`, `src/mcp/leon_backtest_mcp.py`, `tests/test_market_mcp_availability.py` (novo)
+
+## 🎯 Missão Anterior: MISSION-20260818-CORRECAO-ENTRADA-SMC (encerramento pós-commit)
+- **Commit `d1e6ba3`** (06:25:46) e **restart do operador às 06:27:01** — operador PID **3424309** JÁ roda o código novo (SMC guard sempre ativo em LAB_LEARNING; `_micro_trigger` com sweep+reclaim+displacement, sem perseguir estrutura).
+- **Status**: ✅ IMPLEMENTADA + COMMITADA + VALIDADA (missão encerrada; ver MISSION-20260818-CORRECAO-ENTRADA-SMC.md)
+- **Evidência em produção (Fase A)**: log 06:35+ mostra "SMC guard sempre ativo, timeframe_policy relaxado pelo laboratorio" (antes do restart: "SMC guard skipped"); PREOP-003551 em loop sem nova entrada — bloqueado por `MAX_OPEN_POSITIONS_REACHED` (2 abertas, limite 2), não mais pelo viés comprar topo/vender fundo.
+- **Autonomia**: ativa (demo_execution) até 2026-08-18T20:32:24; heartbeat ONLINE (PID 3424309, `execution_authorized: true`); conta real bloqueada.
+- **Achado novo (bug MCP, SEM correção nesta missão)**: `src/mcp/leon_market_mcp.py` importa `_MT5_AVAILABLE` **por valor** (cópia `False` no import) → todos os tools de mercado exceto `check_mt5_status` retornam "MT5 não disponível" mesmo com MT5 saudável (rpyc OK, porta 18812 aberta). A flag só é atualizada dentro de `mt5_safe`; os handlers não chamam `_ensure_initialized()`/`check_mt5()` antes. **Correção proposta**: handlers devem chamar `check_mt5()`/`_ensure_initialized()` antes de checar a flag, ou importar o módulo e ler `mt5_safe._MT5_AVAILABLE` dinamicamente. → Pendência nova #12.
+
+## 🎯 Missão Anterior: MISSION-20260818-BACKUP-RESGATE-DADOS
 - **Fase 2 do plano de execução** (pendências #6 e #9)
 - **Status**: ✅ CONCLUÍDA
 - **Backup automático dos CSVs operacionais**: `scripts/backup_operational_data.sh` (backup/status/verify), snapshot leve 1.5M, checksum sha256, rotação 48, agendado no crontab do `leon` (`0 * * * *`)
@@ -49,13 +65,14 @@
 8. **`tests/test_leon_brain.py`** usa `sys.exit(0)` no módulo — suíte exige `--ignore` (dívida conhecida)
 9. ~~**Backup externo dos CSVs de `data/`**~~ ✅ RESOLVIDO (MISSION-20260818): `scripts/backup_operational_data.sh` implantado (snapshot 1.5M somente-leitura, sha256, rotação 48) e agendado no crontab do `leon` (`0 * * * *`). Log em `/opt/leon/logs/backup_operational_data.log`. Validado em `env -i`.
 11. **Restart automático do operador era falha silenciosa** (descoberto em 2026-08-18): `logs/operator_out.log` pertencia a `root:leon` (640) e o `start-operator.sh`, rodando como `leon`, falhava com `Permission denied` — o operador não voltaria sozinho se caísse. Log removido e operador reiniciado. **Pendente**: impedir recorrência (evitar que processo root crie logs do operador; considerar `logrotate` com `su leon leon` ou criar o log com owner correto no script).
-10. ~~**🔴 CRÍTICA — Correção do gatilho de entrada + guard de posição SMC**~~ ✅ IMPLEMENTADO (MISSION-20260818-CORRECAO-ENTRADA-SMC, aguardando commit): LEON estava **comprando topo e vendendo fundo** (winrate VENDA-FUNDO = 17.6%, COMPRA-TOPO = 41%; mediana posição: COMPRA 0.67 / VENDA 0.23 do range 48h). Correções aplicadas no escopo **A + C** (escolha do usuário): **A** — `_micro_trigger` reescrito: confirmação exige sweep de liquidez + reclaim + displacement e NUNCA rompimento de estrutura (anti perseguir preço); **C** — `create_lab_zone` não fabrica mais `CONFIRMADA` (nasce `AGUARDANDO_ESTRUTURA`, sem `structural_confirmations`/`valid_confirmations` fabricados) e SMC guard passou a ser **sempre ativo** (LAB_LEARNING não pula mais o guard). Guard de posição 3.2 (hard block) **NÃO implementado** — sem evidência nos dados recuperados. 387 testes passando. Reviewer: APROVADO COM RESSALVAS (corrigidas). **Impacto operacional**: execução demo LAB via bootstrap fica bloqueada até existir mecanismo de confirmação estrutural real (follow-up) — ver relatório da missão.
+10. ~~**🔴 CRÍTICA — Correção do gatilho de entrada + guard de posição SMC**~~ ✅ IMPLEMENTADO + COMMITADO (MISSION-20260818-CORRECAO-ENTRADA-SMC, commit `d1e6ba3`): LEON estava **comprando topo e vendendo fundo** (winrate VENDA-FUNDO = 17.6%, COMPRA-TOPO = 41%; mediana posição: COMPRA 0.67 / VENDA 0.23 do range 48h). Correções aplicadas no escopo **A + C** (escolha do usuário): **A** — `_micro_trigger` reescrito: confirmação exige sweep de liquidez + reclaim + displacement e NUNCA rompimento de estrutura (anti perseguir preço); **C** — `create_lab_zone` não fabrica mais `CONFIRMADA` (nasce `AGUARDANDO_ESTRUTURA`, sem `structural_confirmations`/`valid_confirmations` fabricados) e SMC guard passou a ser **sempre ativo** (LAB_LEARNING não pula mais o guard). Guard de posição 3.2 (hard block) **NÃO implementado** — sem evidência nos dados recuperados. 387 testes passando. Reviewer: APROVADO COM RESSALVAS (corrigidas). **Impacto operacional**: execução demo LAB via bootstrap fica bloqueada até existir mecanismo de confirmação estrutural real (follow-up) — ver relatório da missão.
+12. ~~**Bug MCP `_MT5_AVAILABLE` copiado por valor**~~ ✅ RESOLVIDO (MISSION-20260818-FIX-MCP-MARKET): `leon_market_mcp.py` importava a flag `False` por valor → `get_account_info`, `get_current_price`, `get_symbol_info`, `get_ohlc`, `list_symbols`, `get_market_snapshot` retornavam sempre "MT5 não disponível"; só `check_mt5_status` funcionava. Correção: helper `_mt5_disponivel()` → `check_mt5().get("available")` (dispara `_ensure_initialized()` real). Mesmo padrão corrigido em `leon_backtest_mcp.py`. Validado em produção (account info real, preço Gold_Spot real). 11 testes novos, 398 total.
 
 ## 🟢 Status Geral do Sistema
 - **387/387** testes passando (com `--ignore=tests/test_leon_brain.py`)
-- **Operator**: PID **3395248** ativo (`leon_operator.py`), ONLINE, autonomia demo ATIVA (scope `demo_execution`), conta real bloqueada — reiniciado em 2026-08-18 após correção de permissão de log. ⚠️ O operador em execução ainda roda o código antigo até ser reiniciado (correção SMC entra no próximo restart — requer autorização).
-- **CSV pre_operation**: 297 pre-ops (PREOP-003106→003550), gap 12-17/08 recuperado
+- **Operator**: PID **3424309** ativo (`leon_operator.py`, reiniciado 2026-08-18 06:27:01), ONLINE, autonomia demo ATIVA (scope `demo_execution`, expira 18/08 20:32), conta real bloqueada. ✅ **RODA O CÓDIGO NOVO (commit `d1e6ba3`)** — SMC guard sempre ativo confirmado em produção (log 06:35+).
+- **CSV pre_operation**: 297+ pre-ops (PREOP-003106→003558), gap 12-17/08 recuperado; 18 ABERTO, 137 FECHADO, 150 OBSERVADO
 - **Backup operacional**: horário via `scripts/backup_operational_data.sh` → `/opt/leon/backups/operational_data/` (rotação 48)
-- **MT5**: read-only via wine/rpyc
-- **MCPs**: backtest, market, memory, replay registrados
-- ⚠️ **Alerta operacional ativo**: pendência #10 (compra topo/vende fundo) NÃO resolvida — operador segue enviando ordens demo VENDA em SETUP FRACO (ex.: PREOP-003504/003505 em 18/08). Priorizar Fase 1 (correção SMC).
+- **MT5**: read-only via wine/rpyc (porta 18812 aberta, wineserver saudável)
+- **MCPs**: backtest, market, memory, replay registrados — ✅ **market MCP funcional** (bug #12 corrigido: account info, preço Gold_Spot e OHLC reais)
+- **Alerta operacional (pendência #10)**: ✅ RESOLVIDO — operador roda o guard SMC novo; entradas no quadrante comprar topo/vender fundo não passam mais
