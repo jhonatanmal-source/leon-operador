@@ -1,15 +1,15 @@
 {
-  "mission_id": "MISSION-20260818-BACKLOG-MISSAO-1-BUGS-TRIVIAIS",
+  "mission_id": "MISSION-20260818-BACKLOG-MISSAO-2-TELEGRAM-STATUS-IMPORT",
   "status": "CONCLUIDA_APROVADA_COMMITADA",
   "writer": "Engineering Director",
   "reserved_files": [
-    "src/interest_zone_engine.py",
-    "src/leon_operator.py",
+    "src/telegram_commands_mcp.py",
+    "tests/test_telegram_commands_status.py",
     "tarefas/aprendizados_diarios/CONTEXTO_EVOLUCAO.md",
     "tarefas/aprendizados_diarios/2026-08-18.md",
     "tarefas/handoff_atual.md"
   ],
-  "started_at": "2026-08-18T15:07:00-0300",
-  "completed_at": "2026-08-18T15:13:00-0300",
-  "notes": "Backlog de melhorias de codigo, Missao 1 (bugs triviais de 1 linha, risco minimo). Corrigido typo kilzone_name -> killzone_name em interest_zone_engine.py:1386 (create_lab_zone). Padronizado import duplicado/inconsistente de obter_status_operadores em leon_operator.py: removidos 2 imports locais sem prefixo src. (resolviam para modulo distinto do import global sob o PYTHONPATH real do systemd) + 1 import local redundante; agora usa so o import global do topo. Testes: 398/398 (tests/ --ignore=tests/test_leon_brain.py). Achado colateral registrado (nao corrigido, fora do escopo): backups/leon_backup_20260805/ tem backups aninhados recursivamente e quebra pytest se rodado sem escopo (pytest . na raiz) por conter copia antiga de test_leon_brain.py. COMMITADO (1a31848). Nenhuma alteracao em MT5/risco/TP/SL/execucao. Proxima missao do backlog: Missao 2 (import quebrado do Telegram /status), aguardando autorizacao."
+  "started_at": "2026-08-18T15:14:00-0300",
+  "completed_at": "2026-08-18T15:19:00-0300",
+  "notes": "Backlog de melhorias de codigo, Missao 2 (import quebrado do comando /status do Telegram). telegram_commands_mcp.py:640 importava detectar_ativo de market_reader.py (modulo so tem ler_preco_xau) -> ImportError mascarado por except Exception, /status sempre caia no fallback fixo Gold_Spot. Corrigido para 'from asset_detector import detectar_ativo', mesmo padrao ja usado em mt5_monitor.py/leon.py/mt5_engine.py/MCPs. Teste de regressao novo: tests/test_telegram_commands_status.py (2 testes). Testes: 400/400 (tests/ --ignore=tests/test_leon_brain.py). COMMITADO (a1edd1a). Missao 1 tambem commitada anteriormente (1a31848). Nenhuma alteracao em MT5/risco/TP/SL/execucao. Proxima missao do backlog: Missao 3 (codigo morto context_decision em interest_zone_engine.py), aguardando autorizacao."
 }
