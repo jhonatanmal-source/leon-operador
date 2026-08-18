@@ -38,6 +38,7 @@
 7. **Dívida técnica**: `_consecutive_losses()` ainda por contagem; consumidores `performance_engine`, `risk_method_engine`, `telegram_commands_mcp`, `daily_learning_report` calculam winrate sem janela
 8. **`tests/test_leon_brain.py`** usa `sys.exit(0)` no módulo — suíte exige `--ignore` (dívida conhecida)
 9. **Backup externo dos CSVs de `data/`** — nenhum backup completo dos CSVs operacionais (`shadow_trades.csv`, `pre_operation_trades.csv`, `operation_decisions.csv`); backups disponíveis vão só até 05/08. Tornou o gap 12-17/08 irreversível. Missão de infraestrutura dedicada (ex.: agendar `tar.gz` de `data/` + rotacionar no próprio host e/ou remoto). Aprendizado registrado em 2026-08-17.
+10. **🔴 CRÍTICA — Correção do gatilho de entrada + guard de posição SMC**: LEON está **comprando topo e vendendo fundo** (winrate VENDA-FUNDO = 17.6%, COMPRA-TOPO = 41%; mediana posição: COMPRA 0.67 / VENDA 0.23 do range 48h). Causa raiz: gatilho M5 de ROMPIMENTO (`mt5_execution_refiner._micro_trigger`), zona = FVG de deslocamento (não demanda/oferta), sem guard de posição da entrada vs estrutura em nenhuma camada, `create_lab_zone` fabrica zonas CONFIRMADA. Recomendação do Trading Systems Engineer: **NÃO liberar execução (nem demo) baseada na evidência shadow atual** até corrigir 5.1 (gatilho de reteste) + 5.2 (guard de posição hard block). Missão dedicada com plano pronto (ver `tarefas/missoes/`). Aprendizado registrado em 2026-08-17.
 
 ## 🟢 Status Geral do Sistema
 - **373/373** testes passando (com `--ignore=tests/test_leon_brain.py`)
