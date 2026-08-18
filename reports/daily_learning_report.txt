@@ -984,3 +984,597 @@ Aprendizado do LEON
 - O LEON reforcou que setups fortes aparecem quando SMC e Elliott apontam juntos.
 =================================
 
+=================================
+LEON VPS | RELATORIO DIARIO DE APRENDIZADO
+=================================
+Data: 2026-08-02
+
+Resumo do dia
+- Precos coletados: 516
+- Candles coletados: 516
+- Sinais registrados: 0
+- Contextos cerebrais: 55
+- Registros analisados: 0
+- Planos gerados: 0
+- Direcao dominante: SEM DADOS
+- Qualidade dominante: SEM DADOS
+- Confianca dominante: SEM DADOS
+
+Ultima coleta
+- Ativo: Gold_Spot
+- Bid: 4058.38
+- Ask: 4058.77
+- Candle close: 4058.38
+
+Ultima leitura estrutural
+- Tendencia: SEM DADOS
+- Score: SEM DADOS
+- Sinal: SEM DADOS
+
+Leitura SMC + Elliott
+- SMC dominante: SEM DADOS
+- Elliott dominante: SEM DADOS
+- Brain Score medio dos planos: 0.00
+
+Ultimo contexto do cerebro
+- Origem: operator
+- Tipo: coleta_programada
+- Alinhamento: ATENCAO
+- Observacao: Snapshot automatico apos coleta.
+
+Memoria operacional do operador
+- Integridade da memoria: 100.00%
+- Status: INTEGRA
+- PRE_OPERATION atuais: 172
+- Identidades registradas: 1589
+- Contextos vinculados: 172 / 172
+
+Resultados historicos usados no aprendizado
+- Acertos registrados: 5
+- Erros registrados: 26
+- Taxa historica de acerto: 16.13%
+
+Aprendizado do LEON
+- Hoje houve coleta de mercado, mas ainda nao houve novo setup registrado na memoria operacional.
+=================================
+
+=================================
+LEON VPS | RELATORIO DIARIO DE APRENDIZADO
+=================================
+Data: 2026-08-03
+
+Resumo do dia
+- Precos coletados: 1489
+- Candles coletados: 1489
+- Sinais registrados: 168
+- Contextos cerebrais: 487
+- Registros analisados: 168
+- Planos gerados: 168
+- Direcao dominante: AGUARDAR
+- Qualidade dominante: FIBONACCI_LIQUIDEZ_NAO_CONFIRMADOS
+- Confianca dominante: BAIXA
+
+Ultima coleta
+- Ativo: Gold_Spot
+- Bid: 4059.2
+- Ask: 4059.62
+- Candle close: 4059.2
+
+Ultima leitura estrutural
+- Tendencia: ALTA
+- Score: 100
+- Sinal: OBSERVAR
+
+Leitura SMC + Elliott
+- SMC dominante: BEARISH
+- Elliott dominante: ABC_ZIGZAG
+- Brain Score medio dos planos: 30.09
+
+Ultimo contexto do cerebro
+- Origem: operator
+- Tipo: coleta_programada
+- Alinhamento: ATENCAO
+- Observacao: Snapshot automatico apos coleta.
+
+Memoria operacional do operador
+- Integridade da memoria: 100.00%
+- Status: INTEGRA
+- PRE_OPERATION atuais: 340
+- Identidades registradas: 1757
+- Contextos vinculados: 340 / 340
+
+Resultados historicos usados no aprendizado
+- Acertos registrados: 5
+- Erros registrados: 26
+- Taxa historica de acerto: 16.13%
+
+Aprendizado do LEON
+- O LEON registrou ambiente de conflito e deve preservar paciencia operacional.
+=================================
+
+=================================
+LEON VPS | RELATORIO DIARIO DE APRENDIZADO
+=================================
+Data: 2026-08-04
+
+Resumo do dia
+- Precos coletados: 1830
+- Candles coletados: 1830
+- Sinais registrados: 129
+- Contextos cerebrais: 447
+- Registros analisados: 129
+- Planos gerados: 129
+- Direcao dominante: AGUARDAR
+- Qualidade dominante: FIBONACCI_LIQUIDEZ_NAO_CONFIRMADOS
+- Confianca dominante: BAIXA
+
+Ultima coleta
+- Ativo: Gold_Spot
+- Bid: 4100.59
+- Ask: 4100.98
+- Candle close: 4100.58
+
+Ultima leitura estrutural
+- Tendencia: ALTA
+- Score: 100
+- Sinal: OBSERVAR
+
+Leitura SMC + Elliott
+- SMC dominante: BULLISH
+- Elliott dominante: ONDA 3
+- Brain Score medio dos planos: 30.00
+
+Ultimo contexto do cerebro
+- Origem: operator
+- Tipo: coleta_programada
+- Alinhamento: ATENCAO
+- Observacao: Snapshot automatico apos coleta.
+
+Memoria operacional do operador
+- Integridade da memoria: 100.00%
+- Status: INTEGRA
+- PRE_OPERATION atuais: 470
+- Identidades registradas: 1887
+- Contextos vinculados: 470 / 470
+
+Resultados historicos usados no aprendizado
+- Acertos registrados: 5
+- Erros registrados: 26
+- Taxa historica de acerto: 16.13%
+
+Aprendizado do LEON
+- O LEON reforcou que setups fortes aparecem quando SMC e Elliott apontam juntos.
+=================================
+
+=================================
+LEON VPS | RELATORIO DIARIO DE APRENDIZADO
+=================================
+Data: 2026-08-05
+
+Resumo do dia
+- Precos coletados: 855
+- Candles coletados: 855
+- Sinais registrados: 238
+- Contextos cerebrais: 555
+- Registros analisados: 238
+- Planos gerados: 238
+- Direcao dominante: AGUARDAR
+- Qualidade dominante: FIBONACCI_LIQUIDEZ_NAO_CONFIRMADOS
+- Confianca dominante: BAIXA
+
+Ultima coleta
+- Ativo: Gold_Spot
+- Bid: 4288.27
+- Ask: 4288.67
+- Candle close: 4288.27
+
+Ultima leitura estrutural
+- Tendencia: ALTA
+- Score: 100
+- Sinal: OBSERVAR
+
+Leitura SMC + Elliott
+- SMC dominante: BULLISH
+- Elliott dominante: ONDA 3
+- Brain Score medio dos planos: 29.98
+
+Ultimo contexto do cerebro
+- Origem: operator
+- Tipo: analise_programada
+- Alinhamento: ATENCAO
+- Observacao: Ciclo automatico de analise executado.
+
+Memoria operacional do operador
+- Integridade da memoria: 100.00%
+- Status: INTEGRA
+- PRE_OPERATION atuais: 107
+- Identidades registradas: 2125
+- Contextos vinculados: 107 / 107
+
+Resultados historicos usados no aprendizado
+- Acertos registrados: 5
+- Erros registrados: 26
+- Taxa historica de acerto: 16.13%
+
+Aprendizado do LEON
+- O LEON reforcou que setups fortes aparecem quando SMC e Elliott apontam juntos.
+=================================
+
+=================================
+LEON VPS | RELATORIO DIARIO DE APRENDIZADO
+=================================
+Data: 2026-08-06
+
+Resumo do dia
+- Precos coletados: 1406
+- Candles coletados: 1406
+- Sinais registrados: 176
+- Contextos cerebrais: 504
+- Registros analisados: 176
+- Planos gerados: 176
+- Direcao dominante: AGUARDAR
+- Qualidade dominante: FIBONACCI_LIQUIDEZ_NAO_CONFIRMADOS
+- Confianca dominante: BAIXA
+
+Ultima coleta
+- Ativo: Gold_Spot
+- Bid: 4256.9
+- Ask: 4257.28
+- Candle close: 4256.9
+
+Ultima leitura estrutural
+- Tendencia: BAIXA
+- Score: 100
+- Sinal: OBSERVAR
+
+Leitura SMC + Elliott
+- SMC dominante: BEARISH
+- Elliott dominante: ONDA 3
+- Brain Score medio dos planos: 27.56
+
+Ultimo contexto do cerebro
+- Origem: operator
+- Tipo: coleta_programada
+- Alinhamento: ATENCAO
+- Observacao: Snapshot automatico apos coleta.
+
+Memoria operacional do operador
+- Integridade da memoria: 100.00%
+- Status: INTEGRA
+- PRE_OPERATION atuais: 295
+- Identidades registradas: 2313
+- Contextos vinculados: 295 / 295
+
+Resultados historicos usados no aprendizado
+- Acertos registrados: 6
+- Erros registrados: 29
+- Taxa historica de acerto: 17.14%
+
+Aprendizado do LEON
+- O LEON reforcou que setups fortes aparecem quando SMC e Elliott apontam juntos.
+=================================
+
+=================================
+LEON VPS | RELATORIO DIARIO DE APRENDIZADO
+=================================
+Data: 2026-08-09
+
+Resumo do dia
+- Precos coletados: 270
+- Candles coletados: 270
+- Sinais registrados: 28
+- Contextos cerebrais: 85
+- Registros analisados: 28
+- Planos gerados: 28
+- Direcao dominante: AGUARDAR
+- Qualidade dominante: FIBONACCI_LIQUIDEZ_NAO_CONFIRMADOS
+- Confianca dominante: BAIXA
+
+Ultima coleta
+- Ativo: Gold_Spot
+- Bid: 4318.88
+- Ask: 4319.3
+- Candle close: 4318.88
+
+Ultima leitura estrutural
+- Tendencia: BAIXA
+- Score: 100
+- Sinal: OBSERVAR
+
+Leitura SMC + Elliott
+- SMC dominante: BULLISH
+- Elliott dominante: ONDA 5
+- Brain Score medio dos planos: 28.57
+
+Ultimo contexto do cerebro
+- Origem: operator
+- Tipo: coleta_programada
+- Alinhamento: ATENCAO
+- Observacao: Snapshot automatico apos coleta.
+
+Memoria operacional do operador
+- Integridade da memoria: 100.00%
+- Status: INTEGRA
+- PRE_OPERATION atuais: 536
+- Identidades registradas: 2554
+- Contextos vinculados: 536 / 536
+
+Resultados historicos usados no aprendizado
+- Acertos registrados: 6
+- Erros registrados: 30
+- Taxa historica de acerto: 16.67%
+
+Aprendizado do LEON
+- O LEON registrou ambiente de conflito e deve preservar paciencia operacional.
+=================================
+
+=================================
+LEON VPS | RELATORIO DIARIO DE APRENDIZADO
+=================================
+Data: 2026-08-10
+
+Resumo do dia
+- Precos coletados: 1383
+- Candles coletados: 1383
+- Sinais registrados: 180
+- Contextos cerebrais: 498
+- Registros analisados: 180
+- Planos gerados: 180
+- Direcao dominante: AGUARDAR
+- Qualidade dominante: LAB_SHADOW_VALIDATED
+- Confianca dominante: BAIXA
+
+Ultima coleta
+- Ativo: Gold_Spot
+- Bid: 4430.3
+- Ask: 4430.72
+- Candle close: 4430.3
+
+Ultima leitura estrutural
+- Tendencia: ALTA
+- Score: 100
+- Sinal: POSSÍVEL SETUP
+
+Leitura SMC + Elliott
+- SMC dominante: BULLISH
+- Elliott dominante: ABC_FLAT
+- Brain Score medio dos planos: 29.17
+
+Ultimo contexto do cerebro
+- Origem: operator
+- Tipo: analise_programada
+- Alinhamento: ALINHADO
+- Observacao: Ciclo automatico de analise executado.
+
+Memoria operacional do operador
+- Integridade da memoria: 100.00%
+- Status: INTEGRA
+- PRE_OPERATION atuais: 728
+- Identidades registradas: 2746
+- Contextos vinculados: 728 / 728
+
+Resultados historicos usados no aprendizado
+- Acertos registrados: 6
+- Erros registrados: 30
+- Taxa historica de acerto: 16.67%
+
+Aprendizado do LEON
+- O LEON registrou ambiente de conflito e deve preservar paciencia operacional.
+=================================
+
+=================================
+LEON VPS | RELATORIO DIARIO DE APRENDIZADO
+=================================
+Data: 2026-08-11
+
+Resumo do dia
+- Precos coletados: 1258
+- Candles coletados: 1258
+- Sinais registrados: 192
+- Contextos cerebrais: 511
+- Registros analisados: 192
+- Planos gerados: 192
+- Direcao dominante: AGUARDAR
+- Qualidade dominante: FIBONACCI_LIQUIDEZ_NAO_CONFIRMADOS
+- Confianca dominante: BAIXA
+
+Ultima coleta
+- Ativo: Gold_Spot
+- Bid: 4395.61
+- Ask: 4396.03
+- Candle close: 4395.61
+
+Ultima leitura estrutural
+- Tendencia: BAIXA
+- Score: 100
+- Sinal: OBSERVAR
+
+Leitura SMC + Elliott
+- SMC dominante: BULLISH
+- Elliott dominante: ONDA 3
+- Brain Score medio dos planos: 24.53
+
+Ultimo contexto do cerebro
+- Origem: operator
+- Tipo: coleta_programada
+- Alinhamento: ATENCAO
+- Observacao: Snapshot automatico apos coleta.
+
+Memoria operacional do operador
+- Integridade da memoria: 100.00%
+- Status: INTEGRA
+- PRE_OPERATION atuais: 932
+- Identidades registradas: 2950
+- Contextos vinculados: 932 / 932
+
+Resultados historicos usados no aprendizado
+- Acertos registrados: 6
+- Erros registrados: 30
+- Taxa historica de acerto: 16.67%
+
+Aprendizado do LEON
+- O LEON reforcou que setups fortes aparecem quando SMC e Elliott apontam juntos.
+=================================
+
+=================================
+LEON VPS | RELATORIO DIARIO DE APRENDIZADO
+=================================
+Data: 2026-08-12
+
+Resumo do dia
+- Precos coletados: 1503
+- Candles coletados: 1503
+- Sinais registrados: 164
+- Contextos cerebrais: 482
+- Registros analisados: 164
+- Planos gerados: 164
+- Direcao dominante: AGUARDAR
+- Qualidade dominante: FIBONACCI_LIQUIDEZ_NAO_CONFIRMADOS
+- Confianca dominante: BAIXA
+
+Ultima coleta
+- Ativo: Gold_Spot
+- Bid: 4408.09
+- Ask: 4408.46
+- Candle close: 4408.09
+
+Ultima leitura estrutural
+- Tendencia: ALTA
+- Score: 100
+- Sinal: OBSERVAR
+
+Leitura SMC + Elliott
+- SMC dominante: BULLISH
+- Elliott dominante: ONDA 3
+- Brain Score medio dos planos: 34.63
+
+Ultimo contexto do cerebro
+- Origem: operator
+- Tipo: coleta_programada
+- Alinhamento: ATENCAO
+- Observacao: Snapshot automatico apos coleta.
+
+Memoria operacional do operador
+- Integridade da memoria: 100.00%
+- Status: INTEGRA
+- PRE_OPERATION atuais: 9
+- Identidades registradas: 3114
+- Contextos vinculados: 9 / 9
+
+Resultados historicos usados no aprendizado
+- Acertos registrados: 6
+- Erros registrados: 31
+- Taxa historica de acerto: 16.22%
+
+Aprendizado do LEON
+- O LEON reforcou que setups fortes aparecem quando SMC e Elliott apontam juntos.
+=================================
+
+=================================
+LEON VPS | RELATORIO DIARIO DE APRENDIZADO
+=================================
+Data: 2026-08-13
+
+Resumo do dia
+- Precos coletados: 1827
+- Candles coletados: 1827
+- Sinais registrados: 128
+- Contextos cerebrais: 455
+- Registros analisados: 128
+- Planos gerados: 128
+- Direcao dominante: AGUARDAR
+- Qualidade dominante: FIBONACCI_LIQUIDEZ_NAO_CONFIRMADOS
+- Confianca dominante: BAIXA
+
+Ultima coleta
+- Ativo: Gold_Spot
+- Bid: 4318.96
+- Ask: 4319.35
+- Candle close: 4318.96
+
+Ultima leitura estrutural
+- Tendencia: BAIXA
+- Score: 100
+- Sinal: POSSÍVEL SETUP
+
+Leitura SMC + Elliott
+- SMC dominante: BEARISH
+- Elliott dominante: POSSIVEL ONDA 3
+- Brain Score medio dos planos: 37.97
+
+Ultimo contexto do cerebro
+- Origem: operator
+- Tipo: coleta_programada
+- Alinhamento: ALINHADO
+- Observacao: Snapshot automatico apos coleta.
+
+Memoria operacional do operador
+- Integridade da memoria: 100.00%
+- Status: INTEGRA
+- PRE_OPERATION atuais: 146
+- Identidades registradas: 3251
+- Contextos vinculados: 146 / 146
+
+Resultados historicos usados no aprendizado
+- Acertos registrados: 9
+- Erros registrados: 36
+- Taxa historica de acerto: 20.00%
+
+Aprendizado do LEON
+- O LEON registrou ambiente de conflito e deve preservar paciencia operacional.
+=================================
+
+=================================
+LEON VPS | RELATORIO DIARIO DE APRENDIZADO
+=================================
+Data: 2026-08-16
+
+Resumo do dia
+- Precos coletados: 515
+- Candles coletados: 515
+- Sinais registrados: 0
+- Contextos cerebrais: 55
+- Registros analisados: 0
+- Planos gerados: 0
+- Direcao dominante: SEM DADOS
+- Qualidade dominante: SEM DADOS
+- Confianca dominante: SEM DADOS
+
+Ultima coleta
+- Ativo: Gold_Spot
+- Bid: 4396.7
+- Ask: 4397.12
+- Candle close: 4396.7
+
+Ultima leitura estrutural
+- Tendencia: SEM DADOS
+- Score: SEM DADOS
+- Sinal: SEM DADOS
+
+Leitura SMC + Elliott
+- SMC dominante: SEM DADOS
+- Elliott dominante: SEM DADOS
+- Brain Score medio dos planos: 0.00
+
+Ultimo contexto do cerebro
+- Origem: operator
+- Tipo: coleta_programada
+- Alinhamento: CONFLITO
+- Observacao: Snapshot automatico apos coleta.
+
+Memoria operacional do operador
+- Integridade da memoria: 100.00%
+- Status: INTEGRA
+- PRE_OPERATION atuais: 202
+- Identidades registradas: 3307
+- Contextos vinculados: 202 / 202
+
+Resultados historicos usados no aprendizado
+- Acertos registrados: 9
+- Erros registrados: 36
+- Taxa historica de acerto: 20.00%
+
+Aprendizado do LEON
+- Hoje houve coleta de mercado, mas ainda nao houve novo setup registrado na memoria operacional.
+=================================
+

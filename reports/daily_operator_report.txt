@@ -1,7 +1,7 @@
 LEON | RELATORIO OPERACIONAL DIARIO
 =================================
-Data: 2026-07-30
-Inicio do operador: 2026-07-30 12:24:01.601044
+Data: 2026-08-16
+Inicio do operador: 2026-07-30 12:24:01.601044 (ciclo iniciado anteriormente)
 
 Resumo
 - Checkpoints enviados: 0
@@ -12,7 +12,7 @@ Resumo
 Decisoes por operacao
 - Entrar: 0
 - Bloquear: 0
-- Observar: 89
+- Observar: 0
 
 Bloqueios
 - Alvo tecnico nao pagou o risco: 0
@@ -21,13 +21,13 @@ Bloqueios
 - Preco fora da zona: 0
 
 Erros
-- Ativos: 1599
-- Recuperados no mesmo dia: 4180
-- 2026-07-30 22:57:40.989993 | TELEGRAM | TOKEN ou CHAT_ID nao configurado
-- 2026-07-30 22:58:11.143176 | TELEGRAM | TOKEN ou CHAT_ID nao configurado
-- 2026-07-30 22:58:41.246437 | TELEGRAM | TOKEN ou CHAT_ID nao configurado
-- 2026-07-30 22:59:11.393420 | TELEGRAM | TOKEN ou CHAT_ID nao configurado
-- 2026-07-30 22:59:41.492410 | TELEGRAM | TOKEN ou CHAT_ID nao configurado
+- Ativos: 1236
+- Recuperados no mesmo dia: 171
+- 2026-08-16 22:59:56.400357 | OPERATOR | falha na analise: Returncode: 1
+- 2026-08-16 22:59:56.400517 | TELEGRAM | TOKEN ou CHAT_ID nao configurado
+- 2026-08-16 22:59:56.511984 | TELEGRAM | TOKEN ou CHAT_ID nao configurado
+- 2026-08-16 23:00:27.334134 | OPERATOR | falha na analise: Returncode: 1
+- 2026-08-16 23:00:27.334344 | TELEGRAM | TOKEN ou CHAT_ID nao configurado
 
 Melhoria sugerida para o proximo dia
 - Continuar estudando ate aparecer Setup A+ com confluencia limpa.

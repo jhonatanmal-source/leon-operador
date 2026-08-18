@@ -1,0 +1,18 @@
+LEON | RELATORIO POR OPERACAO
+=================================
+Data/hora: 2026-08-17T15:09:27
+Pre-op: PREOP-003457
+Simbolo: Gold_Spot
+Direcao planejada: COMPRA
+Preco planejado: 4411.3
+Preco real: 4411.86
+RR planejado: 3.0
+RR real: 1.04
+Brain Score: 35
+Classificacao: SETUP FRACO
+Decisao: ENTRAR
+Motivo: ORDEM_TESTE_ENVIADA
+Contexto SMC: BULLISH
+Contexto Elliott: ABC_ZIGZAG
+Melhoria sugerida: Aguardar confluencia mais forte antes de permitir execucao demo.
+=================================

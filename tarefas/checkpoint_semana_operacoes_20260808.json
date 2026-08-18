@@ -1,0 +1,46 @@
+{
+  "mission_id": "MISSION-20260808-RELATORIO-SEMANA",
+  "date": "2026-08-08",
+  "type": "RELATORIO / OPERACIONAL LEON",
+  "description": "Consolidar todas as informações da semana de operações do LEON (03-08/08/2026)",
+  "status": "APROVADO",
+  "phases": {
+    "triage": "COMPLETED",
+    "diagnosis": "COMPLETED",
+    "plan": "COMPLETED",
+    "convocation": "COMPLETED (nenhum agente necessário - coleta direta)",
+    "implementation": "COMPLETED (relatório + nota Obsidian + renovação demo)",
+    "tests": "COMPLETED (validação cruzada 12 trades, 4W/8L = 33.3%)",
+    "review": "COMPLETED",
+    "security": "COMPLETED (sem alteração de código/estratégia/risco/TP/SL; conta real bloqueada)",
+    "documentation": "COMPLETED (relatório + aprendizado 2026-08-08 + nota Obsidian)",
+    "report": "COMPLETED",
+    "approval": "APROVED"
+  },
+  "files_modified": [
+    "tarefas/relatorios/RELATORIO_SEMANA_OPERACOES_20260808.md (criado)",
+    "obsidian_vault/analise/Relatorio_Semana_Operacoes_2026-08-08.md (criado)",
+    "tarefas/aprendizados_diarios/2026-08-08.md (atualizado)",
+    "data/autonomy_state.json (renovado demo via CLI oficial)"
+  ],
+  "findings": {
+    "week_trades": 12,
+    "wins": 4,
+    "losses": 8,
+    "winrate_percent": 33.3,
+    "payoff_R": 0,
+    "max_loss_streak": 5,
+    "c5_reached": true,
+    "c5_logged": false,
+    "auto_simulate_now_permitted": true
+  },
+  "security_verified": true,
+  "mt5_affected": false,
+  "real_account_affected": false,
+  "strategy_risk_tp_sl_affected": false,
+  "autonomy_demo": {
+    "action": "granted_1440min_via_cli",
+    "expires_at": "2026-08-09T21:14:31",
+    "scope": "demo_execution"
+  }
+}
