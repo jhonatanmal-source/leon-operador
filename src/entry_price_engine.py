@@ -35,6 +35,7 @@ def calcular_entrada(
     sell_liquidity=None,
     fvg_inicio=None,
     fvg_fim=None,
+    symbol=None,
 ):
     print()
     print("===================================")
@@ -42,7 +43,10 @@ def calcular_entrada(
     print("===================================")
 
     minimum_rr = _minimum_operational_rr()
-    refinement = refine_m15_m5(direcao)
+    if symbol:
+        refinement = refine_m15_m5(direcao, symbol=symbol)
+    else:
+        refinement = refine_m15_m5(direcao)
     if not refinement.get("ok"):
         print(
             "SEM ENTRADA: nao foi possivel carregar candles M15/M5 "

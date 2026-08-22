@@ -665,6 +665,7 @@ if direcao != "AGUARDAR":
         sell_liquidity=sell_liquidity,
         fvg_inicio=fvg_inicio,
         fvg_fim=fvg_fim,
+        symbol=ativo,
     )
     if operacao is not None and lab_entry["approved"]:
         mark_lab_event(lab_event_signature)

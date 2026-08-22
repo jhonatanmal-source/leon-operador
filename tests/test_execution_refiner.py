@@ -185,3 +185,60 @@ def test_refine_repassa_erro_de_mercado(monkeypatch):
     out = refine_m15_m5("COMPRA")
     assert out["ok"] is False
     assert out["error"] == "MT5_INITIALIZE_FAILED"
+
+
+# ── Propagação de símbolo (correção B1 — bug do default XAUUSD) ───────────
+
+def test_refine_propaga_simbolo_para_load(monkeypatch):
+    """refine_m15_m5 deve repassar o símbolo recebido a load_execution_candles.
+
+    Regressão do bug B1: a corretora usa 'Gold_Spot', mas o default 'XAUUSD'
+    fazia load_execution_candles retornar 0 candles -> INSUFFICIENT_EXECUTION_CANDLES
+    em todo ciclo. O símbolo real precisa chegar até o carregador.
+    """
+    capturado = {}
+
+    def _fake_load(symbol="XAUUSD", **kwargs):
+        capturado["symbol"] = symbol
+        return {"ok": True, "m15": [], "m5": [], "h1": [], "h4": []}
+
+    monkeypatch.setattr(
+        "mt5_execution_refiner.load_execution_candles", _fake_load
+    )
+    refine_m15_m5("COMPRA", symbol="Gold_Spot")
+    assert capturado["symbol"] == "Gold_Spot"
+
+
+def test_calcular_entrada_propaga_simbolo(monkeypatch):
+    """calcular_entrada(symbol=...) deve chegar a refine_m15_m5 com o símbolo.
+
+    Garante que o caller (leon.py passa symbol=ativo) não caia no default
+    XAUUSD dentro do entry_price_engine.
+    """
+    import entry_price_engine
+
+    capturado = {}
+
+    def _fake_refine(direction, symbol="XAUUSD"):
+        capturado["symbol"] = symbol
+        # Sem trigger confirmado: interrompe cedo, basta validar a propagação.
+        return {"ok": True, "m15": [], "m5": [], "trigger": {"confirmed": False, "reason": "X"}}
+
+    monkeypatch.setattr(entry_price_engine, "refine_m15_m5", _fake_refine)
+    entry_price_engine.calcular_entrada("COMPRA", 100.0, 98.0, symbol="Gold_Spot")
+    assert capturado["symbol"] == "Gold_Spot"
+
+
+def test_calcular_entrada_sem_simbolo_usa_default(monkeypatch):
+    """Sem symbol explícito, mantém compatibilidade (default do refinador)."""
+    import entry_price_engine
+
+    capturado = {}
+
+    def _fake_refine(direction, symbol="XAUUSD"):
+        capturado["symbol"] = symbol
+        return {"ok": True, "m15": [], "m5": [], "trigger": {"confirmed": False, "reason": "X"}}
+
+    monkeypatch.setattr(entry_price_engine, "refine_m15_m5", _fake_refine)
+    entry_price_engine.calcular_entrada("COMPRA", 100.0, 98.0)
+    assert capturado["symbol"] == "XAUUSD"
