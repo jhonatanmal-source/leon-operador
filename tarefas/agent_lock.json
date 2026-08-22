@@ -1,6 +1,6 @@
 {
   "mission_id": "MISSION-20260821-FIX-SIMBOLO-ENTRADA",
-  "status": "IMPLEMENTADA_TESTADA_SEM_COMMIT",
+  "status": "CONCLUIDA_APROVADA_COMMITADA",
   "writer": "Engineering Director",
   "reserved_files": [
     "src/entry_price_engine.py",
@@ -11,5 +11,5 @@
   ],
   "started_at": "2026-08-21T21:10:00-0300",
   "completed_at": "2026-08-21T21:20:00-0300",
-  "notes": "Correcao A IMPLEMENTADA: calcular_entrada(symbol=None) e leon.py agora passam symbol=ativo para refine_m15_m5, corrigindo default XAUUSD (corretora so tem Gold_Spot) que causava INSUFFICIENT_EXECUTION_CANDLES em 100% dos ciclos. Validado em produzido real: Gold_Spot agora carrega 160/180 candles M15/M5 (antes: 0/0). 4 testes novos em tests/test_execution_refiner.py (403 total, 403 passed). Correcao D: investigacao read-only concluida - INVALID_SELL_PRICE_STRUCTURE (18/08 10:41, PREOP-003551) e o guard _rr_no_preco_execucao funcionando corretamente; recusou plano degenerado (stop a 1.36 pontos da entrada planejada, estrutura invertida no preco live). Causa raiz esta upstream em build_smc_trade_levels (fora do escopo aprovado, nao alterado). Nenhuma alteracao em estrategia/risco/TP/SL/conta real. Sem commit, aguardando autorizacao."
+  "notes": "Correcao A IMPLEMENTADA: calcular_entrada(symbol=None) e leon.py agora passam symbol=ativo para refine_m15_m5, corrigindo default XAUUSD (corretora so tem Gold_Spot) que causava INSUFFICIENT_EXECUTION_CANDLES em 100% dos ciclos. Validado em produzido real: Gold_Spot agora carrega 160/180 candles M15/M5 (antes: 0/0). 4 testes novos em tests/test_execution_refiner.py (403 total, 403 passed). Correcao D: investigacao read-only concluida - INVALID_SELL_PRICE_STRUCTURE (18/08 10:41, PREOP-003551) e o guard _rr_no_preco_execucao funcionando corretamente; recusou plano degenerado (stop a 1.36 pontos da entrada planejada, estrutura invertida no preco live). Causa raiz esta upstream em build_smc_trade_levels (fora do escopo aprovado, nao alterado). Nenhuma alteracao em estrategia/risco/TP/SL/conta real. COMMITADO (c3420e2). Proximas pendencias do diagnostico (nao resolvidas por esta missao): B2 - zonas LAB sem mecanismo de promocao a CONFIRMADA (aguarda decisao + design do Architect); B3 - autonomia demo expirada em 2026-08-21 14:30 (renovacao manual do usuario)."
 }
