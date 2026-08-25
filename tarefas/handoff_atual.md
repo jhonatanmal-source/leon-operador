@@ -1,5 +1,15 @@
 # Handoff Atual
 
+## 🎯 Última Missão Concluída: MISSION-20260824-PROMOCAO-ZONAS-LAB (bloqueio B2)
+- **Estado**: ✅ IMPLEMENTADA + TESTADA (416/416 passed, 13 testes novos) — **sem commit, sem restart do operador** (aguardando autorização).
+- **O que resolve**: bloqueio B2 do diagnóstico de 21/08 — zonas LAB nasciam `AGUARDANDO_ESTRUTURA` e nunca eram promovidas a `CONFIRMADA` (nenhum processo alimentava evidência ao `monitor_zone`) → execução demo LAB permanentemente bloqueada (`REGION_NOT_CONFIRMED`).
+- **Mecanismo**: novo `src/lab_zone_monitor.py` roda no ciclo de estudo contínuo do operador; agrupa zonas LAB pendentes por símbolo (**1 leitura MT5 por símbolo/ciclo**, não por zona); evidência real via `analyze_smc_context` (M15) + `_micro_trigger` (M5, sweep+reclaim+displacement); promoção EXCLUSIVAMENTE via `monitor_zone` (cadeia completa liquidez→estrutura→gatilho, igual produção); `structural_confirmations` gravadas só após promoção real, com eventos detectados. Hook em `leon_operator.py` com log `OPERATOR | zonas LAB monitoradas: ...`.
+- **Escopo consciente**: as **1509 zonas LAB legadas `CONFIRMADA`** (fabricadas antes da correção de 18/08) ficam FORA do monitor — reprocessá-las custaria 1509 leituras MT5/ciclo e as expiraria em massa por idade. Retroatividade = missão dedicada futura se necessário.
+- **⚠️ Bloqueio de infraestrutura (PENDENTE DO USUÁRIO)**: MT5 indisponível durante a missão — `mt5.initialize()` → `False`, `(-10001, 'IPC send failed')`. Porta 18812 abre mas IPC falha. Suspeita: duas sessões wineserver simultâneas dessincronizadas (rpyc 20:08 vs terminal64 21:00). Restart exige ação manual fora do workspace (política de permissões nega `/opt/leon/scripts/` a agentes): rodar `start-rpyc-server.sh` → `run-mt5-headless` e validar com `python -c "import mt5_safe as mt5; print(mt5.initialize())"`. Validação end-to-end da missão depende disso.
+- **Comportamento seguro validado**: com MT5 fora, monitor faz skip gracioso (`MT5_INITIALIZE_FAILED`), zero mutação de estado, arquivo real intacto (validado contra cópia com md5).
+- **Arquivos**: `src/lab_zone_monitor.py` (NOVO), `src/leon_operator.py` (+19 linhas: import + hook), `tests/test_lab_zone_monitor.py` (NOVO, 13 testes), `tarefas/missoes/MISSION-20260824-PROMOCAO-ZONAS-LAB.md`.
+- **Próximos passos**: (1) usuário restaura MT5 manualmente; (2) autorizar commit desta missão + das alterações pendentes de 21/08; (3) reiniciar operador para carregar o hook; (4) observar logs `zonas LAB monitoradas` nas 62 zonas legítimas.
+
 ## 🛠️ Backlog de Melhorias de Código (análise 2026-08-18 — 9 missões pequenas)
 
 Origem: auditoria de código somente leitura em `src/` (arquivos grandes: `leon_panel.py`, `leon_operator.py`, `interest_zone_engine.py`, `mt5_order_executor.py`, `telegram_commands_mcp.py`, `leon.py`, `pre_operation_engine.py`). Dividido em missões pequenas e independentes para não consumir muito crédito de uma vez. Ordem sugerida: risco crescente. Nenhuma mistura de estratégia/risco/MT5 real. Executar uma por vez, com testes (suíte completa `--ignore=tests/test_leon_brain.py`) e aprovação entre cada.
@@ -89,6 +99,7 @@ Origem: auditoria de código somente leitura em `src/` (arquivos grandes: `leon_
 | `config.ini` + `config.ini.example` | seção `[BASELINE] window_days = 30` |
 
 ## 📋 Pendências Pós-Missão
+0. **MT5 indisponível (24/08)** — `IPC send failed` (-10001); restart manual de rpyc+MT5 headless necessário (ver missão acima). Bloqueia validação end-to-end do B2 e toda leitura MT5.
 1. **Rotacionar senha do usuário `jhonatan`** (dashboard web) — comprometida em 30/07
 2. **Telegram** — ✅ REATIVADO (2026-08-18): token real do BotFather + chat_id `-1004376165028` configurados em `/opt/leon/app/.env`; `config.ini` `enabled=true`; envio real validado (`message_id 3364`, grupo "LEON XAU AI - Estudos"). ⚠️ NÃO criar symlink `app/.env -> config/.env` (placeholder antigo `COLAR_...` no `config/.env` seria lido como token; `app/.env` tem chaves web reais).
 3. **Backtest MCP** — ainda simulação estrutural (`candles_analyzed: 0`)
@@ -103,10 +114,11 @@ Origem: auditoria de código somente leitura em `src/` (arquivos grandes: `leon_
 12. ~~**Bug MCP `_MT5_AVAILABLE` copiado por valor**~~ ✅ RESOLVIDO (MISSION-20260818-FIX-MCP-MARKET): `leon_market_mcp.py` importava a flag `False` por valor → `get_account_info`, `get_current_price`, `get_symbol_info`, `get_ohlc`, `list_symbols`, `get_market_snapshot` retornavam sempre "MT5 não disponível"; só `check_mt5_status` funcionava. Correção: helper `_mt5_disponivel()` → `check_mt5().get("available")` (dispara `_ensure_initialized()` real). Mesmo padrão corrigido em `leon_backtest_mcp.py`. Validado em produção (account info real, preço Gold_Spot real). 11 testes novos, 398 total.
 
 ## 🟢 Status Geral do Sistema
-- **387/387** testes passando (com `--ignore=tests/test_leon_brain.py`)
-- **Operator**: PID **3424309** ativo (`leon_operator.py`, reiniciado 2026-08-18 06:27:01), ONLINE, autonomia demo ATIVA (scope `demo_execution`, expira 18/08 20:32), conta real bloqueada. ✅ **RODA O CÓDIGO NOVO (commit `d1e6ba3`)** — SMC guard sempre ativo confirmado em produção (log 06:35+).
+- **416/416** testes passando (com `--ignore=tests/test_leon_brain.py`) — inclui 13 novos do B2 (`tests/test_lab_zone_monitor.py`)
+- **🔴 MT5**: INDISPONÍVEL desde 24/08 (`IPC send failed` -10001) — porta 18812 abre mas IPC falha; suspeita de sessões wineserver dessincronizadas (rpyc 20:08 vs terminal64 21:00). Restart manual pendente do usuário.
+- **Operator**: rodando código de 21/08 (commit `c3420e2`) — **NÃO inclui ainda o hook B2** (restart pendente de autorização). Autonomia demo EXPIRADA desde 21/08 14:30. Conta real bloqueada.
 - **CSV pre_operation**: 297+ pre-ops (PREOP-003106→003558), gap 12-17/08 recuperado; 18 ABERTO, 137 FECHADO, 150 OBSERVADO
 - **Backup operacional**: horário via `scripts/backup_operational_data.sh` → `/opt/leon/backups/operational_data/` (rotação 48)
-- **MT5**: read-only via wine/rpyc (porta 18812 aberta, wineserver saudável)
-- **MCPs**: backtest, market, memory, replay registrados — ✅ **market MCP funcional** (bug #12 corrigido: account info, preço Gold_Spot e OHLC reais)
+- **MCPs**: backtest, market, memory, replay registrados — market MCP funcional quando MT5 saudável
+- **Zonas LAB**: 1571 total — 1509 legadas CONFIRMADA (artefatos pré-18/08, fora de escopo), 62 AGUARDANDO_ESTRUTURA (legítimas, agora monitoráveis pelo B2 após restart do operador com MT5 saudável)
 - **Alerta operacional (pendência #10)**: ✅ RESOLVIDO — operador roda o guard SMC novo; entradas no quadrante comprar topo/vender fundo não passam mais
