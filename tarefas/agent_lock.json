@@ -1,16 +1,9 @@
 {
-  "mission_id": "MISSION-20260824-PROMOCAO-ZONAS-LAB",
-  "status": "CONCLUIDA_AGUARDANDO_COMMIT",
+  "mission_id": "MISSION-20260825-MT5-CREDENCIAIS-WEB",
+  "status": "CONCLUIDA_APROVADA_COMMITADA",
   "writer": "Engineering Director",
-  "reserved_files": [
-    "src/lab_zone_monitor.py",
-    "src/leon_operator.py",
-    "tests/test_lab_zone_monitor.py",
-    "tarefas/handoff_atual.md",
-    "tarefas/aprendizados_diarios/2026-08-24.md",
-    "tarefas/missoes/MISSION-20260824-PROMOCAO-ZONAS-LAB.md"
-  ],
-  "started_at": "2026-08-24T00:00:00-0300",
-  "completed_at": "2026-08-24T23:30:00-0300",
-  "notes": "B2 CONCLUIDA: mecanismo de promocao de zonas LAB por evidencia estrutural real. src/lab_zone_monitor.py (NOVO) + hook no ciclo de estudo continuo do leon_operator.py (+19 linhas) + tests/test_lab_zone_monitor.py (NOVO, 13 testes). Suite completa 416/416 passed. Promocao EXCLUSIVAMENTE via monitor_zone (cadeia completa liquidez->estrutura->gatilho M5 _micro_trigger); structural_confirmations gravadas so apos promocao real, com eventos detectados; nunca fabrica status. Otimizacao: 1 leitura MT5 por simbolo/ciclo (nao por zona). Escopo consciente: 1509 zonas LAB legadas CONFIRMADA (fabricadas pre-18/08) ficam fora do monitor. Validacao end-to-end com MT5 vivo PENDENTE: mt5.initialize() falha com IPC send failed (-10001), suspeita de sessoes wineserver dessincronizadas (rpyc 20:08 vs terminal64 21:00); restart manual dos scripts /opt/leon/scripts/start-rpyc-server.sh e run-mt5-headless necessario (fora do workspace, bloqueado por politica de permissoes a agentes). Skip gracioso validado contra copia do dataset real (arquivo original intacto, md5 conferido). SEM COMMIT e SEM restart do operador - aguardando autorizacao do usuario."
+  "reserved_files": [],
+  "started_at": "2026-08-25T00:00:00-0300",
+  "completed_at": "2026-08-25T23:59:00-0300",
+  "notes": "CONCLUIDA E COMMITADA (3da5a4f): pagina admin-only /mt5-account para credenciais MT5 (login/servidor/senha criptografados Fernet, chave mestra /opt/leon/.master_key). Guard REAL duplo (salvamento so DEMO + teste de conexao recusa trade_mode REAL). Senha nunca exposta. 27 testes novos, suite 443/443 passed. Commit autorizado pelo usuario ('so comitta ela'). Proximo passo operacional: cadastrar credenciais da conta FTMO Challenge via painel (prerequisito FTMO Fase 1)."
 }
