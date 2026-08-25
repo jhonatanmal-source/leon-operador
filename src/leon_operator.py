@@ -61,6 +61,7 @@ from src.operator_status import obter_status_operadores
 from src.mt5_operation_close_monitor import check_mt5_closed_operations
 from src.smc_study_engine import analyze_smc_context
 from src.elliott_study_engine import study_elliott_context
+from src.lab_zone_monitor import monitorar_zonas_lab
 from src.telegram_alert import (
     enviar_alerta_conflito_operadores,
     enviar_alerta_dados_antigos,
@@ -1226,6 +1227,24 @@ def executar_estudo_continuo(forcar=False):
                     f"OPERATOR | entradas simuladas avaliadas: "
                     f"{atualizadas} atualizadas"
                 )
+
+        # Monitoramento de zonas de laboratorio (B2): alimenta evidencia
+        # estrutural real (liquidez+estrutura+gatilho M5) ao monitor_zone,
+        # promovendo zonas LAB de AGUARDANDO_ESTRUTURA a CONFIRMADA quando a
+        # cadeia completa e observada em candles reais. Somente leitura de MT5;
+        # a promocao ocorre exclusivamente dentro de monitor_zone.
+        try:
+            resultado_lab = monitorar_zonas_lab()
+            if resultado_lab.get("monitored"):
+                registrar_log(
+                    "OPERATOR | zonas LAB monitoradas: "
+                    f"{resultado_lab['monitored']} "
+                    f"(promovidas={resultado_lab['promoted']}, "
+                    f"invalidadas={resultado_lab['invalidated']}, "
+                    f"expiradas={resultado_lab['expired']})"
+                )
+        except Exception as erro_lab:  # nao interrompe o ciclo de estudo
+            registrar_log(f"OPERATOR | erro ao monitorar zonas LAB: {erro_lab}")
 
         from src.study_engine import register_market_observation
 
