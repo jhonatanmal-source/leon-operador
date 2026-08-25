@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Conta MT5 | LEON XAU ELITE AI{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Conta MT5</h1>
+    <p class="muted">Gerencia as credenciais do terminal MetaTrader 5. Somente leitura no teste — nenhuma ordem é enviada.</p>
+  </div>
+  <span class="badge {{ 'g' if status.configured else 'y' }}">{{ 'Configurado' if status.configured else 'Não configurado' }}</span>
+</div>
+
+<div class="g2">
+  <div class="card">
+    <div class="card-head"><h2>Status atual</h2></div>
+    <div class="dl">
+      <div class="dl-item"><dt>Login</dt><dd>{{ status.login or '—' }}</dd></div>
+      <div class="dl-item"><dt>Servidor</dt><dd>{{ status.server or '—' }}</dd></div>
+      <div class="dl-item"><dt>Tipo de conta</dt><dd>{{ status.account_type or '—' }}</dd></div>
+      <div class="dl-item"><dt>Senha</dt><dd>{{ 'configurada' if status.configured else 'não configurada' }}</dd></div>
+      <div class="dl-item"><dt>Atualizado em</dt><dd>{{ status.updated_at or '—' }}</dd></div>
+      <div class="dl-item"><dt>Atualizado por</dt><dd>{{ status.updated_by or '—' }}</dd></div>
+    </div>
+  </div>
+
+  {% if test_result %}
+  <div class="card">
+    <div class="card-head">
+      <h2>Resultado do teste</h2>
+      <span class="badge {{ 'r' if test_result.is_real else 'g' if test_result.ok else 'r' }}">
+        {{ 'CONTA REAL BLOQUEADA' if test_result.is_real else 'OK' if test_result.ok else 'FALHOU' }}
+      </span>
+    </div>
+    <div class="dl">
+      <div class="dl-item"><dt>Conta</dt><dd>{{ test_result.account_login or '—' }}</dd></div>
+      <div class="dl-item"><dt>Servidor</dt><dd>{{ test_result.server or '—' }}</dd></div>
+      <div class="dl-item"><dt>Modo</dt><dd>{{ test_result.trade_mode or '—' }}</dd></div>
+      {% if test_result.error %}
+      <div class="dl-item"><dt>Erro</dt><dd class="red">{{ test_result.error }}</dd></div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<div class="card" style="max-width:520px">
+  <div class="card-head"><h2>Salvar credenciais</h2></div>
+  <form method="post" action="{{ url_for('mt5_account.save') }}" class="form-stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label>
+      Login MT5
+      <input class="form-input" type="text" name="login" placeholder="Ex: 12345678" pattern="[0-9]{4,12}" minlength="4" maxlength="12" required>
+      <small style="color:var(--muted);font-weight:400;text-transform:none">Numérico, 4 a 12 dígitos.</small>
+    </label>
+
+    <label>
+      Servidor
+      <input class="form-input" type="text" name="server" placeholder="Ex: Broker-Demo" required>
+    </label>
+
+    <label>
+      Senha
+      <input class="form-input" type="password" name="password" placeholder="Senha do investidor/master" minlength="4" required>
+    </label>
+
+    <label>
+      Confirmar senha
+      <input class="form-input" type="password" name="confirm_password" placeholder="Repita a senha" minlength="4" required>
+    </label>
+
+    <label>
+      Tipo de conta
+      <select name="account_type" class="form-select" required>
+        <option value="DEMO" selected>DEMO</option>
+      </select>
+      <small style="color:var(--muted);font-weight:400;text-transform:none">Apenas contas DEMO são aceitas. Conta REAL é bloqueada em código.</small>
+    </label>
+
+    <button class="btn btn-gold form-full" type="submit">Salvar credenciais</button>
+  </form>
+</div>
+
+<div class="card" style="max-width:520px;margin-top:16px">
+  <div class="card-head"><h2>Testar conexão</h2></div>
+  <p class="muted" style="margin-bottom:10px">
+    Deixe os campos em branco para testar as credenciais já salvas, ou preencha
+    para testar antes de salvar. Somente leitura — nenhuma ordem é enviada.
+  </p>
+  <form method="post" action="{{ url_for('mt5_account.test') }}" class="form-stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label>
+      Login MT5 (opcional)
+      <input class="form-input" type="text" name="login" placeholder="Deixe vazio para usar o salvo">
+    </label>
+
+    <label>
+      Servidor (opcional)
+      <input class="form-input" type="text" name="server" placeholder="Deixe vazio para usar o salvo">
+    </label>
+
+    <label>
+      Senha (opcional)
+      <input class="form-input" type="password" name="password" placeholder="Deixe vazio para usar a salva">
+    </label>
+
+    <button class="btn btn-outline form-full" type="submit">Testar conexão</button>
+  </form>
+</div>
+{% endblock %}

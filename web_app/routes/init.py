@@ -4,6 +4,7 @@ from . import (
     dashboard_bp,
     health_bp,
     leon_bp,
+    mt5_account_bp,
     users_bp,
     virtual_operations_bp,
     weekly_audit_bp,
@@ -19,3 +20,4 @@ def register_blueprints(app):
     app.register_blueprint(analysis_bp)
     app.register_blueprint(virtual_operations_bp)
     app.register_blueprint(weekly_audit_bp)
+    app.register_blueprint(mt5_account_bp)

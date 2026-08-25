@@ -62,9 +62,12 @@
       </details>
 
       {% if current_user.role == 'ADMIN' %}
-      <details class="sb-group" {% if request.endpoint and 'users' in request.endpoint %}open{% endif %}>
+      <details class="sb-group" {% if request.endpoint and ('users' in request.endpoint or 'mt5_account' in request.endpoint) %}open{% endif %}>
         <summary class="sb-link"><i>⚙</i><span>Administracao</span><em>⌄</em></summary>
-        <div class="sb-submenu"><a href="{{ url_for('users.list_users') }}" class="{% if request.endpoint and 'users' in request.endpoint %}active{% endif %}">Usuarios</a></div>
+        <div class="sb-submenu">
+          <a href="{{ url_for('users.list_users') }}" class="{% if request.endpoint and 'users' in request.endpoint %}active{% endif %}">Usuarios</a>
+          <a href="{{ url_for('mt5_account.index') }}" class="{% if request.endpoint and 'mt5_account' in request.endpoint %}active{% endif %}">Conta MT5</a>
+        </div>
       </details>
       {% endif %}
     </nav>
