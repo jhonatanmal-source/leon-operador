@@ -30,6 +30,7 @@ from src.top_down_agent import ultima_leitura_top_down
 from src.autonomy_guard import status_autonomia
 from src.timeframe_policy import evaluate_timeframe_policy
 from src.interest_zone_engine import validate_zone_for_execution
+from src.ftmo_guard import avaliar_guard_ftmo
 
 # _mt5_exec is resolved dynamically inside executar_ordem_mt5_pre_operacao()
 # to allow test mocking. It is not imported at module level.
@@ -693,6 +694,19 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
             f"MT5 ORDER | bloqueada por perda diaria: {limite_diario}"
         )
         return _bloqueio("DAILY_LOSS_LIMIT_REACHED", limite_diario)
+
+    # ── FTMO Guard (kill switch automatico, adicional) ────────────────────
+    # Ativo apenas quando [FTMO] enabled=true. Detecta a conta ao vivo,
+    # ancora baseline por login e aplica buffer interno (mais conservador
+    # que os limites FTMO). NAO substitui os guards acima; nao envia ordem.
+    ftmo = avaliar_guard_ftmo()
+    if not ftmo.get("reason") == "FTMO_GUARD_DISABLED":
+        if not ftmo.get("ok"):
+            registrar_log(f"MT5 ORDER | FTMO guard indisponivel: {ftmo}")
+            return _bloqueio("FTMO_GUARD_UNAVAILABLE", ftmo)
+        if not ftmo.get("approved"):
+            registrar_log(f"MT5 ORDER | bloqueada pelo FTMO guard: {ftmo}")
+            return _bloqueio("FTMO_LIMIT_REACHED", ftmo)
 
     pre_operacao = _ultima_pre_operacao_aberta()
 

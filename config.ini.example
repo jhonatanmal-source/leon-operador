@@ -67,6 +67,15 @@ window_days=30
 [MT5]
 enabled=false
 
+[FTMO]
+enabled=false
+daily_loss_percent=5.0
+max_drawdown_percent=10.0
+daily_buffer_percent=2.0
+drawdown_buffer_percent=6.0
+min_trading_days=4
+profit_target_percent=8.0
+
 [EXECUTION]
 enabled=false
 demo_only=true
