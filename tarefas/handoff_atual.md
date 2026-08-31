@@ -1,5 +1,123 @@
 # Handoff Atual
 
+## 🟢 CONCLUÍDA: MISSION-20260830-AUTO-LEARNING — Mecanismo de Aprendizado Automático
+- **Categoria**: IA — Captura automática de aprendizados do agente
+- **Estado**: ✅ IMPLEMENTADA + TESTADA + DOCUMENTADA + APROVADA
+- **O que foi feito**: Mecanismo que salva automaticamente o que o agente aprende conforme o mercado está agindo, sem exigir registro manual no final de cada missão.
+- **Arquivos criados**:
+  - `src/learning_capture.py` (NOVO, 325 linhas) — Módulo Python de captura automática
+  - `docs/automatic_learning_mechanism.md` (NOVO, 231 linhas) — Documentação completa
+- **Funcionalidades**:
+  - 5 checkpoints automáticos: TRIAGEM, DIAGNÓSTICO, PLANO, IMPLEMENTATION, TESTES
+  - Filtro de segurança com 66 palavras-chave sensíveis (TP, SL, conta real, tokens, balance, risk, RR, etc.)
+  - Promoção inteligente para CONTEXTO_EVOLUCAO.md (respeita marcador CURADO_MANUALMENTE)
+  - Atualização automática do INDICE.md
+  - Idempotência (evita duplicatas)
+- **Testes**: End-to-end completo, filtro de sensibilidade validado, integração com sistema existente
+- **Segurança**: Conta real, TP, SL, tokens, strategy details NUNCA salvos
+- **Próximos passos**: Integrar chamadas automáticas no leon-engineering-director.md; criar testes unitários em tests/test_learning_capture.py; expandir para mais checkpoints
+- **Pendência de commit**: Arquivos novos não commitados (aguardando autorização)
+
+---
+
+## 🔒 AUDITORIA DE BRECHAS (2026-08-25) — INPUT PARA MISSÃO EM ANDAMENTO
+> Levantamento somente leitura feito pelo agente de revisão para subsidiar a missão do agente ativo. NADA foi alterado.
+
+### 🔴 CRÍTICAS
+1. **`web_app/database/mt5_credentials.json` está `root:root` (600) e o serviço web roda como `leon`** — o service NÃO consegue ler nem escrever o store de credenciais MT5. Agravante: `_read_store()` (`mt5_credential_service.py:88-97`) **mascara o erro** retornando `{}` silenciosamente (`except OSError: return {}`) → feature de credenciais parece funcionar mas opera vazia/falha oculta. Mesma classe do incidente `web_access.log` de hoje (root vs leon). **Corrigir**: `chown leon:leon` no arquivo + substituir masking silencioso por log de erro explícito + verificação de permissão no startup.
+2. **Telegram: `ALLOWED_CHAT_IDS = []` (`telegram_commands_mcp.py:75`) = qualquer chat que descubra o token comanda o bot**, incluindo `/go` e `/autonomy on` (ativam autonomia de execução DEMO!). Pré-requisito bloqueante da Fase 1 da missão TELEGRAM-MT5-CONTAS; recomenda-se aplicar allowlist também a `/go`, `/autonomy`, `/memory` e `/backtest`.
+
+### 🟠 ALTAS
+3. **HTTP aberto na internet sem redirect para HTTPS + `SESSION_COOKIE_SECURE` default false** (`web_app/config.py:19`) — login e cookie de sessão podem trafegar em texto claro via porta 80. Corrigir: redirect 80→443 no openresty (exceto futura rota ACME) + `SESSION_COOKIE_SECURE=true`.
+4. **Certificado self-signed**: usuário precisa aceitar warning manualmente (risco de MITM consciente). Plano de médio prazo: domínio dedicado + Let's Encrypt.
+
+### 🟡 MÉDIAS
+5. **rpyc classic na 18812 sem autenticação** — qualquer processo LOCAL obtém API MT5 completa (inclusive envio de ordens). Mitigado pelo bind em 127.0.0.1 (validado), mas recomenda-se credencial rpyc (`rpyc.core.auth`) ou configuração restritiva como defesa em profundidade.
+6. **`SECRET_KEY` com fallback aleatório por processo** (`web_app/config.py:16`) — se `.env` perder a chave, todas as sessões invalidam a cada restart e múltiplos workers divergem. Landmine; hoje `.env` TEM a chave (ok).
+7. **Aviso permanente no template de login** ("Admin inicial: verifique o `.env` e troque a senha") informa a atacantes que pode haver senha padrão. Remover após confirmação de troca de senha (relacionado à pendência #1 de rotação).
+
+### ✅ VERIFICADO SEM BRECHA
+CSRF global no `before_request`; cookie HttpOnly+SameSite=Lax; rate limit de login (15 min); senhas com werkzeug hash; `.master_key` com `r--------` leon; `.env` (600, fora do git); UFW default-deny; portas sensíveis (5000, 18812, MCPs) apenas em loopback; store com chmod 600 (intenção correta, owner errado — item 1).
+
+---
+
+## 🚨 URGENTE — AGUARDANDO APROVAÇÃO: MISSION-20260825-WEB-RPYC-TIMEOUT
+- **Severidade ALTA — indisponibilidade intermitente do painel web remoto** (reproduzida e diagnosticada em 2026-08-25).
+- **Causa raiz 1 (estrutural)**: chamadas rpyc/MT5 **sem timeout** no caminho de render de TODA página: `inject_current_user` (`web_app/app.py:48`) → `get_mt5_account_summary` (`system_health_service.py:540`) → `mt5.initialize` via gateway Wine porta 18812. Quando o gateway trava/lenta, as **4 threads do waitress bloqueiam indefinidamente** → app inteiro em 504/timeout. Evidência: py-spy dump com as 4 threads presas em `rpyc sync_request`, `Task queue depth` 12+, sockets CLOSE-WAIT.
+- **Causa raiz 2**: `logs/web_access.log` era `root` (serviço roda como `leon`) → PermissionError a cada login. ✅ Mitigado com chown em 2026-08-25.
+- **Infra já corrigida nesta data** (fora desta missão): HTTPS habilitado no openresty (bloco 443 + cert self-signed em `/etc/ssl/leon/`, config em `tarefas/missoes/.../conf.d/users/leon-web.conf` do icontainer). Porta 443 validada acessível externamente via check-host.net (5 nós).
+- **Plano (A+B+C)**: timeout rpyc (~10–15s) + cache TTL do status MT5 (sem chamada MT5 por render) + health assíncrono no painel. Detalhes, critérios de aceitação e guards em `tarefas/missoes/MISSION-20260825-WEB-RPYC-TIMEOUT.md`.
+- **Guards**: somente leitura MT5; estratégia/risco/TP/SL/execução intocados; REAL bloqueada; gateway Wine não é tocado.
+- **⚠️ Risco de não agir**: qualquer travamento do gateway MT5 (incidente `IPC send failed` de 24/08 já demonstrou recorrência) derruba o acesso remoto ao painel — inclusive supervisão humana durante operações demo.
+- **Próxima ação**: usuário autoriza → Engineering Director convoca equipe (Senior Software Engineer implementação + QA testes + Reviewer) → executa com lock próprio.
+
+---
+
+## 🟡 AGUARDANDO APROVAÇÃO: MISSION-20260825-TELEGRAM-MT5-CONTAS
+- **Origem**: pedido do usuário — "montar um plano para adicionar ao Telegram painel para adicionar contas ao MT5".
+- **Estado**: plano completo criado; **nada implementado** — aguardando aprovação.
+- **Especificação completa**: `tarefas/missoes/MISSION-20260825-TELEGRAM-MT5-CONTAS.md`.
+- **Decisões do usuário (2026-08-25)**: escopo **MULTI-CONTA** (alinhado à Fase 0/1 do plano FTMO) e senha via **fluxo em 2 passos** (senha nunca em comando único).
+- **Resumo em 3 fases**:
+  - **Fase 1**: allowlist de admins no Telegram (`LEON_TELEGRAM_ADMIN_CHAT_IDS` em `.env`) — pré-requisito de segurança, hoje `ALLOWED_CHAT_IDS=[]` permite qualquer chat com o token.
+  - **Fase 2**: evolução multi-conta de `mt5_credential_service` com migração não-destrutiva do store atual (conta existente vira a ativa); web `/mt5-account` segue funcionando.
+  - **Fase 3**: comandos `/conta` (listar/add 2 passos/ativar/testar/remover com confirmação), reusando Fernet + guards existentes.
+- **Guards**: REAL bloqueada em código; nenhuma ordem enviada; senha nunca ecoada/logada; gateway MT5 intocado.
+- **Próxima ação**: usuário aprova → Engineering Director convoca equipe para implementar fase a fase com testes entre cada.
+
+---
+
+## 🟣 PLANO ESTRATÉGICO — AGUARDANDO APROVAÇÃO: MISSION-20260825-FTMO-PLAN
+- **Origem**: pedido do usuário — "planejamento para rodarmos nosso agente na FTMO".
+- **Estado**: plano completo criado e salvo; **NADA executado** — aguardando aprovação e informações da conta.
+- **Especificação completa**: `tarefas/missoes/MISSION-20260825-FTMO-PLAN.md`.
+- **Resumo em 5 fases**:
+  - **Fase 0**: mapear conta FTMO (tipo Normal/Swing, tamanho, fase alvo) → documentar regras exatas em `docs/ftmo_rules.md`
+  - **Fase 1**: conectar MT5 da FTMO via painel de credenciais (⚠️ depende de MISSION-20260825-MT5-CREDENCIAIS-WEB)
+  - **Fase 2**: novo `src/ftmo_guard.py` — perda diária vs limite FTMO, drawdown total vs 10%, contador de dias mínimos, kill switch com buffer (pausa em 6% drawdown / 2% dia), card FTMO no painel
+  - **Fase 3**: operação no Challenge (DEMO) com relatório diário no Telegram
+  - **Fase 4**: Verification → funded é SEMPRE decisão humana manual; agentes não liberam conta real
+- **Alinhamentos já existentes** (bom news): News Shield ativo (regra FTMO de notícias ✓), risco interno 0.5%/trade + perda diária 2% (mais conservador que os 5% FTMO), max_open_positions 2.
+- **Decisão do usuário (2026-08-25)**: **AUTOMAÇÃO TOTAL** das entradas no Challenge/Verification (contas DEMO) — sem aprovação manual por operação; supervisão via painel + Telegram. Exige kill switch automático rigoroso na Fase 2 (pausa dia em 2%, pausa geral em 6% drawdown). **Conta FUNDED = REAL permanece bloqueada para agentes** — liberação futura é decisão manual e formal do usuário, fora da autoridade de agentes.
+- **Guards inegociáveis**: estratégia intocada (FTMO adapta guards, não estratégia); funded bloqueada para agentes; parâmetros de risco só mudam com aprovação explícita.
+- **AJUSTE APROVADO (2026-08-26)**: usuário NÃO vai definir tamanho de conta manualmente — haverá VÁRIAS contas FTMO de tamanhos diferentes. **Fase 0 muda de "usuário informa tamanho" para "LEON detecta automaticamente ao conectar"**:
+  - Ao conectar, LEON lê `mt5.account_info()` (padrão já usado em `mt5_monitor.py`): `login`, `server`, `trade_mode`, `currency`, `balance`.
+  - Limites FTMO são PERCENTUAIS (5% dia, 10% total) → independem do tamanho. Guard calcula o valor em dinheiro dinamicamente a partir do `balance` inicial detectado. Funciona para 10k/25k/100k/qualquer tamanho sem config manual.
+  - No primeiro connect de cada `login`, grava snapshot do `balance` inicial como baseline de drawdown (ancorado, não usa `equity` que oscila). Cada conta nova gera perfil próprio automaticamente — sem intervenção manual.
+  - `trade_mode` continua sendo o guard DEMO vs REAL — isso não muda (funded real permanece bloqueada).
+  - **Pendência de infraestrutura**: `tarefas/missoes/MISSION-20260825-FTMO-PLAN.md` está `root:root` (0644) — usuário `leon` sem permissão de escrita, edição da Fase 0 no arquivo original bloqueada. Decisão registrada aqui no handoff até correção de owner ou execução via usuário com privilégio. Não afeta a decisão nem a implementação futura.
+- **✅ APROVADO pelo usuário (2026-08-26) e Fase 2 IMPLEMENTADA + TESTADA (sem commit)**:
+  - `src/ftmo_guard.py` (NOVO): `avaliar_conformidade_ftmo()` (cálculo puro, testável sem MT5) + `registrar_perfil_conta()` (baseline por login em `data/ftmo_accounts.json`, grava `balance` inicial no primeiro connect e preserva depois) + `avaliar_guard_ftmo()` (leitura real MT5) + `resumo_ftmo()`.
+  - Limites percentuais (5% dia / 10% drawdown, buffer interno 2%/6%) calculados dinamicamente sobre o `baseline_balance` detectado — funciona para qualquer tamanho de conta sem config manual.
+  - `config.ini` + `config.ini.example`: nova seção `[FTMO]` (`enabled=false` por padrão, seguro).
+  - Integrado em `src/mt5_order_executor.py` (`executar_ordem_mt5_pre_operacao`) logo após o guard de perda diária existente — guard ADICIONAL, não substitui nada; quando desativado retorna `FTMO_GUARD_DISABLED` e não bloqueia nada (validado).
+  - **Testes**: `tests/test_ftmo_guard.py` NOVO (17 testes: cálculo puro, multi-tamanho de conta, baseline por login, violações reais FTMO vs buffer interno, configs). Suíte completa: **460/460 passed** (`--ignore=tests/test_leon_brain.py`).
+  - **Segurança validada**: REAL/FUNDED continua bloqueada por outros guards; `ftmo_guard` só classifica (`is_demo` via `trade_mode`), nunca libera nada, nunca envia ordem.
+  - **⚠️ Pendência de infraestrutura**: `tarefas/missoes/MISSION-20260825-FTMO-PLAN.md` é `root:root` (0644) — usuário `leon` sem permissão de escrita nesse arquivo específico (outros da pasta têm o mesmo problema: `MISSION-20260825-MT5-CREDENCIAIS-WEB.md`, `MISSION-20260825-CENTRAL-VIRTUAL-VIVA.md`). Decisão da Fase 0 e conclusão da Fase 2 registradas aqui no handoff em vez do arquivo da missão. Corrigir owner (`chown leon:leon`) quando possível.
+  - **Próxima ação**: aguardar autorização para commit desta Fase 2; depois seguir para Fase 3 (card FTMO no painel + relatório diário Telegram) e cadastro real das credenciais FTMO via `/mt5-account` (pré-requisito já concluído na missão de credenciais).
+
+---
+
+## 🟡 EM AJUSTE — AGUARDANDO APROVAÇÃO: MISSION-20260825-CENTRAL-VIRTUAL-VIVA
+- **Origem**: pedido do usuário — "painel web mais melhorias, quero painel virtual mais vivo, quero tudo planejado".
+- **Estado**: plano completo criado; usuário pediu **ajustes antes de aprovar** — refinamento iterativo em andamento.
+- **Especificação completa**: `tarefas/missoes/MISSION-20260825-CENTRAL-VIRTUAL-VIVA.md` (diagnóstico com evidências, 3 fases, arquivos previstos, guards, critérios de aceitação + seção aberta "Ajustes pendentes" para registrarmos cada rodada de ajuste).
+- **Resumo do plano**:
+  - **Fase 1 (núcleo)**: endpoint `/central-virtual/api/snapshot` (JSON, autenticado) + cache TTL 15s + polling adaptativo no JS (pausa com aba oculta) → tela atualiza sozinha sem F5.
+  - **Fase 2**: feed de atividade real do operador (últimas 5 ações), linha de mercado (preço/fase/tendência do contexto salvo), destaques visuais de transição de status.
+  - **Fase 3**: polimento (fade nas mudanças, reduced-motion, fallback gracioso).
+- **Diagnóstico-chave**: a Central Virtual é rica mas estática — snapshot só no render server-side, zero API, zero polling (`central_virtual.js` sem `fetch()`).
+- **Guards**: página READ ONLY; nenhuma chamada MT5 nova; operacional/risco/TP/SL intocados.
+- **Próxima ação**: usuário indica ajustes → atualizamos o plano na seção "Ajustes pendentes" da missão → nova rodada até aprovação.
+
+---
+
+## 🔴 PRIORIDADE MÁXIMA — AGUARDANDO ORDEM DE EXECUÇÃO: MISSION-20260825-MT5-CREDENCIAIS-WEB
+- **✅ CONCLUÍDA E COMMITADA (2026-08-25, commit `3da5a4f`)**: página admin-only `/mt5-account` no painel web para gerenciar credenciais MT5 (login/servidor/senha criptografados com Fernet + chave mestra `/opt/leon/.master_key`), botão "Testar conexão" somente leitura, guard REAL duplo (salvamento só DEMO + teste recusa `trade_mode REAL`), senha nunca exposta. 27 testes novos; suíte 443/443 passed. Commit autorizado pelo usuário.
+- **Próximo passo operacional**: cadastrar as credenciais da conta FTMO Challenge via painel (pré-requisito da Fase 1 do plano FTMO abaixo). Se o erro "login/senha inválido" persistir após cadastro via painel, validar sessão wine/rpyc (restart manual de `start-rpyc-server.sh` + `run-mt5-headless`).
+
+---
+
 ## 🎯 Última Missão Concluída: MISSION-20260824-PROMOCAO-ZONAS-LAB (bloqueio B2)
 - **Estado**: ✅ IMPLEMENTADA + TESTADA (416/416 passed, 13 testes novos) — **sem commit, sem restart do operador** (aguardando autorização).
 - **O que resolve**: bloqueio B2 do diagnóstico de 21/08 — zonas LAB nasciam `AGUARDANDO_ESTRUTURA` e nunca eram promovidas a `CONFIRMADA` (nenhum processo alimentava evidência ao `monitor_zone`) → execução demo LAB permanentemente bloqueada (`REGION_NOT_CONFIRMED`).

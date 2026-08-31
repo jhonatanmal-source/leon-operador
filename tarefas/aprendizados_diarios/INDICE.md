@@ -1,3 +1,4 @@
+| 2026-08-30 | Aprendizados Diários — 2026-08-30 |
 # Índice de Aprendizados Diários
 
 ## Estrutura
