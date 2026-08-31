@@ -369,3 +369,169 @@ class TestCacheStaleWhileRevalidate:
             f"context_processor bloqueou por {elapsed:.2f}s com gateway travado"
         )
         assert result == {"account": "SEM CONTA", "connected": False}
+
+
+class TestHealthMt5StatusEndpoint:
+    """Fase C: endpoint JSON /health/mt5-status para polling do widget.
+
+    Fora do critical path de render — o sidebar exibe o valor do
+    context_processor no 1o load e depois atualiza via fetch() neste
+    endpoint (ver web_app/static/js/mt5_status_widget.js).
+    """
+
+    @pytest.fixture(autouse=True)
+    def _isolar_modulos(self):
+        for name in list(sys.modules):
+            if name.startswith("web_app."):
+                del sys.modules[name]
+        yield
+        for name in list(sys.modules):
+            if name.startswith("web_app."):
+                del sys.modules[name]
+
+    @pytest.fixture
+    def client(self, tmp_path, monkeypatch):
+        from cryptography.fernet import Fernet
+
+        db_path = tmp_path / "leon_web_test.db"
+        master_key = tmp_path / "master_key"
+        master_key.write_bytes(Fernet.generate_key())
+
+        from web_app import config
+
+        monkeypatch.setattr(config, "DATABASE_PATH", db_path)
+
+        from web_app.database import db as db_module
+
+        monkeypatch.setattr(db_module, "DATABASE_PATH", db_path)
+        monkeypatch.setattr(db_module, "DEFAULT_ADMIN_USERNAME", "admin_test")
+        monkeypatch.setattr(
+            db_module, "DEFAULT_ADMIN_PASSWORD", "senha-admin-teste-123"
+        )
+
+        from web_app.services import access_log_service
+
+        monkeypatch.setattr(
+            access_log_service, "LOG_FILE", tmp_path / "web_access.log"
+        )
+
+        from web_app.app import create_app
+
+        app = create_app({"TESTING": True, "WTF_CSRF_ENABLED": False})
+        test_client = app.test_client()
+
+        from web_app.database.db import get_connection
+
+        with app.app_context():
+            with get_connection() as connection:
+                row = connection.execute(
+                    "SELECT id FROM users WHERE username = ?", ("admin_test",)
+                ).fetchone()
+            admin_id = row["id"]
+
+        with test_client.session_transaction() as session:
+            session["user_id"] = admin_id
+
+        return test_client
+
+    def test_endpoint_requer_login(self, tmp_path, monkeypatch):
+        from cryptography.fernet import Fernet
+
+        db_path = tmp_path / "leon_web_test.db"
+        master_key = tmp_path / "master_key"
+        master_key.write_bytes(Fernet.generate_key())
+
+        from web_app import config
+
+        monkeypatch.setattr(config, "DATABASE_PATH", db_path)
+
+        from web_app.database import db as db_module
+
+        monkeypatch.setattr(db_module, "DATABASE_PATH", db_path)
+
+        from web_app.services import access_log_service
+
+        monkeypatch.setattr(
+            access_log_service, "LOG_FILE", tmp_path / "web_access.log"
+        )
+
+        from web_app.app import create_app
+
+        app = create_app({"TESTING": True, "WTF_CSRF_ENABLED": False})
+        response = app.test_client().get("/health/mt5-status", follow_redirects=False)
+
+        assert response.status_code == 302
+        assert "/login" in response.headers["Location"]
+
+    def test_endpoint_retorna_json_com_login(self, client, monkeypatch):
+        # A rota importa o nome diretamente (`from ... import
+        # get_mt5_account_summary`), entao o patch precisa ser no modulo
+        # da rota (onde o nome esta vinculado), nao no modulo de origem.
+        from web_app.routes import health_routes
+
+        monkeypatch.setattr(
+            health_routes,
+            "get_mt5_account_summary",
+            lambda: {
+                "account": "****5678",
+                "server": "Broker-Demo",
+                "type": "DEMO",
+                "status": "OK",
+                "connected": True,
+            },
+        )
+
+        response = client.get("/health/mt5-status")
+
+        assert response.status_code == 200
+        assert response.content_type.startswith("application/json")
+        payload = response.get_json()
+        assert payload["connected"] is True
+        assert payload["account"] == "****5678"
+
+    def test_endpoint_nunca_expoe_senha_ou_dados_sensiveis(self, client, monkeypatch):
+        """Somente leitura — login mascarado, sem senha/credencial no payload."""
+        from web_app.routes import health_routes
+
+        monkeypatch.setattr(
+            health_routes,
+            "get_mt5_account_summary",
+            lambda: {
+                "account": "****5678",
+                "server": "Broker-Demo",
+                "type": "DEMO",
+                "status": "OK",
+                "connected": True,
+            },
+        )
+
+        response = client.get("/health/mt5-status")
+        payload = response.get_json()
+
+        assert "password" not in payload
+        assert "senha" not in payload
+        for value in payload.values():
+            assert "senha123" not in str(value)
+
+    def test_endpoint_degrada_com_gateway_indisponivel(self, client, monkeypatch):
+        """Com MT5 indisponivel, o fallback de config ainda responde 200
+        (nunca 500) — o widget deve mostrar estado neutro, nao quebrar.
+        """
+        from web_app.routes import health_routes
+
+        monkeypatch.setattr(
+            health_routes,
+            "get_mt5_account_summary",
+            lambda: {
+                "account": "SEM CONTA",
+                "server": "SEM DADOS",
+                "type": "SEM DADOS",
+                "connected": False,
+            },
+        )
+
+        response = client.get("/health/mt5-status")
+
+        assert response.status_code == 200
+        payload = response.get_json()
+        assert payload["connected"] is False
