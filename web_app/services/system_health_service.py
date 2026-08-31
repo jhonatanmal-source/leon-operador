@@ -23,15 +23,67 @@ LOGS_DIR = BASE_DIR / "logs"
 ROOT_CONFIG_FILE = BASE_DIR / "config.ini"
 
 # Cache for _mt5_status to avoid expensive MT5 initialize/shutdown on every health check
-_mt5_cache = {"result": None, "timestamp": 0.0}
+_mt5_cache = {"result": None, "timestamp": 0.0, "refreshing": False}
 _MT5_CACHE_TTL = 30  # seconds
 _mt5_cache_lock = threading.Lock()
 
 # Cache para get_mt5_account_summary() — usado no context_processor do sidebar
 # (executa em TODA request). TTL 30s evita chamadas caras ao MT5 por request.
-_mt5_account_cache = {"result": None, "timestamp": 0.0}
+_mt5_account_cache = {"result": None, "timestamp": 0.0, "refreshing": False}
 _MT5_ACCOUNT_CACHE_TTL = 30  # seconds
 _mt5_account_cache_lock = threading.Lock()
+
+
+def _stale_while_revalidate(cache, lock, ttl, compute_fn):
+    """Cache com TTL que nunca bloqueia a thread do request além do 1o cache miss.
+
+    - Cache fresco (dentro do TTL): retorna imediatamente.
+    - Cache expirado mas com valor anterior (stale): devolve o valor antigo
+      na hora e dispara UMA thread de background para recalcular (nao
+      bloqueia o render). Evita que o path critico do template fique presa
+      esperando o timeout do rpyc quando o gateway MT5 esta lento.
+    - Sem valor anterior (1o acesso do processo): calcula de forma sincrona
+      (bloqueante), mas isso agora e limitado pelo timeout+lock do
+      mt5linux_compat (no maximo ~_TIMEOUT segundos), nunca trava indefinidamente.
+    """
+    with lock:
+        result = cache["result"]
+        age = time.monotonic() - cache["timestamp"]
+        is_fresh = result is not None and age < ttl
+        is_stale = result is not None and not is_fresh
+        already_refreshing = cache["refreshing"]
+
+    if is_fresh:
+        return result
+
+    if is_stale:
+        if not already_refreshing:
+            def _refresh():
+                try:
+                    fresh_result = compute_fn()
+                    with lock:
+                        cache["result"] = fresh_result
+                        cache["timestamp"] = time.monotonic()
+                finally:
+                    with lock:
+                        cache["refreshing"] = False
+
+            with lock:
+                # Reconfere sob lock para evitar corrida entre threads
+                # concorrentes que passaram pela leitura acima ao mesmo tempo.
+                if cache["refreshing"]:
+                    return cache["result"]
+                cache["refreshing"] = True
+            threading.Thread(target=_refresh, daemon=True).start()
+        return result
+
+    # Sem valor anterior: 1a chamada do processo, calcula sincrono (bounded
+    # pelo timeout do mt5linux_compat).
+    fresh_result = compute_fn()
+    with lock:
+        cache["result"] = fresh_result
+        cache["timestamp"] = time.monotonic()
+    return fresh_result
 
 
 def _ensure_src_path():
@@ -400,75 +452,63 @@ def _performance_summary():
 
 
 
-def _mt5_status():
-    # Try cache first — avoid expensive MT5 initialize/shutdown on every call
-    with _mt5_cache_lock:
-        if _mt5_cache["result"] is not None and (
-            time.monotonic() - _mt5_cache["timestamp"]
-        ) < _MT5_CACHE_TTL:
-            return _mt5_cache["result"]
+def _compute_mt5_status():
+    """Calcula o status MT5 na hora (pode bloquear pelo timeout do rpyc).
 
-    # Cache miss — compute fresh status (may involve MT5 init/shutdown)
+    Extraido de _mt5_status para ser reusado tanto no caminho sincrono
+    (1a chamada do processo) quanto no refresh assincrono em background
+    (_stale_while_revalidate).
+    """
     try:
         import mt5_safe as mt5
     except ImportError:
-        result = {
+        return {
             "status": "INDISPONÍVEL",
             "connected": False,
             "trade_allowed": False,
             "account_mode": "SEM MÓDULO",
         }
-        with _mt5_cache_lock:
-            _mt5_cache["result"] = result
-            _mt5_cache["timestamp"] = time.monotonic()
-        return result
 
     if not mt5.initialize():
-        result = {
+        return {
             "status": "ERRO",
             "connected": False,
             "trade_allowed": False,
             "account_mode": "DESCONHECIDO",
         }
-        with _mt5_cache_lock:
-            _mt5_cache["result"] = result
-            _mt5_cache["timestamp"] = time.monotonic()
-        return result
 
     try:
         account = mt5.account_info()
         terminal = mt5.terminal_info()
         if account is None or terminal is None:
-            result = {
+            return {
                 "status": "ERRO",
                 "connected": False,
                 "trade_allowed": False,
                 "account_mode": "DESCONHECIDO",
             }
-        else:
-            demo_mode = account.trade_mode == mt5.ACCOUNT_TRADE_MODE_DEMO
-            connected = bool(terminal.connected)
-            trade_allowed = bool(
-                terminal.trade_allowed and not terminal.tradeapi_disabled
-            )
-            result = {
-                "status": "OK" if connected and trade_allowed and demo_mode else "ATENÇÃO",
-                "connected": connected,
-                "trade_allowed": trade_allowed,
-                "account_mode": "DEMO" if demo_mode else "NÃO DEMO",
-                "balance": round(float(account.balance), 2),
-                "equity": round(float(account.equity), 2),
-                "open_profit": round(float(account.profit), 2),
-            }
+        demo_mode = account.trade_mode == mt5.ACCOUNT_TRADE_MODE_DEMO
+        connected = bool(terminal.connected)
+        trade_allowed = bool(
+            terminal.trade_allowed and not terminal.tradeapi_disabled
+        )
+        return {
+            "status": "OK" if connected and trade_allowed and demo_mode else "ATENÇÃO",
+            "connected": connected,
+            "trade_allowed": trade_allowed,
+            "account_mode": "DEMO" if demo_mode else "NÃO DEMO",
+            "balance": round(float(account.balance), 2),
+            "equity": round(float(account.equity), 2),
+            "open_profit": round(float(account.profit), 2),
+        }
     finally:
         mt5.shutdown()
 
-    # Store in cache for subsequent requests (TTL = 30s)
-    with _mt5_cache_lock:
-        _mt5_cache["result"] = result
-        _mt5_cache["timestamp"] = time.monotonic()
 
-    return result
+def _mt5_status():
+    return _stale_while_revalidate(
+        _mt5_cache, _mt5_cache_lock, _MT5_CACHE_TTL, _compute_mt5_status
+    )
 
 
 def _remote_status():
@@ -517,21 +557,13 @@ def _mt5_config_fallback():
     }
 
 
-def get_mt5_account_summary():
-    """Resumo da conta MT5 REAL (login mascarado, servidor, modo) com cache TTL 30s.
+def _compute_mt5_account_summary():
+    """Calcula o resumo de conta MT5 na hora (pode bloquear pelo timeout do rpyc).
 
-    Usado no context_processor do sidebar para exibir dados reais do terminal
-    em vez dos valores estáticos do .env. Se MT5 indisponível, cai para os
-    valores de config sem quebrar. A função NÃO faz chamadas MT5 caras por
-    request graças ao cache com threading.Lock + time.monotonic (padrão
-    já existente em _mt5_cache).
+    Extraido de get_mt5_account_summary para ser reusado tanto no caminho
+    sincrono (1a chamada do processo) quanto no refresh assincrono em
+    background (_stale_while_revalidate).
     """
-    with _mt5_account_cache_lock:
-        if _mt5_account_cache["result"] is not None and (
-            time.monotonic() - _mt5_account_cache["timestamp"]
-        ) < _MT5_ACCOUNT_CACHE_TTL:
-            return _mt5_account_cache["result"]
-
     result = None
     _ensure_src_path()
     try:
@@ -554,11 +586,28 @@ def get_mt5_account_summary():
 
     if result is None:
         result = _mt5_config_fallback()
-
-    with _mt5_account_cache_lock:
-        _mt5_account_cache["result"] = result
-        _mt5_account_cache["timestamp"] = time.monotonic()
     return result
+
+
+def get_mt5_account_summary():
+    """Resumo da conta MT5 REAL (login mascarado, servidor, modo) com cache TTL 30s.
+
+    Usado no context_processor do sidebar para exibir dados reais do terminal
+    em vez dos valores estáticos do .env. Se MT5 indisponível, cai para os
+    valores de config sem quebrar.
+
+    Estrategia stale-while-revalidate: com cache expirado mas valor anterior
+    disponivel, devolve o valor antigo na hora e atualiza em background —
+    o render nunca fica bloqueado esperando o gateway MT5 travado/lento
+    (ver _stale_while_revalidate). So bloqueia (ate o timeout do rpyc) na
+    1a chamada do processo, quando ainda nao ha nenhum valor cacheado.
+    """
+    return _stale_while_revalidate(
+        _mt5_account_cache,
+        _mt5_account_cache_lock,
+        _MT5_ACCOUNT_CACHE_TTL,
+        _compute_mt5_account_summary,
+    )
 
 
 def _lab_mode_active():
