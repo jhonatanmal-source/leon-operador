@@ -220,25 +220,8 @@ def pattern_key(operation):
 
 
 def learning_statistics(preop):
-    rows = [r for r in confirmed_records() if pattern_key(r) == pattern_key(preop)
-            and r.get("setup_version") == VERSION and r.get("realized_r") is not None]
-    values = []
-    for row in rows:
-        try:
-            value = float(row['realized_r'])
-        except (ValueError, TypeError):
-            continue
-        if math.isfinite(value) and row.get('source') == 'MT5_DEMO_REAL':
-            values.append(value)
-    n = len(values)
-    mean = sum(values) / n if n else 0.0
-    # Neutral-prior shrinkage limits the influence of tiny samples; not calibrated probability.
-    score = mean * n / (n + 20) if n >= 4 else 0.0
-    return {'samples': n, 'mean_r': mean, 'median_r': median(values) if n else None,
-            'standard_error_r': stdev(values) / math.sqrt(n) if n > 1 else None,
-            'selection_score': score, 'status': 'INSUFFICIENT_SAMPLE' if n < 4 else 'EXPLORATORY',
-            'method': 'neutral_prior_20_by_model_context_v2', 'pattern': pattern_key(preop),
-            'validated_edge': False}
+    from src.opportunity_learning import opportunity_statistics
+    return opportunity_statistics(preop, confirmed_records(), VERSION)
 
 
 def learning_score(preop):
@@ -246,7 +229,10 @@ def learning_score(preop):
 
 
 def daily_evidence_report(day):
-    rows = [r for r in confirmed_records() if str(r.get("data_fechamento", ""))[:10] <= str(day)]
+    from src.opportunity_learning import learning_summary
+    rows = [r for r in confirmed_records() if r.get('source') == 'MT5_DEMO_REAL'
+            and str(r.get("data_fechamento", ""))[:10] <= str(day)]
+    learning = learning_summary(rows, VERSION)
     groups = {}
     for row in rows:
         key = pattern_key(row) + "|" + row.get("setup_version", "LEGACY") + "|" + row.get("currency", "UNKNOWN")
@@ -258,7 +244,8 @@ def daily_evidence_report(day):
         group["net_profit"] = round(group["net_profit"] + pnl, 2)
         group["tickets"].append(f"{row['account_key']}:{row['position_id']}")
     snapshot = {"date": str(day), "version": VERSION, "confirmed_positions": len(rows), "patterns": groups,
-                "rule": "Exploratory ranking: same-version mean R shrunk toward zero by n/(n+20), minimum 4; never change risk, SL or TP.",
+                "learning": learning,
+                "rule": "Exploratory SMC/context ranking; mean ticket R per account/region, minimum 4 independent opportunities; shrink n/(n+20). Not validated edge. No risk, SL or TP changes.",
                 "changes": "Evidence updated; risk limits and setup requirements unchanged."}
     snapshot["subsequent_outcomes"] = [
         {"ticket": r["position_id"], "account": r["account_key"], "score_at_entry": r.get("selection_score_at_entry"),
@@ -271,11 +258,17 @@ def daily_evidence_report(day):
     lines = [f"# Evidencias confirmadas - {day}", "", f"Versao: {VERSION}",
              f"Posicoes fechadas confirmadas: {len(rows)}", "",
              "Observacoes e simulacoes nao entram nesta estatistica.",
-             "O ranking usa retorno em R de operacoes fechadas da mesma versao; minimo de 4 amostras.",
+             f"Oportunidades independentes da versao atual: {learning['independent_opportunities']}",
+             f"Escolhas alteradas pelo ranking entre fechamentos rastreados: {learning['selection_attribution']['changed_choice']}",
+             "Ranking por modelo SMC e contexto; minimo de 4 oportunidades independentes por grupo.",
+             "Retorno medio dos tickets por regiao; nao e retorno da conta. Vantagem ainda nao validada.",
              "Risco, stop e alvo nao sao alterados pelo aprendizado.", ""]
     for key, group in groups.items():
-        lines.extend([f"## {key}", f"Amostras: {group['samples']}; ganhos: {group['wins']}; perdas: {group['losses']}",
+        lines.extend([f"## {key}", f"Tickets (nao oportunidades): {group['samples']}; ganhos: {group['wins']}; perdas: {group['losses']}",
                       "Tickets: " + ", ".join(group["tickets"]), ""])
+    lines.append('## Aprendizado por oportunidade')
+    for key, group in learning['groups'].items():
+        lines.append(f"- {key}: {group['samples']} oportunidades; {group['trade_count']} tickets; prioridade {group['selection_score']:.4f}; {group['status']}")
     lines.append("## Decisao registrada e resultado posterior")
     for row in snapshot["subsequent_outcomes"]:
         lines.append(f"- {row['account']}:{row['ticket']}: prioridade na entrada {row['score_at_entry']}; resultado {row['realized_r']} R")
@@ -307,6 +300,10 @@ def operational_status_text():
                 if trace.get('structural_reason'):
                     reason += '; zona SMC: ' + str(trace['structural_reason'])[:350]
         current = [r for r in rows if r.get("setup_version") == VERSION]
+        from src.opportunity_learning import learning_summary
+        learning = learning_summary(rows, VERSION)
+        last_selection = read_json(DATA / 'latest_learning_selection.json', {})
+        learning_choice = ('alterou a escolha' if last_selection.get('changed_choice') else 'manteve a escolha') if last_selection else 'ainda sem comparacao registrada'
         wins = sum(float(r["actual_profit"]) > 0 for r in current)
         losses = sum(float(r["actual_profit"]) < 0 for r in current)
         return "\n".join([
@@ -319,6 +316,8 @@ def operational_status_text():
             f"Ganhos: {wins} | Perdas: {losses} | Zero: {len(current) - wins - losses}",
             f"Historico anterior separado: {len(rows) - len(current)}",
             "Aprendizado: ranking por resultado confirmado; sem mudar risco, stop ou alvo.",
+            f"Oportunidades independentes: {learning['independent_opportunities']} | Grupos SMC: {len(learning['groups'])}",
+            f"Ultima selecao: {learning_choice}. Vantagem ainda nao validada.",
             "Risco por entrada: 0,5% | Maximo aberto: 3 posicoes",
             "Parada diaria: 2% | Devolucao: 50% do lucro de posicoes fechadas",
             "Quantidade diaria de entradas: sem limite",

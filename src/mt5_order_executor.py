@@ -430,7 +430,16 @@ def _ultima_pre_operacao_aberta():
         candidates.append(row)
     for row in candidates:
         row['_selection'] = dict(learning_statistics(row), selected_at=datetime.now().isoformat(), version=VERSION)
-    return max(candidates, key=lambda row: (row['_selection']['selection_score'], row.get("data_abertura", ""))) if candidates else None
+    from src.opportunity_learning import select_ranked_candidate
+    selected, audit = select_ranked_candidate(candidates)
+    if audit:
+        audit['selected_at'] = datetime.now().isoformat()
+        selected['_selection']['decision'] = {k: v for k, v in audit.items() if k != 'candidates'}
+        try:
+            atomic_json(PRE_OPERATION_FILE.parent / 'latest_learning_selection.json', audit)
+        except OSError as error:
+            registrar_log(f"LEARNING | selection audit unavailable: {type(error).__name__}")
+    return selected
 
 
 def liberar_nova_tentativa_mt5(pre_operation_id=None):
@@ -1480,6 +1489,7 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
                 "entry_model": pre_operacao.get('entry_model', 'UNSPECIFIED'),
                 "context_mode": pre_operacao.get('context_mode', 'UNSPECIFIED'),
                 "initial_risk": plano_risco["estimated_risk"],
+                "region_id": pre_operacao.get('region_id'),
                 "selection_score": pre_operacao.get('_selection', {}).get('selection_score'),
                 "selection_statistics": pre_operacao.get('_selection', {}),
             })

@@ -26,7 +26,7 @@ class EvidenceTests(unittest.TestCase):
         self.addCleanup(patcher.stop)
 
     def operation(self, ticket=1, profit=10, version=evidence.VERSION):
-        return dict(id=f"PREOP-{ticket}", source="MT5_DEMO_REAL", position_id=ticket,
+        return dict(id=f"PREOP-{ticket}", region_id=f"REG-{ticket}", source="MT5_DEMO_REAL", position_id=ticket,
                     account_key="server:1", actual_profit=profit, realized_r=profit / 10,
                     ativo="XAUUSD", direcao="COMPRA", smc="BULLISH", elliott="ONDA 3",
                     setup_version=version, data_fechamento="2026-09-10T10:00:00", currency="USD")
@@ -46,12 +46,14 @@ class EvidenceTests(unittest.TestCase):
             evidence.record_confirmed_outcome(row)
 
     def test_rank_uses_only_current_confirmed_version_and_minimum(self):
+        def identified(ticket=1, **kwargs):
+            return dict(self.operation(ticket=ticket, **kwargs), entry_model='ORDER_BLOCK_RETEST', context_mode='TENDENCIA')
         for ticket in range(3):
-            evidence.record_confirmed_outcome(self.operation(ticket=ticket + 1))
-        self.assertEqual(evidence.learning_score(self.operation()), 0)
-        evidence.record_confirmed_outcome(self.operation(ticket=4))
-        evidence.record_confirmed_outcome(self.operation(ticket=5, profit=-999, version="LEGACY"))
-        self.assertAlmostEqual(evidence.learning_score(self.operation()), 1 / 6)
+            evidence.record_confirmed_outcome(identified(ticket=ticket + 1))
+        self.assertEqual(evidence.learning_score(identified()), 0)
+        evidence.record_confirmed_outcome(identified(ticket=4))
+        evidence.record_confirmed_outcome(identified(ticket=5, profit=-999, version="LEGACY"))
+        self.assertAlmostEqual(evidence.learning_score(identified()), 1 / 6)
 
     def test_learning_does_not_mix_entry_models_or_contexts(self):
         sample = dict(self.operation(), entry_model='ORDER_BLOCK_RETEST', context_mode='TENDENCIA')

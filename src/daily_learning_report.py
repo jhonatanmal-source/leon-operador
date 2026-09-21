@@ -7,6 +7,10 @@ import json
 from collections import Counter
 from datetime import date, datetime
 from pathlib import Path
+from src.operational_evidence import confirmed_records, VERSION
+from src.opportunity_learning import learning_summary
+from src.learning_evaluation import evaluate
+from src.quality_collector import cache_key
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -336,6 +340,21 @@ def gerar_relatorio_aprendizado_diario(data_referencia=None):
     else:
         taxa_acerto = 0
     memoria_operacional = _resumo_memoria_operacional()
+    confirmed = [r for r in confirmed_records()
+                 if str(r.get('data_fechamento', ''))[:10] <= str(data_referencia)]
+    learning = learning_summary(confirmed, VERSION)
+    evaluation = evaluate([r for r in confirmed if r.get('setup_version') == VERSION])
+    quality_lines = []
+    for row in confirmed:
+        if row.get('setup_version') != VERSION or not row.get('account_key') or not row.get('position_id'):
+            continue
+        quality_path = DATA_DIR / 'trade_quality' / (cache_key(row) + '.json')
+        if quality_path.exists():
+            try:
+                measured = json.loads(quality_path.read_text())
+                quality_lines.append(f"- Ticket {row.get('order_ticket')}: MFE={measured.get('mfe_r')} R; MAE={measured.get('mae_r')} R; {measured.get('status')}; cobertura={measured.get('collection_reason', 'indisponivel')}")
+            except (OSError, ValueError):
+                quality_lines.append(f"- Ticket {row.get('order_ticket')}: medicao indisponivel.")
 
     linhas = [
         "=================================",
@@ -349,7 +368,7 @@ def gerar_relatorio_aprendizado_diario(data_referencia=None):
         f"- Sinais registrados: {total_sinais}",
         f"- Contextos cerebrais: {total_contextos}",
         f"- Registros analisados: {total_registros}",
-        f"- Planos gerados: {total_planos}",
+        f"- Avaliacoes registradas (nao ordens): {total_planos}",
         f"- Direcao dominante: {direcao_dominante}",
         f"- Qualidade dominante: {qualidade_dominante}",
         f"- Confianca dominante: {confianca_dominante}",
@@ -393,12 +412,28 @@ def gerar_relatorio_aprendizado_diario(data_referencia=None):
             f"{memoria_operacional['total']}"
         ),
         "",
-        "Resultados historicos usados no aprendizado",
+        "Memoria legada (nao usada como amostra do ranking confirmado)",
         f"- Acertos registrados: {acertos}",
         f"- Erros registrados: {erros}",
         f"- Taxa historica de acerto: {taxa_acerto:.2f}%",
         "",
-        "Aprendizado do LEON",
+        "Aprendizado confirmado da versao atual",
+        f"- Operacoes fechadas: {learning['confirmed_trades']}",
+        f"- Oportunidades independentes: {learning['independent_opportunities']}",
+        f"- Fechamentos com decisao rastreada: {learning['selection_attribution']['closed_trades_with_decision']}",
+        f"- Escolhas alteradas pelo ranking nesses fechamentos: {learning['selection_attribution']['changed_choice']}",
+        "- Agrupamento: modelo SMC e contexto; Elliott preservado como descricao.",
+        "- Prioridade neutra abaixo de 4 oportunidades por grupo; nao bloqueia setup valido.",
+        "- Vantagem operacional ainda nao validada.",
+        f"- Avaliacao prospectiva: {evaluation['status']}",
+        "- Resultados das alternativas nao executadas sao desconhecidos; nao ha comparacao causal de lucro.",
+        *[f"- {key}: oportunidades={g['samples']}; tickets={g['trade_count']}; prioridade={g['selection_score']:.4f}; {g['status']}"
+          for key, g in learning['groups'].items()],
+        "",
+        "Qualidade das operacoes (extremos observados; historico completo nao garantido)",
+        *(quality_lines or ['- Aguardando medicao independente de ticks.']),
+        "",
+        "Observacao descritiva (nao evidencia de melhora)",
         _gerar_aprendizado(
             total_registros,
             total_precos,
@@ -454,8 +489,8 @@ def _gerar_aprendizado(
         "ONDA C",
     ]:
         return (
-            "- O LEON reforcou que setups fortes aparecem quando SMC e "
-            "Elliott apontam juntos."
+            "- SMC e Elliott apareceram alinhados nas observacoes; "
+            "isso isoladamente nao demonstra rentabilidade."
         )
 
     if qualidade_dominante == "CONFLITO" or confianca_dominante == "BAIXA":

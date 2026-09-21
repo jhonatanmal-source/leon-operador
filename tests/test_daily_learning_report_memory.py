@@ -111,5 +111,7 @@ class DailyLearningReportMemoryTests(TestCase):
         )
         self.assertIn("Integridade da memoria: 100.00%", output)
         self.assertIn("Contextos vinculados: 2 / 2", output)
-        self.assertIn("Resultados historicos usados no aprendizado", output)
+        self.assertIn("Memoria legada (nao usada como amostra do ranking confirmado)", output)
+        self.assertIn("Oportunidades independentes:", output)
+        self.assertIn("Avaliacoes registradas (nao ordens)", output)
         self.assertIn("Taxa historica de acerto: 0.00%", output)

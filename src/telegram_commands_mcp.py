@@ -450,6 +450,8 @@ def _formatar_autonomy(args: str) -> str:
         msg += f"Escopo: `{escopo}`\n"
         msg += f"Motivo: `{razao}`\n"
         
+        if ativo and estado.get("until_revoked"):
+            msg += "Duracao: ate voce desligar com /autonomy off\n"
         if ativo:
             expira = estado.get("expires_at", "")
             restante = estado.get("remaining_seconds", 0)
@@ -529,6 +531,8 @@ def _formatar_go(args: str) -> str:
     # Verificar estado atual
     estado = autonomy_guard.status_autonomia()
     
+    if estado.get("active") and estado.get("until_revoked"):
+        return "Autonomia DEMO ativa ate voce desligar. Use /autonomy off para revogar."
     if estado.get("active"):
         # Já está ativa — mostrar status
         expira = estado.get("expires_at", "")

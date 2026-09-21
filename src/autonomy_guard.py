@@ -120,8 +120,20 @@ def status_autonomia():
     if not estado.get("enabled"):
         return {
             "active": False,
-            "reason": "AUTONOMY_NOT_GRANTED",
+            "reason": "AUTONOMY_REVOKED" if estado.get("revoked_at") else "AUTONOMY_NOT_GRANTED",
             "scope": config["scope"],
+        }
+
+    if estado.get("until_revoked") is True:
+        if config["scope"] != "demo_execution" or estado.get("scope") != "demo_execution":
+            return {"active": False, "reason": "AUTONOMY_SCOPE_MISMATCH", "scope": config["scope"]}
+        return {
+            "active": True,
+            "reason": "AUTONOMY_ACTIVE_UNTIL_REVOKED",
+            "scope": "demo_execution",
+            "until_revoked": True,
+            "expires_at": None,
+            "remaining_seconds": 0,
         }
 
     expires_at = estado.get("expires_at")

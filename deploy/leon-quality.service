@@ -1,0 +1,18 @@
+[Unit]
+Description=LEON read-only closed-trade quality measurement
+After=network-online.target leon-rpyc.service
+
+[Service]
+Type=oneshot
+User=leon
+Group=leon
+WorkingDirectory=/opt/leon/app
+Environment=PYTHONPATH=/opt/leon/app:/opt/leon/app/src
+ExecStart=/opt/leon/venv/bin/python -m src.quality_collector
+TimeoutStartSec=90
+Nice=10
+MemoryMax=256M
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/leon/app/data
+PrivateTmp=true

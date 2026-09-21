@@ -192,6 +192,8 @@ def check_mt5_closed_operations():
                 "entry_model": metadata.get("entry_model") or "UNSPECIFIED",
                 "context_mode": metadata.get("context_mode") or "UNSPECIFIED",
                 "selection_score_at_entry": metadata.get("selection_score"),
+                "selection_statistics_at_entry": metadata.get("selection_statistics"),
+                "region_id": metadata.get("region_id") or pre_operation.get("region_id"),
                 "realized_r": round(net_profit / float(metadata["initial_risk"]), 4) if float(metadata.get("initial_risk") or 0) > 0 else None,
             })
             record_confirmed_outcome(operation)
