@@ -1,0 +1,200 @@
+import os
+import json
+from datetime import datetime
+from pathlib import Path
+
+VAULT = Path("/opt/leon/app/obsidian_vault")
+DIARIO_DIR = VAULT / "aprendizados_diarios"
+OPERACIONAL_DIR = VAULT / "operacional"
+CONTEXTO_FILE = DIARIO_DIR / "CONTEXTO_EVOLUCAO.md"
+INDICE_FILE = DIARIO_DIR / "INDICE.md"
+STATS_FILE = VAULT / ".trade_stats.json"
+
+
+def _ensure_dirs():
+    DIARIO_DIR.mkdir(parents=True, exist_ok=True)
+    OPERACIONAL_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _load_stats():
+    _ensure_dirs()
+    if STATS_FILE.exists():
+        try:
+            return json.loads(STATS_FILE.read_text())
+        except (json.JSONDecodeError, OSError):
+            pass
+    return {"total": 0, "wins": 0, "losses": 0, "winrate": 0.0, "patterns": {}}
+
+
+def _save_stats(stats):
+    STATS_FILE.write_text(json.dumps(stats, indent=2, ensure_ascii=False))
+
+
+def save_trade_note(operation):
+    _ensure_dirs()
+    if operation.get("source") != "MT5_DEMO_REAL" or not operation.get("position_id"):
+        raise ValueError("Somente fechamentos confirmados pelo MT5 entram no diario operacional")
+    pre_op_id = str(operation.get("id") or "SEM_ID")
+    ativo = operation.get("ativo", "SEM_ATIVO")
+    direcao = operation.get("direcao", "SEM_DIRECAO")
+    result = operation.get("resultado", "SEM_RESULTADO")
+    data = str(operation.get("data_fechamento") or datetime.now().isoformat())[:10]
+
+    # Build markdown note
+    outcome_text = "VENCEDORA" if str(result).startswith("WIN") else "PERDEDORA" if result == "LOSS" else result
+
+    lines = [
+        f"# {pre_op_id} — {ativo} {direcao} — {outcome_text}",
+        "",
+        f"**Data fechamento:** {data}",
+        f"**Resultado:** {result}",
+        f"**Origem:** MT5 confirmado; conta {operation.get('account_key')}; posicao {operation.get('position_id')}",
+        f"**Versao do setup:** {operation.get('setup_version', 'LEGACY_UNVERIFIED_SETUP')}",
+        "",
+        "## Plano",
+        f"- Entrada: {operation.get('entrada', '?')}",
+        f"- Stop: {operation.get('stop', '?')}",
+        f"- TP1: {operation.get('tp1', '?')}",
+        f"- TP2: {operation.get('tp2', '?')}",
+        f"- RR: 1:{operation.get('rr', '?')}",
+        f"- Fechamento real: {operation.get('actual_close_price', '?')}",
+        f"- Lucro/prejuizo: {operation.get('actual_profit', '?')}",
+        f"- Motivo MT5: {operation.get('close_reason', '?')}",
+        "",
+        "## Contexto",
+        f"- Setup: {operation.get('status_setup', '?')}",
+        f"- SMC: {operation.get('smc', '?')}",
+        f"- Elliott: {operation.get('elliott', '?')}",
+        f"- BOS: {operation.get('bos', '?')}",
+        f"- CHOCH: {operation.get('choch', '?')}",
+        f"- FVG: {operation.get('fvg', '?')}",
+        f"- Confianca: {operation.get('confianca', '?')}",
+        f"- Brain Score: {operation.get('brain_score', '?')}",
+        f"- Sessao: {operation.get('sessao', '?')}",
+        f"- Context Mode: {operation.get('context_mode', '?')}",
+        "",
+        "## Observacao",
+        f"{operation.get('observacao', '')}",
+        "",
+        "## Licao",
+        _learning_text(operation),
+        "",
+    ]
+
+    note = "\n".join(lines)
+    safe_account = str(operation.get("account_key", "")).replace(":", "_").replace("/", "_").replace("\\", "_")
+    filename = f"{safe_account}_{operation['position_id']}_{data}.md"
+    filepath = OPERACIONAL_DIR / filename
+    filepath.write_text(note)
+
+    # Update stats
+    stats = _load_stats()
+    if "confirmed_positions" not in stats:
+        stats["legacy_summary_unverified"] = {key: stats.get(key) for key in ("total", "wins", "losses", "winrate")}
+    key = f"{operation.get('account_key')}:{operation['position_id']}"
+    seen = stats.setdefault("confirmed_positions", {})
+    seen[key] = str(result)
+    stats["total"] = len(seen)
+    stats["wins"] = sum(str(value).startswith("WIN") for value in seen.values())
+    stats["losses"] = sum(value == "LOSS" for value in seen.values())
+    if stats["total"] > 0:
+        stats["winrate"] = round(stats["wins"] / stats["total"] * 100, 1)
+    _save_stats(stats)
+
+    return filepath
+
+
+def _learning_text(operation):
+    result = operation.get("resultado")
+    if result == "LOSS":
+        return (
+            "Revisar se a zona, o gatilho M5 e o contexto top-down "
+            "continuavam validos no momento da entrada. Verificar se "
+            "houve sweep de liquidity na direcao oposta."
+        )
+    if result == "WIN_TP1":
+        return (
+            "A leitura entregou o primeiro alvo. Avaliar se travar "
+            "parcial ou proteger breakeven seria viavel."
+        )
+    if result == "WIN_TP2":
+        return (
+            "A leitura alcancou o alvo tecnico principal. Registrar "
+            "quais confluencias sustentaram o movimento para reuso."
+        )
+    return "Registrar o contexto e comparar com operacoes semelhantes."
+
+
+def update_daily_learning(trade_note_path):
+    hoje = datetime.now().strftime("%Y-%m-%d")
+    filepath = DIARIO_DIR / f"{hoje}.md"
+
+    if not filepath.exists():
+        header = f"# Aprendizados Diarios — {hoje}\n\n"
+        filepath.write_text(header)
+
+    note_title = trade_note_path.stem
+    entry = f"- [[{note_title}]] — fechada em {hoje}\n"
+
+    # Idempotência: nunca duplicar a mesma operação no diário do dia.
+    if entry in filepath.read_text():
+        return False
+
+    with filepath.open("a") as f:
+        f.write(entry)
+    return True
+
+
+def update_contexto_evolucao(operation):
+    """DEPRECATED — operações individuais NÃO devem ser appendadas ao CONTEXTO.
+
+    O CONTEXTO_EVOLUCAO.md é regenerado integralmente por daily_learning_sync.py
+    a partir dos diários diários. Append aqui conflita com a regravação completa
+    e gerou 16+ duplicatas de PREOP-000116 (2026-08-04). Mantida somente para
+    compatibilidade de API; não é mais chamada por sync_closed_trade().
+    """
+    result = operation.get("resultado")
+    smc = operation.get("smc", "?")
+    elliott = operation.get("elliott", "?")
+    direcao = operation.get("direcao", "?")
+    brain = operation.get("brain_score", "?")
+
+    if result == "LOSS":
+        entry = (
+            f"- {datetime.now().strftime('%Y-%m-%d')} | {operation.get('id')} "
+            f"| LOSS {direcao} {operation.get('ativo')} "
+            f"| SMC={smc} Elliott={elliott} Brain={brain} "
+            f"| Revisar confirmacao antes da entrada"
+        )
+    elif str(result).startswith("WIN"):
+        entry = (
+            f"- {datetime.now().strftime('%Y-%m-%d')} | {operation.get('id')} "
+            f"| {result} {direcao} {operation.get('ativo')} "
+            f"| SMC={smc} Elliott={elliott} Brain={brain} "
+            f"| Confluencia valida, registrar padrao"
+        )
+    else:
+        return False
+
+    if not CONTEXTO_FILE.exists():
+        CONTEXTO_FILE.write_text("# Contexto de Evolucao\n\n")
+
+    # Idempotência: não duplicar a mesma entrada de operação.
+    if entry in CONTEXTO_FILE.read_text():
+        return False
+
+    with CONTEXTO_FILE.open("a") as f:
+        f.write(entry + "\n")
+    return True
+
+
+def sync_closed_trade(operation):
+    import fcntl
+    _ensure_dirs()
+    with (VAULT / ".confirmed-sync.lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        path = save_trade_note(operation)
+        update_daily_learning(path)
+    # update_contexto_evolucao(operation) — removido: CONTEXTO é gerido por
+    # daily_learning_sync (regravação completa). Append aqui causava duplicatas.
+    return path

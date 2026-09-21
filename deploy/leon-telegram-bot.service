@@ -1,0 +1,16 @@
+[Unit]
+Description=LEON Telegram Commands Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+WorkingDirectory=/opt/leon/app
+ExecStart=/usr/bin/python3 /opt/leon/app/src/telegram_commands_mcp.py
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

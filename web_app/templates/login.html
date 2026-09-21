@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Login | LEON XAU ELITE AI{% endblock %}
+{% block content_auth %}
+<div class="auth-card">
+  <div class="eyebrow">ESTUDO HUMANO SUPERVISIONADO</div>
+  <h1>Entrar no LEON</h1>
+  <p class="muted" style="margin-bottom:14px">Acesso remoto com senha individual.</p>
+  <form method="post" class="form-stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Usuário<input class="form-input" name="username" autocomplete="username" required autofocus></label>
+    <label>Senha<input class="form-input" type="password" name="password" autocomplete="current-password" required></label>
+    <button class="btn btn-gold form-full" type="submit">Entrar</button>
+  </form>
+  <div class="notice warning">
+    <strong>Admin inicial:</strong> verifique o arquivo <code>.env</code> e troque a senha.
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+[Unit]
+Description=LEON Daily Learning Synchronizer
+Documentation=leon-daily-learning skill
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=leon
+WorkingDirectory=/opt/leon/app
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONPATH=/opt/leon/app:/opt/leon/app/src
+ExecStart=/opt/leon/venv/bin/python -u /opt/leon/app/src/daily_learning_sync.py
+
+ProtectSystem=full
+ReadWritePaths=/opt/leon/app/tarefas/aprendizados_diarios
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+RestrictNamespaces=true
+RestrictRealtime=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

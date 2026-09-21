@@ -1,0 +1,42 @@
+# ===================================
+# MARKET READER
+# ===================================
+
+import mt5_safe as mt5
+from src.price_logger import registrar_preco
+from src.symbol_config import obter_simbolo_padrao
+
+def ler_preco_xau():
+
+    if not mt5.initialize():
+
+        print("ERRO MT5")
+        return
+
+    simbolo = obter_simbolo_padrao()
+
+    mt5.symbol_select(simbolo, True)
+
+    tick = mt5.symbol_info_tick(simbolo)
+
+    if tick:
+
+        print("===================================")
+        print("MARKET READER")
+        print("===================================")
+
+        print(f"SIMBOLO: {simbolo}")
+        print(f"BID: {tick.bid}")
+        print(f"ASK: {tick.ask}")
+
+        registrar_preco(
+            simbolo,
+            tick.bid,
+            tick.ask
+        )
+
+    else:
+
+        print("SEM DADOS")
+
+    mt5.shutdown()

@@ -1,0 +1,45 @@
+# ===================================
+# MARKET SNAPSHOT
+# ===================================
+
+import json
+from datetime import datetime
+import mt5_safe as mt5
+from src.symbol_config import obter_simbolo_padrao
+
+def salvar_snapshot():
+
+    if not mt5.initialize():
+        print("ERRO MT5")
+        return
+
+    simbolo = obter_simbolo_padrao()
+
+    mt5.symbol_select(simbolo, True)
+
+    tick = mt5.symbol_info_tick(simbolo)
+
+    if tick:
+
+        snapshot = {
+            "data": str(datetime.now()),
+            "simbolo": simbolo,
+            "bid": tick.bid,
+            "ask": tick.ask
+        }
+
+        with open(
+            "/opt/leon/app/data/market_snapshot.json",
+            "w",
+            encoding="utf-8"
+        ) as arquivo:
+
+            json.dump(
+                snapshot,
+                arquivo,
+                indent=4
+            )
+
+        print("SNAPSHOT SALVO")
+
+    mt5.shutdown()

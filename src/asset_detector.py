@@ -1,0 +1,77 @@
+import json
+import time
+from pathlib import Path
+
+CANDIDATOS = ["Gold_Spot", "XAUUSD", "XAUUSD.fx", "GOLD", "XAU/USD"]
+CACHE_FILE = Path(__file__).resolve().parent.parent / "data" / "active_symbol_cache.json"
+CACHE_TTL_SECONDS = 300
+
+
+def detectar_ativo(use_cache=True):
+    cache = _ler_cache() if use_cache else None
+    if cache:
+        return cache
+
+    try:
+        import mt5_safe as mt5
+    except ImportError:
+        _salvar_cache(CANDIDATOS[0])
+        return CANDIDATOS[0]
+
+    if not mt5.initialize():
+        _salvar_cache(CANDIDATOS[0])
+        return CANDIDATOS[0]
+
+    try:
+        total = mt5.symbols_total()
+        if total and total > 0:
+            simbolos = mt5.symbols_get()
+            if simbolos:
+                nomes = {s.name for s in simbolos}
+                for cand in CANDIDATOS:
+                    if cand in nomes:
+                        select_ok = mt5.symbol_select(cand, True)
+                        if select_ok:
+                            _salvar_cache(cand)
+                            mt5.shutdown()
+                            return cand
+    except Exception:
+        pass
+
+    mt5.shutdown()
+    _salvar_cache(CANDIDATOS[0])
+    return CANDIDATOS[0]
+
+
+def _ler_cache():
+    try:
+        if CACHE_FILE.exists():
+            dados = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
+            detected_at = dados.get("detected_at_monotonic")
+            if detected_at and time.monotonic() - float(detected_at) > CACHE_TTL_SECONDS:
+                return None
+            if dados.get("ativo"):
+                return dados["ativo"]
+    except Exception:
+        pass
+    return None
+
+
+def _salvar_cache(ativo):
+    CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        CACHE_FILE.write_text(
+            json.dumps({
+                "ativo": ativo,
+                "detectado_em": __import__("datetime").datetime.now().isoformat(timespec="seconds"),
+                "detected_at_monotonic": time.monotonic(),
+            }),
+            encoding="utf-8",
+        )
+    except Exception:
+        pass
+
+
+def invalidar_cache():
+    if CACHE_FILE.exists():
+        CACHE_FILE.unlink()

@@ -1,0 +1,189 @@
+import configparser
+import csv
+import json
+import os
+from datetime import datetime
+from pathlib import Path
+
+from src.baseline_window import dentro_da_janela, obter_window_days
+
+
+ROOT_DIR = Path(__file__).resolve().parent.parent
+CONFIG_FILE = ROOT_DIR / "config.ini"
+SHADOW_FILE = ROOT_DIR / "data" / "shadow_trades.csv"
+LAB_EVENT_FILE = ROOT_DIR / "data" / "lab_entry_events.json"
+ALLOWED_MISSING_CONFIRMATIONS = {
+    "FIBONACCI_ONDA_2_OU_4",
+    "CAPTURA_LIQUIDEZ",
+    "TOP_DOWN_H4_H1_M15",
+}
+
+
+def _config():
+    parser = configparser.ConfigParser()
+    parser.read(CONFIG_FILE, encoding="utf-8")
+    section = parser["EXECUTION"] if parser.has_section("EXECUTION") else {}
+
+    return {
+        "enabled": (
+            str(section.get("demo_only", "true")).lower() == "true"
+            and str(section.get("learning_lab_enabled", "false")).lower()
+            == "true"
+            and str(
+                section.get(
+                    "lab_shadow_evidence_enabled",
+                    "false",
+                )
+            ).lower()
+            == "true"
+        ),
+        "min_closed": int(section.get("lab_shadow_min_closed", 2)),
+        "min_winrate": float(section.get("lab_shadow_min_winrate", 30)),
+    }
+
+
+def _progressive_min_closed(winrate):
+    """Calcula meta progressiva de shadows fechados baseada na winrate.
+
+    Quanto melhor a winrate, menos evidencia é exigida (confiança acumulada).
+    Quanto pior a winrate, mais evidencia é exigida.
+    """
+    if winrate >= 70:
+        return 5
+    elif winrate >= 50:
+        return 10
+    elif winrate >= 30:
+        return 20
+    else:
+        return 15
+
+
+def _read_shadow_rows():
+    if not SHADOW_FILE.exists():
+        return []
+
+    try:
+        with SHADOW_FILE.open("r", encoding="utf-8", newline="") as file:
+            return list(csv.DictReader(file, delimiter=";"))
+    except (OSError, csv.Error):
+        return []
+
+
+def shadow_evidence(rows=None, window_days=None):
+    """Evidência de shadows fechadas elegíveis.
+
+    window_days: quando fornecido, filtra por closed_at dentro da janela de
+    dias corridos. Default None = sem filtro (compatibilidade; testes que
+    passam rows sem closed_at não são afetados quando window_days é None).
+    """
+    rows = rows if rows is not None else _read_shadow_rows()
+    eligible = []
+
+    for row in rows:
+        if row.get("status") != "FECHADO":
+            continue
+
+        if window_days and not dentro_da_janela(row.get("closed_at"), window_days):
+            continue
+
+        missing = {
+            item.strip()
+            for item in str(row.get("missing_confirmations") or "").split(",")
+            if item.strip()
+        }
+        if missing and missing.issubset(ALLOWED_MISSING_CONFIRMATIONS):
+            eligible.append(row)
+
+    wins = sum(str(row.get("result") or "").startswith("WIN") for row in eligible)
+    losses = sum(row.get("result") == "LOSS" for row in eligible)
+    decided = wins + losses
+    winrate = round(wins / decided * 100, 2) if decided else 0
+
+    return {
+        "closed": decided,
+        "wins": wins,
+        "losses": losses,
+        "winrate": winrate,
+    }
+
+
+def _used_events():
+    if not LAB_EVENT_FILE.exists():
+        return {}
+
+    try:
+        return json.loads(LAB_EVENT_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def lab_event_available(signature):
+    return bool(signature) and signature not in _used_events()
+
+
+def mark_lab_event(signature):
+    if not signature:
+        return False
+
+    events = _used_events()
+    events[signature] = datetime.now().isoformat(timespec="seconds")
+    LAB_EVENT_FILE.parent.mkdir(parents=True, exist_ok=True)
+    temporary = LAB_EVENT_FILE.with_name(
+        f".{LAB_EVENT_FILE.name}.{os.getpid()}.tmp"
+    )
+
+    try:
+        temporary.write_text(
+            json.dumps(events, indent=2, ensure_ascii=True),
+            encoding="utf-8",
+        )
+        temporary.replace(LAB_EVENT_FILE)
+    finally:
+        try:
+            temporary.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+    return True
+
+
+def evaluate_lab_entry(
+    smc_confirmed,
+    top_down_confirmed,
+    strict_confirmation,
+    missing_confirmations,
+    rows=None,
+):
+    config = _config()
+    # Janela de dias apenas no caminho de produção (rows lido do CSV com closed_at).
+    # Quando rows é fornecido (testes), não aplica janela para preservar contrato.
+    window_days = obter_window_days() if rows is None else None
+    evidence = shadow_evidence(rows, window_days=window_days)
+    effective_min_closed = _progressive_min_closed(evidence["winrate"])
+    missing = set(missing_confirmations)
+    only_allowed_missing = (
+        bool(missing)
+        and missing.issubset(ALLOWED_MISSING_CONFIRMATIONS)
+    )
+
+    approved = (
+        config["enabled"]
+        and smc_confirmed
+        and top_down_confirmed
+        and not strict_confirmation
+        and only_allowed_missing
+        and evidence["closed"] >= effective_min_closed
+        and evidence["winrate"] >= config["min_winrate"]
+    )
+
+    return {
+        "approved": approved,
+        "mode": "LAB_SHADOW_EVIDENCE" if approved else "STRICT",
+        "evidence": evidence,
+        "requirements": {
+            "min_closed": effective_min_closed,
+            "min_winrate": config["min_winrate"],
+            "progressive": True,
+        },
+        "missing_confirmations": sorted(missing),
+    }
