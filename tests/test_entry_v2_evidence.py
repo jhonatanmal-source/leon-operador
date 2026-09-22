@@ -65,8 +65,10 @@ def test_legacy_evidence_rejected(data):
 
 def test_uncertainty_and_invalid_returns(data):
     base = dict(ativo='X', direcao='COMPRA', smc='UP', elliott='ONDA 3',
-                source='MT5_DEMO_REAL', setup_version=evidence.VERSION)
-    rows = [dict(base, realized_r=r) for r in (1, 1, 1, 1, 'NaN', 'bad')]
+                source='MT5_DEMO_REAL', setup_version=evidence.VERSION,
+                account_key='TEST', entry_model='ORDER_BLOCK_RETEST', context_mode='TREND')
+    rows = [dict(base, realized_r=r, position_id=str(i), region_id='region-' + str(i))
+            for i, r in enumerate((1, 1, 1, 1, 'NaN', 'bad'), start=1)]
     rows.append(dict(base, realized_r=100, source='SHADOW'))
     with patch.object(evidence, 'confirmed_records', return_value=rows):
         result = evidence.learning_statistics(base)

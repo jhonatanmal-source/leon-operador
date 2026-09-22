@@ -48,8 +48,36 @@ def test_formatar_status_usa_simbolo_real_nao_fallback_fixo(tmp_path, monkeypatc
         json.dumps({"ativo": "XAUUSD.fx"}), encoding="utf-8"
     )
     monkeypatch.setattr(asset_detector, "CACHE_FILE", cache_file)
+    from src import operational_evidence as evidence
+    from datetime import datetime, timezone
+    monkeypatch.setattr(evidence, 'DATA', tmp_path)
+    (tmp_path / 'operator_heartbeat.json').write_text(json.dumps({
+        'updated_at': datetime.now().isoformat(), 'status': 'AGUARDANDO_SETUP', 'details': {}}))
+    (tmp_path / 'latest_setup_decision.json').write_text(json.dumps({
+        'created_at': datetime.now(timezone.utc).isoformat(), 'plan': {'ativo': 'XAUUSD.fx'}}))
 
     mensagem = tcm._formatar_status()
 
     assert "XAUUSD.fx" in mensagem
     assert "`Gold_Spot`" not in mensagem
+
+
+def test_status_indefinite_requires_fresh_authorized_demo(tmp_path, monkeypatch):
+    from datetime import datetime, timedelta
+    from src import operational_evidence as evidence
+    monkeypatch.setattr(evidence, 'DATA', tmp_path)
+    details = dict(execution_authorized=True, scope='demo_execution',
+                   autonomy_reason='AUTONOMY_ACTIVE_UNTIL_REVOKED', autonomy_expires_at=None)
+    (tmp_path / 'latest_setup_decision.json').write_text(json.dumps({'plan': None}))
+    for age, authorized, scope, expected in [
+        (0, True, 'demo_execution', True), (600, True, 'demo_execution', False),
+        (0, False, 'demo_execution', False), (0, True, 'real_execution', False),
+    ]:
+        details.update(execution_authorized=authorized, scope=scope)
+        (tmp_path / 'operator_heartbeat.json').write_text(json.dumps({
+            'updated_at': (datetime.now() - timedelta(seconds=age)).isoformat(),
+            'status': 'AGUARDANDO_SETUP', 'details': details}))
+        message = evidence.operational_status_text()
+        assert ('Ate desligar com /autonomy off' in message) is expected
+        assert 'Ativo analisado: Sem registro' in message
+        assert 'Autorizacao ate: None' not in message

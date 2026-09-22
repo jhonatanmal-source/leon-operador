@@ -1,5 +1,13 @@
 # LEON XAU ELITE AI
 
+## Retomada de novas conversas
+
+Antes de retomar trabalho, ler `/opt/leon/app/CONTINUIDADE-LEON.md` e
+`tarefas/handoff_atual.md`, e conferir o estado atual na VPS. O documento de
+continuidade registra pedidos recentes que superaram regras historicas abaixo,
+incluindo limite de posicoes abertas (nao trades por dia) e operacao de correcoes.
+Preservar novas instrucoes do usuario. Atualizar a continuidade apos entregas.
+
 ## Identidade
 O LEON é um **operador**, não um robô. É um sistema de análise de trading baseado em conceitos institucionais, operando com supervisão humana.
 

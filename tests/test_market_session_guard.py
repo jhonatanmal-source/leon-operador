@@ -46,6 +46,20 @@ class FakeMT5:
 
 class MarketSessionGuardTests(unittest.TestCase):
 
+    def test_account_permission_is_not_market_closure(self):
+        now = datetime(2026, 9, 22, 9, 0, tzinfo=timezone.utc)
+        result = market_session_guard.inspect_broker_session(
+            now=now, mt5_module=FakeMT5(now, trade_allowed=False))
+        self.assertFalse(result['open'])
+        self.assertEqual(result['status'], 'BROKER_TRADING_BLOCKED')
+        self.assertEqual(market_session_guard.operator_session_status(result), 'CONTA_SEM_PERMISSAO')
+
+    def test_session_states_distinguish_technical_failure(self):
+        for status in ('WEEKEND_CLOSED', 'DAILY_MARKET_PAUSE'):
+            self.assertEqual(market_session_guard.operator_session_status({'status': status}), 'PAUSA_MERCADO')
+        for status in ('MT5_DISCONNECTED', 'SYMBOL_UNAVAILABLE', 'NO_BROKER_TICK', 'BROKER_SYMBOL_DISABLED'):
+            self.assertEqual(market_session_guard.operator_session_status({'status': status}), 'FALHA_TECNICA')
+
     def test_recent_broker_tick_opens_market(self):
         now = datetime(2026, 6, 19, 14, 0, tzinfo=timezone.utc)
         mt5 = FakeMT5(now - timedelta(seconds=20))

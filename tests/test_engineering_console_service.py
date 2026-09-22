@@ -37,6 +37,35 @@ def test_empty_is_not_activity(data):
     assert result['operator']['risk']['risk_percent'] is None
 
 
+def test_indefinite_autonomy_requires_current_demo_authorization(data):
+    details = dict(execution_authorized=True, scope='demo_execution',
+                   autonomy_reason='AUTONOMY_ACTIVE_UNTIL_REVOKED', autonomy_expires_at=None)
+    write(data, 'operator_heartbeat.json', dict(updated_at='2026-09-10T12:00:00', details=details))
+    op = service.get_engineering_console_snapshot(now=NOW)['operator']
+    assert op['autonomy_active'] and op['autonomy_until_revoked']
+    details['execution_authorized'] = False
+    write(data, 'operator_heartbeat.json', dict(updated_at='2026-09-10T12:00:00', details=details))
+    assert not service.get_engineering_console_snapshot(now=NOW)['operator']['autonomy_active']
+    details.update(execution_authorized=True, scope='real_execution')
+    write(data, 'operator_heartbeat.json', dict(updated_at='2026-09-10T12:00:00', details=details))
+    assert not service.get_engineering_console_snapshot(now=NOW)['operator']['autonomy_active']
+
+
+def test_learning_excludes_simulation_and_private_identifiers(data):
+    write(data, 'latest_setup_decision.json', dict(version='v2', created_at=NOW.isoformat()))
+    row = dict(source='MT5_DEMO_REAL', account_key='private-account', position_id=1,
+               order_ticket=123, region_id='REG1', actual_profit=10, realized_r=1,
+               ativo='XAUUSD', direcao='COMPRA', entry_model='ORDER_BLOCK_RETEST',
+               context_mode='TENDENCIA', setup_version='v2')
+    write(data, 'confirmed_mt5_outcomes.json', {'one': row, 'sim': dict(row, source='SHADOW')})
+    result = service.get_engineering_console_snapshot(now=NOW)['learning']
+    assert result['independent_opportunities'] == 1
+    assert len(result['trades']) == 1
+    assert result['trades'][0]['quality']['mfe_r'] is None
+    assert 'private-account' not in json.dumps(result)
+    assert not result['evaluation']['validated_improvement']
+
+
 @pytest.mark.parametrize('time,stale', [('2026-09-10T12:00:00', False),
     ('2026-09-10T11:57:00', False), ('2026-09-10T11:56:59', True),
     ('2026-09-10T12:01:00', True), ('invalid', True)])

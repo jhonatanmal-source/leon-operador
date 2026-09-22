@@ -12,6 +12,9 @@ from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from src import engineering_store as store
+from src.opportunity_learning import learning_summary
+from src.learning_evaluation import evaluate
+from src.quality_collector import cache_key
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = ROOT / 'data'
@@ -117,6 +120,7 @@ def get_engineering_console_snapshot(can_manage=False, now=None):
     details = details if isinstance(details, dict) else {}
     stale = _stale(heartbeat.get('updated_at'), now)
     expires = _date(details.get('autonomy_expires_at'))
+    indefinite = details.get('autonomy_reason') == 'AUTONOMY_ACTIVE_UNTIL_REVOKED' and details.get('scope') == 'demo_execution'
     checks = decision.get('checks', {})
     checks = checks if isinstance(checks, dict) else {}
     decision_stale = _stale(decision.get('created_at'), now)
@@ -124,12 +128,14 @@ def get_engineering_console_snapshot(can_manage=False, now=None):
     plan = plan if isinstance(plan, dict) else {}
     state = 'SEM_ATUALIZACAO' if stale else heartbeat.get('status', 'SEM_DADOS')
     labels = {'SEM_ATUALIZACAO': 'Sem atualizacao recente', 'AGUARDANDO_SETUP': 'Aguardando setup',
+              'CONTA_SEM_PERMISSAO': 'Conta sem permissao para negociar', 'PAUSA_MERCADO': 'Pausa de cotacoes',
               'PAUSA_RISCO': 'Pausa por risco', 'FALHA_TECNICA': 'Falha tecnica',
               'OBSERVACAO': 'Sem autorizacao de execucao', 'ORDEM_ENVIADA': 'Ordem enviada'}
     operator = dict(state=state, label=labels.get(state, state),
-                    reason=details.get('entry_reason', 'Sem diagnostico recente'),
+                    reason=details.get('entry_reason') or details.get('reason') or 'Sem diagnostico recente',
                     asset=plan.get('ativo'), updated_at=_iso(heartbeat.get('updated_at')), stale=stale,
-                    autonomy_active=bool(not stale and details.get('execution_authorized') is True and expires and expires > now),
+                    autonomy_active=bool(not stale and details.get('execution_authorized') is True and (indefinite or (expires and expires > now))),
+                    autonomy_until_revoked=bool(indefinite and not stale and details.get('execution_authorized') is True),
                     autonomy_expires_at=_iso(details.get('autonomy_expires_at')),
                     checks=[dict(id=k, label=v, passed=checks.get(k) if not decision_stale and isinstance(checks.get(k), bool) else None)
                             for k, v in CHECKS.items()], risk=_risk())
@@ -205,10 +211,22 @@ def get_engineering_console_snapshot(can_manage=False, now=None):
     tests = {k: tests.get(k) for k in ('passed', 'failed', 'updated_at')}
     artifacts = [{k: a.get(k) for k in ('id', 'title', 'kind', 'created_at', 'job_id')}
                  for a in store.list_artifacts()]
+    learning = learning_summary([r for r, _ in current], version)
+    learning['evaluation'] = evaluate([r for r, _ in current])
+    learning['trades'] = []
+    for row, profit in sorted(current, key=lambda item: str(item[0].get('data_fechamento', '')), reverse=True)[:50]:
+        quality = _read('trade_quality/' + cache_key(row) + '.json')
+        trade = {key: row.get(key) for key in ('order_ticket', 'ativo', 'direcao', 'entry_model', 'context_mode', 'currency', 'data_fechamento')}
+        trade.update(net_profit=profit, quality={key: quality.get(key) for key in
+                     ('mfe_r', 'mae_r', 'status', 'collection_reason', 'updated_at', 'complete_history_verified')})
+        learning['trades'].append(trade)
+    quality_status = _read('quality_collector_status.json')
+    learning['collector_updated_at'] = quality_status.get('updated_at')
+    learning['collector_ok'] = quality_status.get('ok')
     return _public(dict(schema_version=1, generated_at=now.isoformat(), can_manage=bool(can_manage),
                         operator=operator, engineering=dict(enabled=settings['enabled'], worker=_activity(worker, now),
                         provider=provider, next_run_at=settings['next_run_at'], interval_seconds=settings['interval_seconds']),
-                        agents=agents, jobs=jobs, events=events, artifacts=artifacts,
+                        agents=agents, jobs=jobs, events=events, artifacts=artifacts, learning=learning,
                         metrics=dict(confirmed_trades=len(records), version_trades=len(current),
                                      wins=sum(p > 0 for _, p in current), losses=sum(p < 0 for _, p in current),
                                      setup_version=version, tests=tests)))

@@ -48,6 +48,7 @@ from src.memory_context_engine import gerar_resumo_professor
 from src.market_context_agent import registrar_contexto_mercado
 from src.market_session_guard import (
     inspect_broker_session,
+    operator_session_status,
     maintenance_is_due,
     mark_maintenance_done,
     register_session_status,
@@ -1493,7 +1494,7 @@ def iniciar_operador():
                 sessao = _avaliar_sessao_corretora(config)
                 if not sessao["open"]:
                     _registrar_heartbeat(
-                        "PAUSA_MERCADO",
+                        operator_session_status(sessao),
                         {
                             "broker_status": sessao["status"],
                             "reason": sessao["reason"],
@@ -1506,6 +1507,9 @@ def iniciar_operador():
                                 False,
                             ),
                             "execution_authorized": autonomia["active"],
+                            "scope": autonomia.get("scope"),
+                            "autonomy_reason": autonomia.get("reason"),
+                            "autonomy_expires_at": autonomia.get("expires_at"),
                         },
                     )
                     time.sleep(config["market_pause_poll_seconds"])

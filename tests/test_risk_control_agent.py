@@ -252,7 +252,10 @@ class TestPlanoRisco:
         assert result["calculated_lot"] == 0.019
         assert result["lot"] == 0.01
 
-    def test_item3_lote_020_step_01_resultado_02(self):
+    def test_item3_lote_020_step_01_resultado_02(self, monkeypatch):
+        from src import risk_control_agent as risk
+        config = dict(risk._risk_config(), max_lot=1.0)
+        monkeypatch.setattr(risk, '_risk_config', lambda: config)
         pre = dict(self.MIN_PRE_OP)
         pre["entrada"] = "2000.0"
         pre["stop"] = "1900.0"

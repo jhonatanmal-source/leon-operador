@@ -26,6 +26,7 @@ def selection(rows, scores, *, invalid=(), executed=(), exists=True):
                     and n.name == '_ultima_pre_operacao_aberta')
     program = ast.Module(body=[function], type_ignores=[])
     file = Mock()
+    file.parent = Path('/mock-only')
     file.exists.return_value = exists
     file.open.side_effect = lambda *args, **kwargs: io.StringIO('mock CSV')
     reader = Mock(return_value=[dict(row) for row in rows])
@@ -38,7 +39,7 @@ def selection(rows, scores, *, invalid=(), executed=(), exists=True):
     namespace = dict(PRE_OPERATION_FILE=file, csv=SimpleNamespace(DictReader=reader),
                      validate_setup_evidence=validate, _pre_operacao_ja_executada=sent,
                      learning_statistics=statistics, learning_score=old_score,
-                     datetime=clock, VERSION='test-v2')
+                     datetime=clock, VERSION='test-v2', atomic_json=Mock())
     exec(compile(program, str(SOURCE), 'exec'), namespace)
     return namespace['_ultima_pre_operacao_aberta'], statistics, validate, reader
 
@@ -53,7 +54,13 @@ def test_choice_freezes_statistics_used_for_ranking():
     choose, stats, _, _ = selection([row('older'), row('newer', '2026-09-11T12:01:00')], scores)
     chosen = choose()
     assert chosen['id'] == 'older'
-    assert chosen['_selection'] == dict(scores['older'], selected_at='2026-09-11T12:34:56', version='test-v2')
+    frozen = dict(chosen['_selection'])
+    audit = frozen.pop('decision')
+    assert frozen == dict(scores['older'], selected_at='2026-09-11T12:34:56', version='test-v2')
+    assert audit['policy'] == 'smc_opportunity_v1'
+    assert audit['changed_choice'] is True
+    assert audit['selected_id'] == 'older'
+    assert audit['baseline_id'] == 'newer'
     assert [call.args[0]['id'] for call in stats.call_args_list] == ['older', 'newer']
     assert stats.call_count == 2
     scores['older']['selection_score'] = -100

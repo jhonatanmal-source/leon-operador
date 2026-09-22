@@ -285,12 +285,13 @@ def operational_status_text():
         details = heartbeat.get("details", {})
         status = "SEM_ATUALIZACAO" if stale else heartbeat.get("status", "SEM_DADOS")
         state_labels = {"AGUARDANDO_SETUP": "Aguardando setup", "PAUSA_RISCO": "Pausa por risco",
+                        "CONTA_SEM_PERMISSAO": "Conta sem permissao para negociar", "PAUSA_MERCADO": "Pausa de cotacoes",
                         "FALHA_TECNICA": "Falha tecnica", "OBSERVACAO": "Sem autorizacao de execucao",
                         "ORDEM_ENVIADA": "Ordem enviada", "SEM_ATUALIZACAO": "Sem atualizacao recente"}
         check_labels = {"elliott": "direcao do contexto", "smc": "confirmacao SMC",
                         "wave_liquidity": "onda e liquidez", "top_down": "alinhamento dos tempos", "direction": "direcao"}
         missing = [check_labels.get(key, key) for key, passed in details.get("setup_checks", {}).items() if not passed]
-        reason = details.get("entry_reason", "Sem diagnostico recente")
+        reason = details.get("entry_reason") or details.get("reason") or "Sem diagnostico recente"
         if status == "AGUARDANDO_SETUP":
             reason = "Faltam: " + ", ".join(missing) if missing else "Aguardando gatilho de entrada confirmado"
             proof = read_json(DATA / 'latest_setup_decision.json', {})
@@ -300,6 +301,12 @@ def operational_status_text():
                 if trace.get('structural_reason'):
                     reason += '; zona SMC: ' + str(trace['structural_reason'])[:350]
         current = [r for r in rows if r.get("setup_version") == VERSION]
+        latest_plan = read_json(DATA / 'latest_setup_decision.json', {}).get('plan', {})
+        latest_plan = latest_plan if isinstance(latest_plan, dict) else {}
+        indefinite = (not stale and details.get('execution_authorized') is True
+                      and details.get('scope') == 'demo_execution'
+                      and details.get('autonomy_reason') == 'AUTONOMY_ACTIVE_UNTIL_REVOKED')
+        authorization = 'Ate desligar com /autonomy off' if indefinite else (details.get('autonomy_expires_at') or 'Consultar /autonomy')
         from src.opportunity_learning import learning_summary
         learning = learning_summary(rows, VERSION)
         last_selection = read_json(DATA / 'latest_learning_selection.json', {})
@@ -308,9 +315,10 @@ def operational_status_text():
         losses = sum(float(r["actual_profit"]) < 0 for r in current)
         return "\n".join([
             "LEON | Estado do operador", f"Estado: {state_labels.get(status, status)}",
+            f"Ativo analisado: {latest_plan.get('ativo') or 'Sem registro'}",
             f"Motivo: {reason}",
             f"Atualizado: {heartbeat.get('updated_at')}", "",
-            f"Autorizacao ate: {details.get('autonomy_expires_at', 'Consultar /autonomy')}", "",
+            f"Autorizacao ate: {authorization}", "",
             "Elliott + SMC | versao atual",
             f"Posicoes fechadas confirmadas: {len(current)}",
             f"Ganhos: {wins} | Perdas: {losses} | Zero: {len(current) - wins - losses}",

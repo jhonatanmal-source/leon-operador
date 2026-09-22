@@ -8,6 +8,16 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 STATE_FILE = ROOT_DIR / "data" / "market_session_state.json"
 
 
+def operator_session_status(session):
+    """Separate account permission failures from a market-session pause."""
+    status = session.get('status')
+    if status == 'BROKER_TRADING_BLOCKED':
+        return 'CONTA_SEM_PERMISSAO'
+    if status in {'WEEKEND_CLOSED', 'DAILY_MARKET_PAUSE'}:
+        return 'PAUSA_MERCADO'
+    return 'FALHA_TECNICA'
+
+
 def _utc_now():
     return datetime.now(timezone.utc)
 
@@ -95,7 +105,7 @@ def inspect_broker_session(
                 )
             elif account is None or not account.trade_allowed:
                 status = "BROKER_TRADING_BLOCKED"
-                reason = "Conta conectada, mas a corretora bloqueou negociacao."
+                reason = "MT5 nao autoriza negociacao nesta conta (trade_allowed=false ou conta indisponivel). Conferir senha de negociacao e restricoes da conta; nao e confirmacao de mercado fechado."
             else:
                 status = "MARKET_OPEN"
                 reason = "Tick recente e negociacao liberada pela corretora."

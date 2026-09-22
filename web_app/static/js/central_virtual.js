@@ -14,6 +14,8 @@
   const clock = value => {const n=node('time',when(value));if(date(value))n.dateTime=date(value).toISOString();return n;};
   const empty = text => node('p',text,'empty');
   const names={RUNNING:'Em execução',QUEUED:'Na fila',COMPLETED:'Concluído',FAILED:'Falha',WAITING:'Aguardando',BLOCKED:'Bloqueado',UNCONFIGURED:'Não configurado',STALE:'Dados antigos'};
+  const modelNames={ORDER_BLOCK_RETEST:'Reteste de OB',CHOCH_ORDER_BLOCK_RETEST:'CHOCH + reteste de OB',SUPPLY_DEMAND_RETEST:'Reteste de oferta/demanda',TREND:'Tendência',CORRECTION:'Correção',COMPRA:'Compra',VENDA:'Venda'};
+  const modelLabel=value=>modelNames[String(value).toUpperCase()] || String(value || '—').replaceAll('_',' ');
   let data={},selected=null,pending=false,mutation=false,offline=false,failures=0,timer,artifactController,dialogOrigin;
   const canManage = () => root.dataset.canManage==='true' && data.can_manage===true;
   const snapshotStale = () => offline || !recent(data.generated_at);
@@ -47,7 +49,7 @@
     list(a.evidence).forEach(e=>host.append(node('div',typeof e==='string'?e:JSON.stringify(e,null,2),'evidence')));
     const m=data.metrics || {},op=data.operator || {};
     if(op.funnel?.candidates!=null){host.append(node('h4',`Avaliações de ${op.funnel.day} (${op.funnel.timezone || 'UTC'})`),details([['Candidatos',op.funnel.candidates],['Planos prontos',op.funnel.approved]]));Object.entries(op.funnel.blocked_by || {}).forEach(([reason,count])=>host.append(node('p',`${reason}: ${count} recusas`)));}
-    host.append(details([['Versão do setup',m.setup_version],['Testes aprovados / falhos',m.tests?.passed!=null && m.tests?.failed!=null?`${m.tests.passed} / ${m.tests.failed}`:null],['Testes atualizados',when(m.tests?.updated_at)],['Autonomia',stale(op)?'Não confirmada · dados antigos':op.autonomy_active===true?(date(op.autonomy_expires_at) && date(op.autonomy_expires_at).getTime()<=serverNow()?'Expirada':'Autorizada'):op.autonomy_active===false?'Inativa':'Sem dados'],['Autorização até',when(op.autonomy_expires_at)]]));
+    host.append(details([['Versão do setup',m.setup_version],['Testes aprovados / falhos',m.tests?.passed!=null && m.tests?.failed!=null?`${m.tests.passed} / ${m.tests.failed}`:null],['Testes atualizados',when(m.tests?.updated_at)],['Autonomia',stale(op)?'Não confirmada · dados antigos':op.autonomy_active===true?(date(op.autonomy_expires_at) && date(op.autonomy_expires_at).getTime()<=serverNow()?'Expirada':'Autorizada'):op.autonomy_active===false?'Inativa':'Sem dados'],['Autorização até',!stale(op) && op.autonomy_active && op.autonomy_until_revoked?'Até desligar':when(op.autonomy_expires_at)]]));
     list(data.artifacts).filter(ar=>ar.job_id && list(data.jobs).some(j=>j.id===ar.job_id && j.agent_id===a.id)).forEach(ar=>host.append(artifactButton(ar)));
   }
   function stations() {
@@ -106,7 +108,20 @@
     const manage=root.dataset.canManage==='true' && data.can_manage===true;$('actions').hidden=!manage;$('automation-wrap').hidden=!manage;$('automation').checked=!snapshotStale() && eng.enabled===true;$('automation').indeterminate=snapshotStale();$('automation').title=snapshotStale()?'Estado não confirmado':'';$('automation').disabled=mutation || snapshotStale();root.querySelectorAll('[data-job]').forEach(b=>b.disabled=mutation || snapshotStale());
     put('sync',`${offline?'Conexão interrompida':recent(data.generated_at)?'Atualizado':'Dados antigos'} · ${when(data.generated_at)}`);
     const s=$('agent-filter'),value=s.value;s.replaceChildren(new Option('Todos',''),...list(data.agents).map(a=>new Option(a.name || a.id,a.id)));s.value=value;
-    stations();events();jobs();
+    stations();events();jobs();learning();
+  }
+  function learning() {
+    const value=data.learning || {},op=data.operator || {},at=value.selection_attribution || {};
+    const format=v=>typeof v==='number' && Number.isFinite(v)?v.toLocaleString('pt-BR',{maximumFractionDigits:2}):'—';
+    put('learning-state',value.validated_edge===true?'Validada':'Vantagem ainda não comprovada');
+    const metrics=[['Oportunidades independentes',value.independent_opportunities],['Ordens fechadas',value.confirmed_trades],['Escolhas alteradas',at.changed_choice],['Autonomia',stale(op)?'Não confirmada':op.autonomy_active?(op.autonomy_until_revoked?'Até desligar':'Temporária'):'Inativa']];
+    $('learning-metrics').replaceChildren(...metrics.map(([key,v])=>{const el=node('div');el.append(node('dt',key),node('dd',v ?? 'Sem dados'));return el;}));
+    put('quality-clock',`Medição: ${when(value.collector_updated_at)}`);
+    $('learning-groups').replaceChildren(...Object.entries(value.groups || {}).map(([key,g])=>{const row=node('tr');[key.split('|').map(modelLabel).join(' · '),g.samples,g.trade_count,format(g.mean_r),format(g.selection_score),g.status==='EXPLORATORY'?'Exploratória':g.status==='MODEL_UNIDENTIFIED'?'Modelo ausente':'Amostra insuficiente'].forEach(v=>row.append(node('td',v)));return row;}));
+    const result=$('trade-result').value,direction=$('trade-direction').value;
+    const trades=list(value.trades).filter(t=>(!direction || t.direcao===direction)&&(!result || (result==='win'?t.net_profit>0:t.net_profit<0)));
+    $('learning-trades').replaceChildren(...trades.map(t=>{const row=node('tr'),q=t.quality || {},coverage=q.status==='OBSERVED_TICKS'?(q.collection_reason==='REQUESTED_END_REACHED'?'Janela consultada':'Parcial'):'Indisponível';row.title=`Ticket ${t.order_ticket ?? 'não informado'}. Histórico completo não garantido.`;[when(t.data_fechamento),`${t.ativo || '—'} · ${modelLabel(t.direcao)}`,modelLabel(t.entry_model),`${format(t.net_profit)} ${t.currency || ''}`,format(q.mfe_r),format(q.mae_r),coverage].forEach((v,i)=>{const cell=node('td',v);if(i===3)cell.dataset.pnl=t.net_profit>=0?'gain':'loss';row.append(cell);});return row;}));
+    $('learning-empty').hidden=trades.length>0;
   }
   async function request(path,options={}) {
     const controller=new AbortController(),external=options.signal,abort=()=>controller.abort(),timeout=setTimeout(abort,12000);external?.addEventListener('abort',abort,{once:true});
@@ -133,6 +148,7 @@
   root.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>view(b.dataset.open,true));root.querySelectorAll('[data-job]').forEach(b=>b.onclick=()=>mutate('/jobs',{kind:b.dataset.job}));
   $('automation').onchange=e=>mutate('/automation',{enabled:e.target.checked});$('refresh').onclick=poll;
   ['search','severity','agent-filter'].forEach(id=>$(id).addEventListener(id==='search'?'input':'change',events));$('job-filter').onchange=jobs;
+  ['trade-result','trade-direction'].forEach(id=>$(id).addEventListener('change',learning));
   $('close-dialog').onclick=()=>$('cv-dialog').close();$('cv-dialog').addEventListener('close',()=>{artifactController?.abort();if(dialogOrigin?.isConnected)dialogOrigin.focus();else $('refresh').focus();});
   let ageTimer;
   function ageLocally(){clearTimeout(ageTimer);if(document.hidden)return;ageTimer=setTimeout(()=>{render();ageLocally();},1000);}

@@ -1,6 +1,6 @@
-# Source backup updated 2026-09-21
+# Source backup updated 2026-09-22
 
-Published VPS source, including demo autonomy until revocation, opportunity learning, bounded read-only tick quality collection, tests and service units. Private runtime data, credentials, databases and unpublished local experiments excluded. Source backup is not a full server restore image. No profitability claim.
+Published VPS source, including demo autonomy until revocation, opportunity learning, bounded read-only tick quality collection, tests and service units. Adds the learning dashboard, corrected account-permission status, regression fixtures and continuity document. Private runtime data, credentials, databases and unpublished local experiments excluded. Source backup is not a full server restore image. No profitability claim.
 
 Conservative credential scan omitted:
 - tests/test_telegram_command_dispatch.py
