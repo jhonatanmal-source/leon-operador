@@ -59,3 +59,5 @@
 - **MT5**: read-only via wine/rpyc
 - **MCPs**: backtest, market, memory, replay registrados
 - ⚠️ **Alerta operacional ativo**: pendência #10 (compra topo/vende fundo) NÃO resolvida — operador segue enviando ordens demo VENDA em SETUP FRACO (ex.: PREOP-003504/003505 em 18/08). Priorizar Fase 1 (correção SMC).
+## 2026-09-30 — Etapa 2.1 (cópia isolada)
+Correção de eventos históricos BOS/CHOCH em codex/causal-structure; 22 testes passaram em Python 3.14. Consulte docs/stage2-structure.md. Escrita desta missão encerrada; lock histórico preservado. Sem implantação. Revisão final do Grok bloqueada por limite de uso.
