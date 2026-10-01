@@ -32,7 +32,7 @@ from src.autonomy_guard import (
 from src.brain_context_memory import registrar_contexto_cerebro
 from src.brain_memory import registrar_brain
 from src.collector_operator import executar_coleta_manual
-from src.daily_learning_report import gerar_relatorio_aprendizado_diario
+from src.daily_learning_diary import executar_ciclo_aprendizado_diario
 from src.daily_operator_report import gerar_relatorio_operador_diario
 from src.emotion_engine import register_emotional_event
 from src.error_logger import registrar_erro
@@ -714,7 +714,8 @@ def executar_aprendizado_diario(forcar=False):
         }
 
     try:
-        relatorio = gerar_relatorio_aprendizado_diario(hoje)
+        ciclo = executar_ciclo_aprendizado_diario(hoje)
+        relatorio = ciclo["report"]
         relatorio_operador = gerar_relatorio_operador_diario(hoje)
         auditoria_setup = generate_setup_audit(hoje)
         resultado_telegram = enviar_relatorio_aprendizado_texto(relatorio)

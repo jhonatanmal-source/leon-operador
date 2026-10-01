@@ -181,12 +181,10 @@ def _resumo_memoria_operacional():
     }
 
 
-def gerar_relatorio_aprendizado_diario(data_referencia=None):
+def coletar_metricas_aprendizado(data_referencia=None):
 
     if data_referencia is None:
         data_referencia = date.today()
-
-    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
     memoria_trade = _ler_csv(
         TRADE_MEMORY_FILE,
@@ -414,12 +412,29 @@ def gerar_relatorio_aprendizado_diario(data_referencia=None):
 
     relatorio = "\n".join(linhas)
 
+    return {
+        "data": data_referencia,
+        "total_precos": total_precos,
+        "total_candles": total_candles,
+        "total_sinais": total_sinais,
+        "total_contextos": total_contextos,
+        "total_registros": total_registros,
+        "total_planos": total_planos,
+        "taxa_acerto_historica": taxa_acerto,
+        "memoria_operacional": memoria_operacional,
+        "relatorio": relatorio,
+    }
+
+
+def gerar_relatorio_aprendizado_diario(data_referencia=None, *, metricas=None):
+    if metricas is None:
+        metricas = coletar_metricas_aprendizado(data_referencia)
+    relatorio = metricas["relatorio"]
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     with DAILY_LEARNING_FILE.open("a", encoding="utf-8") as arquivo:
         arquivo.write(relatorio)
         arquivo.write("\n\n")
-
     print(relatorio)
-
     return relatorio
 
 
