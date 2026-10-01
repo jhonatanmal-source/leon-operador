@@ -33,6 +33,11 @@ def _arquivos_dia() -> list[Path]:
 
 
 def _extrair_secao(texto: str, secao: str) -> list[str]:
+    # Operational metrics are evidence for human review, not engineering rules.
+    texto = re.sub(
+        r"<!-- LEON_AUTO_MARKET_START -->.*?<!-- LEON_AUTO_MARKET_END -->",
+        "", texto, flags=re.DOTALL,
+    )
     linhas = texto.splitlines()
     dentro = False
     itens = []
