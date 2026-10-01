@@ -171,7 +171,14 @@ def _closed_candles(candles):
     return candles[:-1] if len(candles) > 1 else candles
 
 
-def detect_pivots(candles, window=2):
+def detect_structure_pivots(candles, window=2):
+    """Confirmed, uncompressed pivots; future extremes cannot erase history.
+
+    The last input candle is live. A pivot becomes available only at the close
+    of index + window. Callers must supply chronological OHLC candles.
+    """
+    if isinstance(window, bool) or not isinstance(window, int) or window < 1:
+        raise ValueError("window must be a positive integer")
     closed = _closed_candles(candles)
     pivots = []
 
@@ -181,6 +188,7 @@ def detect_pivots(candles, window=2):
         if current["high"] > max(candle["high"] for candle in neighbors):
             pivots.append({
                 "index": index,
+                "confirmed_index": index + window,
                 "type": "HIGH",
                 "price": current["high"],
                 "time": current.get("time"),
@@ -188,12 +196,22 @@ def detect_pivots(candles, window=2):
         if current["low"] < min(candle["low"] for candle in neighbors):
             pivots.append({
                 "index": index,
+                "confirmed_index": index + window,
                 "type": "LOW",
                 "price": current["low"],
                 "time": current.get("time"),
             })
 
     pivots.sort(key=lambda pivot: pivot["index"])
+    return pivots
+
+
+def detect_pivots(candles, window=2):
+    # Elliott and snapshot bias retain their existing alternating-pivot contract.
+    pivots = [
+        {key: value for key, value in pivot.items() if key != "confirmed_index"}
+        for pivot in detect_structure_pivots(candles, window)
+    ]
     alternating = []
     for pivot in pivots:
         if not alternating or alternating[-1]["type"] != pivot["type"]:
@@ -242,14 +260,24 @@ def _displacement(candles, index):
     )
 
 
-def detect_structure_events(candles, pivots):
+def detect_structure_events(candles, pivots=None):
+    """Replay close breaks using causal pivots (default window=2).
+
+    Explicit pivots must carry confirmed_index for non-default windows and must
+    not be retrospectively compressed. The default path guarantees this.
+    """
+    if pivots is None:
+        pivots = detect_structure_pivots(candles)
     closed = _closed_candles(candles)
     events = []
     broken = set()
     flow = "NEUTRO"
 
     for index, candle in enumerate(closed):
-        available = [pivot for pivot in pivots if pivot["index"] < index]
+        available = [
+            pivot for pivot in pivots
+            if pivot.get("confirmed_index", pivot["index"] + 2) <= index
+        ]
         highs = [pivot for pivot in available if pivot["type"] == "HIGH"]
         lows = [pivot for pivot in available if pivot["type"] == "LOW"]
 
@@ -382,7 +410,7 @@ def _event_pair(events):
 def analyze_smc_context(candles):
     closed = _closed_candles(candles)
     pivots = detect_pivots(candles)
-    events = detect_structure_events(candles, pivots)
+    events = detect_structure_events(candles)
     choch_event, bos_event = _event_pair(events)
     liquidity = detect_liquidity_event(candles)
 
