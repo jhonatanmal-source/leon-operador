@@ -59,3 +59,5 @@
 - **MT5**: read-only via wine/rpyc
 - **MCPs**: backtest, market, memory, replay registrados
 - ⚠️ **Alerta operacional ativo**: pendência #10 (compra topo/vende fundo) NÃO resolvida — operador segue enviando ordens demo VENDA em SETUP FRACO (ex.: PREOP-003504/003505 em 18/08). Priorizar Fase 1 (correção SMC).
+## 2026-09-30 — Integração do diário (Codex, cópia isolada)
+Primeiro patch na branch codex/daily-learning-diary. 34 testes passaram em Python 3.14. Consulte docs/daily-learning-diary.md. Escrita desta missão encerrada; lock histórico de agosto preservado, sem interferir na VPS ou no checkout local antigo. Implantação e engines pendentes.
