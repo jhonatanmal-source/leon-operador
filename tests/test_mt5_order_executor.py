@@ -147,6 +147,7 @@ def mock_deps():
         patch("src.mt5_order_executor.enviar_foto"),
         patch("src.mt5_order_executor.validate_zone_for_execution", return_value={"ok": True, "region": {"region_id": "REG-TEST-1234"}}),
         patch("src.mt5_order_executor.score_operational_context", return_value=80),
+        patch("src.mt5_order_executor.evaluate_ftmo_entry", return_value={"approved": True}),
     ]
     for p in patches:
         p.start()
@@ -379,9 +380,9 @@ class TestLabLearning:
                     result = executar_ordem_mt5_pre_operacao(forcar=False)
                     assert result.get("ok") is True
 
-    def test_lab_bypasses_risk_plan(self, mock_mt5, mock_lab_config, mock_deps,
+    def test_lab_respects_risk_plan(self, mock_mt5, mock_lab_config, mock_deps,
                                      mock_pre_op_csv, mock_csv, mock_risk_config):
-        """LAB_LEARNING nao bloqueia quando risk plan nao aprovado."""
+        """LAB_LEARNING must respect the risk plan."""
         from src.mt5_order_executor import executar_ordem_mt5_pre_operacao
         with patch("src.mt5_order_executor.calcular_plano_risco",
                    return_value={"approved": False, "lot": 0.01,
@@ -389,11 +390,12 @@ class TestLabLearning:
             with patch("src.mt5_order_executor.avaliar_orcamento_risco_aberto",
                        return_value={"approved": True}):
                 result = executar_ordem_mt5_pre_operacao(forcar=False)
-                assert result.get("ok") is True
+                assert result.get("error") == "RISK_CONTROL_BLOCKED"
+                mock_mt5.order_send.assert_not_called()
 
-    def test_lab_bypasses_risk_budget(self, mock_mt5, mock_lab_config, mock_deps,
+    def test_lab_respects_risk_budget(self, mock_mt5, mock_lab_config, mock_deps,
                                        mock_pre_op_csv, mock_csv, mock_risk_config):
-        """LAB_LEARNING nao bloqueia quando orcamento de risco excedido."""
+        """LAB_LEARNING must respect the open risk budget."""
         from src.mt5_order_executor import executar_ordem_mt5_pre_operacao
         with patch("src.mt5_order_executor.calcular_plano_risco",
                    return_value={"approved": True, "lot": 0.01,
@@ -401,7 +403,8 @@ class TestLabLearning:
             with patch("src.mt5_order_executor.avaliar_orcamento_risco_aberto",
                        return_value={"approved": False}):
                 result = executar_ordem_mt5_pre_operacao(forcar=False)
-                assert result.get("ok") is True
+                assert result.get("error") == "OPEN_RISK_BUDGET_EXCEEDED"
+                mock_mt5.order_send.assert_not_called()
 
     def test_lab_caps_lot_instead_of_blocking(self, mock_mt5, mock_lab_config, mock_deps,
                                                 mock_pre_op_csv, mock_csv, mock_risk_config):
@@ -433,9 +436,9 @@ class TestLabLearning:
                     result = executar_ordem_mt5_pre_operacao(forcar=False)
                     assert result.get("ok") is True
 
-    def test_lab_order_send_retry_on_none(self, mock_mt5, mock_lab_config, mock_deps,
+    def test_lab_order_send_latches_on_none(self, mock_mt5, mock_lab_config, mock_deps,
                                             mock_pre_op_csv, mock_csv, mock_risk_config):
-        """LAB_LEARNING: order_send=None faz retry com reconexao."""
+        """Unknown result blocks subsequent cycles and manual retry release."""
         from src.mt5_order_executor import executar_ordem_mt5_pre_operacao
         mock_mt5.order_send.side_effect = [None, MagicMock(retcode=10009, order=99999)]
         mock_mt5.last_error.return_value = (10099, "test error")
@@ -445,9 +448,28 @@ class TestLabLearning:
             with patch("src.mt5_order_executor.avaliar_orcamento_risco_aberto",
                        return_value={"approved": True}):
                 result = executar_ordem_mt5_pre_operacao(forcar=False)
-                assert result.get("ok") is True
-                order = result.get("order", {})
-                assert order.get("ticket") == 99999
-                assert mock_mt5.order_send.call_count == 2
+                assert result.get("error") == "MT5_ORDER_RESULT_UNKNOWN_RECONCILIATION_REQUIRED"
+                assert executar_ordem_mt5_pre_operacao()["error"] == "MT5_RECONCILIATION_REQUIRED"
+                from src.mt5_order_executor import liberar_nova_tentativa_mt5
+                assert liberar_nova_tentativa_mt5("PREOP-TEST-1")["error"] == "MT5_RECONCILIATION_REQUIRED"
+                assert mock_mt5.order_send.call_count == 1
                 mock_mt5.shutdown.assert_called()
                 mock_mt5.initialize.assert_called()
+
+
+def test_partial_fill_latches(mock_mt5, mock_lab_config, mock_deps, mock_pre_op_csv, mock_csv, mock_risk_config):
+    from src.mt5_order_executor import executar_ordem_mt5_pre_operacao
+    mock_mt5.order_send.return_value=MagicMock(retcode=10010,order=998)
+    with patch('src.mt5_order_executor.calcular_plano_risco', return_value={'approved':True,'lot':.01,'estimated_risk':50,'estimated_risk_percent':.5}), patch('src.mt5_order_executor.avaliar_orcamento_risco_aberto', return_value={'approved':True}):
+        assert executar_ordem_mt5_pre_operacao()['error']=='MT5_RECONCILIATION_REQUIRED'
+        assert executar_ordem_mt5_pre_operacao()['error']=='MT5_RECONCILIATION_REQUIRED'
+    mock_mt5.order_send.assert_called_once()
+
+
+def test_atomic_finalize_preserves_intent_on_failure(mock_csv):
+    from src.mt5_order_executor import _salvar_ordem, _salvar_ordens, _ler_ordens
+    _salvar_ordem({'pre_operation_id':'P1','status':'INDETERMINADA'})
+    with patch('src.mt5_order_executor.os.replace',side_effect=OSError('interrupted')):
+        with pytest.raises(OSError):
+            _salvar_ordens([{'pre_operation_id':'P1','status':'ENVIADA'}])
+    assert _ler_ordens()[0]['status']=='INDETERMINADA'

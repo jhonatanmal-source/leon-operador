@@ -1,3 +1,4 @@
+from src.leon_config import MARKET
 # ===================================
 # MOMENTUM READER
 # ===================================
@@ -10,7 +11,7 @@ def analisar_momentum():
         print("ERRO MT5")
         return "NEUTRO"
 
-    simbolo = "Gold_Spot"
+    simbolo = MARKET
 
     mt5.symbol_select(simbolo, True)
 

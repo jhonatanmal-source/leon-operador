@@ -1,3 +1,4 @@
+from src.leon_config import MARKET
 # ===================================
 
 # LEON XAU ELITE AI V3
@@ -109,7 +110,7 @@ class Leon:
 
     def __init__(self):
 
-        self.market = "Gold_Spot"
+        self.market = MARKET
         self.status = "Observando Mercado"
 
     def iniciar(self):

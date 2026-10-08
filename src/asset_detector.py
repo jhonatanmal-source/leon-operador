@@ -1,13 +1,14 @@
 import json
 from pathlib import Path
+from src.leon_config import MARKET
 
-CANDIDATOS = ["Gold_Spot", "XAUUSD", "XAUUSD.fx", "GOLD", "XAU/USD"]
+CANDIDATOS = list(dict.fromkeys([MARKET, "Gold_Spot", "XAUUSD", "XAUUSD.fx", "GOLD", "XAU/USD"]))
 CACHE_FILE = Path(__file__).resolve().parent.parent / "data" / "active_symbol_cache.json"
 
 
 def detectar_ativo():
     cache = _ler_cache()
-    if cache:
+    if cache == MARKET:
         return cache
 
     try:

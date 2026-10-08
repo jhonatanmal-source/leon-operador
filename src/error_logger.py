@@ -1,3 +1,4 @@
+from src.paths import BASE_DIR
 from datetime import datetime
 from pathlib import Path
 
@@ -5,8 +6,8 @@ def registrar_erro(erro):
 
     linha = f"{datetime.now()} | {erro}\n"
     caminhos = [
-        Path("/opt/leon/app/logs/errors.txt"),
-        Path("/opt/leon/app/logs/errors_fallback.txt"),
+        Path(f"{BASE_DIR.as_posix()}/logs/errors.txt"),
+        Path(f"{BASE_DIR.as_posix()}/logs/errors_fallback.txt"),
     ]
 
     for caminho in caminhos:

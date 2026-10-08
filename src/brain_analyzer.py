@@ -1,3 +1,4 @@
+from src.paths import BASE_DIR
 # ===================================
 # BRAIN ANALYZER
 # ===================================
@@ -5,7 +6,7 @@
 import os
 import csv
 
-ARQUIVO = "/opt/leon/app/data/brain_memory.csv"
+ARQUIVO = f"{BASE_DIR.as_posix()}/data/brain_memory.csv"
 
 
 def analisar_brain():

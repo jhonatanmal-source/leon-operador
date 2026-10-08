@@ -1,3 +1,4 @@
+from src.paths import BASE_DIR
 # ===================================
 # DAILY REPORT
 # ===================================
@@ -9,7 +10,7 @@ def gerar_relatorio_diario():
     agora = datetime.now()
 
     with open(
-        "/opt/leon/app/reports/daily_report.txt",
+        f"{BASE_DIR.as_posix()}/reports/daily_report.txt",
         "a",
         encoding="utf-8"
     ) as arquivo:

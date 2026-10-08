@@ -1,3 +1,4 @@
+from src.leon_config import MARKET
 # ===================================
 # CANDLE ENGINE
 # ===================================
@@ -7,7 +8,7 @@ import pandas as pd
 
 
 def obter_candles(
-    simbolo="Gold_Spot",
+    simbolo=MARKET,
     timeframe=mt5.TIMEFRAME_M15,
     quantidade=100
 ):

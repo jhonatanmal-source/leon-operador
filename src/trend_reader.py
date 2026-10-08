@@ -1,3 +1,4 @@
+from src.leon_config import MARKET
 # ===================================
 # TREND READER
 # ===================================
@@ -11,7 +12,7 @@ def analisar_tendencia_real():
         print("ERRO MT5")
         return "LATERAL"
 
-    simbolo = "Gold_Spot"
+    simbolo = MARKET
 
     mt5.symbol_select(simbolo, True)
 

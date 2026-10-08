@@ -1,10 +1,11 @@
+from src.paths import BASE_DIR
 # ===================================
 # PERFORMANCE TRACKER
 # ===================================
 
 import os
 
-ARQUIVO = "/opt/leon/app/data/performance.csv"
+ARQUIVO = f"{BASE_DIR.as_posix()}/data/performance.csv"
 
 def registrar_performance(resultado):
 

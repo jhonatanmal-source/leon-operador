@@ -1,3 +1,4 @@
+from src.leon_config import MARKET
 import csv
 from datetime import datetime
 from pathlib import Path
@@ -59,7 +60,7 @@ def register_shadow_trade(
     direction,
     missing_confirmations,
     event_signature,
-    symbol="Gold_Spot",
+    symbol=MARKET,
 ):
     if direction not in ["COMPRA", "VENDA"] or len(candles) < 10:
         return {"ok": False, "error": "INVALID_SHADOW_CONTEXT"}

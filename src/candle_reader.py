@@ -1,3 +1,4 @@
+from src.leon_config import MARKET
 # ===================================
 # CANDLE READER
 # ===================================
@@ -12,7 +13,7 @@ def ler_candle_m15():
         print("ERRO MT5")
         return
 
-    simbolo = "Gold_Spot"
+    simbolo = MARKET
 
     mt5.symbol_select(simbolo, True)
 
@@ -39,6 +40,8 @@ def ler_candle_m15():
     else:
 
         print("SEM CANDLES")
+        mt5.shutdown()
+        return
 
     mt5.shutdown()
 

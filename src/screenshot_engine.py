@@ -1,3 +1,4 @@
+from src.paths import BASE_DIR
 # ===================================
 # SCREENSHOT ENGINE
 # ===================================
@@ -5,7 +6,7 @@
 from datetime import datetime
 import os
 
-PASTA = "/opt/leon/app/screenshots"
+PASTA = f"{BASE_DIR.as_posix()}/screenshots"
 
 def registrar_screenshot():
 

@@ -1,3 +1,4 @@
+from src.paths import BASE_DIR
 # ===================================
 # HOURLY ANALYZER
 # ===================================
@@ -6,7 +7,7 @@ from collections import Counter
 
 def analisar_horarios():
 
-    arquivo = "/opt/leon/app/data/trade_memory.csv"
+    arquivo = f"{BASE_DIR.as_posix()}/data/trade_memory.csv"
 
     horas = Counter()
 

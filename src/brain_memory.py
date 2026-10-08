@@ -1,10 +1,11 @@
+from src.paths import BASE_DIR
 # ===================================
 # BRAIN MEMORY
 # ===================================
 
 import os
 
-ARQUIVO = "/opt/leon/app/data/brain_memory.csv"
+ARQUIVO = f"{BASE_DIR.as_posix()}/data/brain_memory.csv"
 
 def registrar_brain(
     brain_score,

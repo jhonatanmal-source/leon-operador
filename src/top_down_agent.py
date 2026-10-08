@@ -124,6 +124,9 @@ def gerar_leitura_top_down(candles_h4=None, candles_h1=None, candles_m15=None):
     elif len(validas) >= 2:
         alinhamento = "MISTO"
         resumo = "Timeframes ainda mistos. Operar somente teste/supervisao."
+    elif all(leitura in {"ALTA", "BAIXA", "LATERAL"} for leitura in leituras):
+        alinhamento = "LATERAL"
+        resumo = "Dados disponiveis, mas sem consenso direcional. Aguardar confirmacao; entrada nao liberada."
     else:
         alinhamento = "SEM DADOS"
         resumo = "Sem dados suficientes para leitura top-down."

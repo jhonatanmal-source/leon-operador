@@ -1,3 +1,4 @@
+from src.paths import BASE_DIR
 # ===================================
 # JOURNAL ENGINE
 # ===================================
@@ -17,7 +18,7 @@ def registrar_journal():
     agora = datetime.now()
 
     with open(
-        "/opt/leon/app/logs/journal.txt",
+        f"{BASE_DIR.as_posix()}/logs/journal.txt",
         "a",
         encoding="utf-8"
     ) as arquivo:

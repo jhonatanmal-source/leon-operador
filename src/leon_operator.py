@@ -33,6 +33,7 @@ from src.brain_context_memory import registrar_contexto_cerebro
 from src.brain_memory import registrar_brain
 from src.collector_operator import executar_coleta_manual
 from src.daily_learning_diary import executar_ciclo_aprendizado_diario
+from src.decision_diagnostic import record as record_decision, read_status as read_decision_status
 from src.daily_operator_report import gerar_relatorio_operador_diario
 from src.emotion_engine import register_emotional_event
 from src.error_logger import registrar_erro
@@ -156,6 +157,7 @@ def _registrar_heartbeat(estado, detalhes=None):
         "pid": os.getpid(),
         "updated_at": datetime.now().isoformat(timespec="seconds"),
     }
+    payload["decision_diagnostic"] = read_decision_status()
     if detalhes:
         payload["details"] = detalhes
 
@@ -928,6 +930,7 @@ def executar_analise_programada(forcar=False):
 
         if resultado.returncode != 0:
             detalhes = _detalhar_falha_subprocesso(resultado)
+            record_decision("analysis", {"ok": False, "error": "ANALYSIS_FAILED"})
             register_emotional_event("error", "Falha na analise automatica.")
             registrar_erro(f"OPERATOR | falha na analise: {detalhes}")
             enviar_erro_sistema(
@@ -953,6 +956,8 @@ def executar_analise_programada(forcar=False):
                 "OPERATOR | diagnostico de entrada: "
                 + " | ".join(bloqueios_analise[-5:])
             )
+
+        record_decision("analysis", {"ok": True}, bloqueios_analise[-5:])
 
         _salvar_analise(agora)
         register_emotional_event("analysis_success")
@@ -1100,6 +1105,7 @@ def executar_ordem_demo_programada(forcar=False):
         }
 
     resultado = executar_ordem_mt5_pre_operacao(forcar=False)
+    record_decision("execution", resultado)
     registrar_log(
         "OPERATOR | execucao demo avaliada: "
         f"ok={resultado.get('ok', False)} "
@@ -1521,6 +1527,7 @@ def iniciar_operador():
                 if (
                     resultado.get("error") == "OPERATOR_TASK_EXCEPTION"
                     or resultado.get("error") == "ANALYSIS_EXCEPTION"
+                    or resultado.get("error") == "ANALYSIS_FAILED"
                 )
             ]
             _registrar_heartbeat(

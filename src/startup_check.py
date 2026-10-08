@@ -1,3 +1,4 @@
+from src.paths import BASE_DIR
 # ===================================
 # STARTUP CHECK
 # ===================================
@@ -11,10 +12,10 @@ def verificar_estrutura():
     print("===================================")
 
     pastas = [
-        "/opt/leon/app/logs",
-        "/opt/leon/app/data",
-        "/opt/leon/app/reports",
-        "/opt/leon/app/backups"
+        f"{BASE_DIR.as_posix()}/logs",
+        f"{BASE_DIR.as_posix()}/data",
+        f"{BASE_DIR.as_posix()}/reports",
+        f"{BASE_DIR.as_posix()}/backups"
     ]
 
     for pasta in pastas:

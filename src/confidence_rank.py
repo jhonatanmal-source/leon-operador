@@ -1,10 +1,11 @@
+from src.paths import BASE_DIR
 # ===================================
 # CONFIDENCE RANK
 # ===================================
 
 import os
 
-ARQUIVO = "/opt/leon/app/data/trade_memory.csv"
+ARQUIVO = f"{BASE_DIR.as_posix()}/data/trade_memory.csv"
 
 def analisar_confianca():
 

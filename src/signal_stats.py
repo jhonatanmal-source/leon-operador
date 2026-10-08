@@ -1,3 +1,4 @@
+from src.paths import BASE_DIR
 # ===================================
 # SIGNAL STATS
 # ===================================
@@ -6,7 +7,7 @@ import os
 
 def analisar_sinais():
 
-    arquivo = "/opt/leon/app/data/signals.csv"
+    arquivo = f"{BASE_DIR.as_posix()}/data/signals.csv"
 
     if not os.path.exists(arquivo):
 

@@ -1,3 +1,4 @@
+from src.leon_config import MARKET
 # ===================================
 # MARKET READER
 # ===================================
@@ -12,7 +13,7 @@ def ler_preco_xau():
         print("ERRO MT5")
         return
 
-    simbolo = "Gold_Spot"
+    simbolo = MARKET
 
     mt5.symbol_select(simbolo, True)
 

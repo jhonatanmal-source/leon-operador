@@ -1,9 +1,10 @@
+from src.paths import BASE_DIR
 import os
 import json
 from datetime import datetime
 from pathlib import Path
 
-VAULT = Path("/opt/leon/app/obsidian_vault")
+VAULT = Path(f"{BASE_DIR.as_posix()}/obsidian_vault")
 DIARIO_DIR = VAULT / "aprendizados_diarios"
 OPERACIONAL_DIR = VAULT / "operacional"
 CONTEXTO_FILE = DIARIO_DIR / "CONTEXTO_EVOLUCAO.md"

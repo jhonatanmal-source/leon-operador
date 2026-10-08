@@ -1,3 +1,4 @@
+from src.paths import BASE_DIR
 from datetime import datetime
 
 def salvar_memoria_trade(
@@ -12,7 +13,7 @@ def salvar_memoria_trade(
 ):
 
     with open(
-        "/opt/leon/app/data/trade_memory.csv",
+        f"{BASE_DIR.as_posix()}/data/trade_memory.csv",
         "a",
         encoding="utf-8"
     ) as arquivo:

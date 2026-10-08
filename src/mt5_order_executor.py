@@ -4,6 +4,8 @@
 
 import configparser
 import csv
+import os
+import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -30,6 +32,7 @@ from src.top_down_agent import ultima_leitura_top_down
 from src.autonomy_guard import status_autonomia
 from src.timeframe_policy import evaluate_timeframe_policy
 from src.interest_zone_engine import validate_zone_for_execution
+from src.ftmo_guard import evaluate_ftmo_entry
 
 # _mt5_exec is resolved dynamically inside executar_ordem_mt5_pre_operacao()
 # to allow test mocking. It is not imported at module level.
@@ -262,16 +265,26 @@ def _salvar_ordem(registro):
     with ORDER_MEMORY_FILE.open("a", encoding="utf-8", newline="") as arquivo:
         escritor = csv.DictWriter(arquivo, fieldnames=ORDER_FIELDS, delimiter=";")
         escritor.writerow(registro)
+        arquivo.flush()
+        os.fsync(arquivo.fileno())
 
 
 def _salvar_ordens(registros):
 
     _garantir_memoria()
 
-    with ORDER_MEMORY_FILE.open("w", encoding="utf-8", newline="") as arquivo:
-        escritor = csv.DictWriter(arquivo, fieldnames=ORDER_FIELDS, delimiter=";")
-        escritor.writeheader()
-        escritor.writerows(registros)
+    fd, path = tempfile.mkstemp(dir=ORDER_MEMORY_FILE.parent, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="") as arquivo:
+            escritor = csv.DictWriter(arquivo, fieldnames=ORDER_FIELDS, delimiter=";")
+            escritor.writeheader()
+            escritor.writerows(registros)
+            arquivo.flush()
+            os.fsync(arquivo.fileno())
+        os.replace(path, ORDER_MEMORY_FILE)
+    finally:
+        if os.path.exists(path):
+            os.unlink(path)
 
 
 def _pre_operacao_ja_executada(pre_operation_id):
@@ -279,7 +292,7 @@ def _pre_operacao_ja_executada(pre_operation_id):
     for ordem in _ler_ordens():
         if (
             ordem.get("pre_operation_id") == pre_operation_id
-            and ordem.get("status") in ["ENVIADA", "RECUSADA"]
+            and ordem.get("status") in ["ENVIADA", "RECUSADA", "INDETERMINADA"]
         ):
             return True
 
@@ -326,6 +339,8 @@ def liberar_nova_tentativa_mt5(pre_operation_id=None):
         pre_operation_id = pre_operacao.get("id")
 
     ordens = _ler_ordens()
+    if any(o.get("status") == "INDETERMINADA" for o in ordens):
+        return _bloqueio("MT5_RECONCILIATION_REQUIRED")
     mantidas = [
         ordem
         for ordem in ordens
@@ -671,12 +686,41 @@ def _rr_no_preco_execucao(direcao, preco_execucao, stop, take_profit):
 
 
 def executar_ordem_mt5_pre_operacao(forcar=False):
+    # Serialize panel and background worker across processes, including intent recording.
+    ORDER_MEMORY_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with ORDER_MEMORY_FILE.with_suffix(".lock").open("a+b") as lock:
+        if lock.tell() == 0:
+            lock.write(b"0")
+            lock.flush()
+        lock.seek(0)
+        try:
+            if os.name == "nt":
+                import msvcrt
+                msvcrt.locking(lock.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            return _bloqueio("MT5_EXECUTOR_BUSY")
+        try:
+            return _executar_ordem_mt5_pre_operacao(forcar=forcar)
+        finally:
+            lock.seek(0)
+            if os.name == "nt":
+                msvcrt.locking(lock.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
+
+
+def _executar_ordem_mt5_pre_operacao(forcar=False):
 
     config = _execution_config()
     risk_gate = _risk_gate_config()
 
-    if not config["enabled"] and not forcar:
+    if not config["enabled"]:
         return _bloqueio("MT5_EXECUTION_DISABLED")
+    if any(o.get("status") == "INDETERMINADA" for o in _ler_ordens()):
+        return _bloqueio("MT5_RECONCILIATION_REQUIRED")
 
     autonomia = status_autonomia()
     if (
@@ -919,7 +963,7 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
             mt5.shutdown()
             return _bloqueio("MT5_ACCOUNT_NOT_AVAILABLE")
 
-        if config["demo_only"] and account.trade_mode != mt5.ACCOUNT_TRADE_MODE_DEMO:
+        if account.trade_mode != mt5.ACCOUNT_TRADE_MODE_DEMO:
             mt5.shutdown()
             return _bloqueio(
                 "MT5_REAL_ACCOUNT_BLOCKED",
@@ -928,7 +972,9 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
 
         if config["max_open_positions"] > 0:
             positions = mt5.positions_get()
-            if positions is not None and len(positions) >= config["max_open_positions"]:
+            if positions is None:
+                return _bloqueio("MT5_POSITIONS_UNAVAILABLE")
+            if len(positions) >= config["max_open_positions"]:
                 mt5.shutdown()
                 registrar_log(
                     f"MT5 ORDER | MAX_OPEN_POSITIONS_REACHED: "
@@ -1121,7 +1167,7 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
             especificacoes=especificacoes,
         )
 
-        if not plano_risco.get("approved") and not lab_learning_mode:
+        if not plano_risco.get("approved"):
             mt5.shutdown()
             registrar_relatorio_operacao(
                 pre_operacao,
@@ -1135,7 +1181,7 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
         orcamento_risco = avaliar_orcamento_risco_aberto(
             plano_risco["estimated_risk_percent"]
         )
-        if not orcamento_risco.get("approved") and not lab_learning_mode:
+        if not orcamento_risco.get("approved"):
             registrar_relatorio_operacao(
                 pre_operacao,
                 decisao="BLOQUEAR",
@@ -1210,34 +1256,35 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
         # Dynamically resolve mt5linux_compat to support test mocking.
         # Using direct import (not mt5_safe) because mt5_safe blocks order_send.
         import mt5linux_compat as _mt5_exec  # noqa: E402
+        if not _mt5_exec.initialize():
+            return _bloqueio("MT5_RECONNECT_BEFORE_SEND_FAILED")
+        ftmo_guard = evaluate_ftmo_entry(_mt5_exec, request, expected_login=account.login)
+        if not ftmo_guard.get("approved"):
+            return _bloqueio(ftmo_guard.get("reason", "FTMO_ENTRY_BLOCKED"), ftmo_guard)
+        _salvar_ordem({"data": datetime.now().isoformat(timespec="seconds"),
+                       "pre_operation_id": pre_operation_id, "ativo": ativo,
+                       "status": "INDETERMINADA", "motivo": "SEND_INTENT_RECONCILIATION_REQUIRED"})
         resultado = _mt5_exec.order_send(request)
         if resultado is None:
             err_code, err_desc = _mt5_exec.last_error()
             registrar_log(
                 f"MT5 ORDER | order_send retornou None: "
-                f"{err_code} {err_desc}; reconectando..."
+                f"{err_code} {err_desc}; requer conciliacao, sem reenvio automatico"
             )
-            _mt5_exec.shutdown()
-            if _mt5_exec.initialize():
-                resultado = _mt5_exec.order_send(request)
-                if resultado is not None:
-                    registrar_log(
-                        "MT5 ORDER | order_send reenviado "
-                        "apos reconexao"
-                    )
-            if resultado is None:
-                mt5.shutdown()
-                mt5_inicializado = False
-                return _bloqueio(
-                    "MT5_ORDER_SEND_FAILED",
-                    _mt5_exec.last_error(),
-                )
+            mt5.shutdown()
+            mt5_inicializado = False
+            return _bloqueio("MT5_ORDER_RESULT_UNKNOWN_RECONCILIATION_REQUIRED")
         mt5.shutdown()
         mt5_inicializado = False
         retcode = getattr(resultado, "retcode", None)
         ticket = getattr(resultado, "order", None)
         ok = retcode == mt5.TRADE_RETCODE_DONE
 
+        # Partial fills, timeout, placed and unknown retcodes require broker reconciliation.
+        rejected_codes = {10004, 10006, 10013, 10014, 10015, 10016, 10017,
+                          10018, 10019, 10020, 10021, 10022, 10024, 10026,
+                          10027, 10030, 10033, 10034, 10035, 10038, 10040}
+        status = "ENVIADA" if ok else ("RECUSADA" if retcode in rejected_codes else "INDETERMINADA")
         registro = {
             "data": datetime.now().isoformat(timespec="seconds"),
             "pre_operation_id": pre_operation_id,
@@ -1247,12 +1294,14 @@ def executar_ordem_mt5_pre_operacao(forcar=False):
             "entrada": price,
             "stop": sl,
             "tp": tp,
-            "status": "ENVIADA" if ok else "RECUSADA",
+            "status": status,
             "retcode": retcode,
             "ticket": ticket,
             "motivo": motivo,
         }
-        _salvar_ordem(registro)
+        _salvar_ordens([o for o in _ler_ordens() if o.get("pre_operation_id") != pre_operation_id] + [registro])
+        if status == "INDETERMINADA":
+            return _bloqueio("MT5_RECONCILIATION_REQUIRED", {"retcode": retcode})
 
         if ok:
             registrar_log(f"MT5 ORDER | ordem teste enviada: {registro}")

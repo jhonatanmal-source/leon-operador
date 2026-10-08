@@ -3,6 +3,8 @@
 # ===================================
 
 from datetime import datetime
+import configparser
+from src.paths import BASE_DIR
 
 from src.candle_logger import registrar_candle
 from src.error_logger import registrar_erro
@@ -13,7 +15,11 @@ from src.price_logger import registrar_preco
 SIMBOLO_PADRAO = "Gold_Spot"
 
 
-def executar_coleta_manual(simbolo=SIMBOLO_PADRAO):
+def executar_coleta_manual(simbolo=None):
+    if simbolo is None:
+        config = configparser.ConfigParser()
+        config.read(BASE_DIR / "config.ini", encoding="utf-8")
+        simbolo = config.get("OPERATOR", "market_symbol", fallback=SIMBOLO_PADRAO)
 
     try:
         import mt5_safe as mt5

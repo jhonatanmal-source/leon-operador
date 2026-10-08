@@ -4,7 +4,8 @@
 
 import configparser
 import math
-from datetime import datetime
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from decimal import Decimal, ROUND_FLOOR
 from pathlib import Path
 
@@ -167,26 +168,34 @@ def avaliar_limite_perda_diaria():
                 "error": "MT5_ACCOUNT_NOT_AVAILABLE",
             }
 
-        start = datetime.now().replace(
+        now = datetime.now(timezone.utc)
+        start = now.astimezone(ZoneInfo("Europe/Prague")).replace(
             hour=0,
             minute=0,
             second=0,
             microsecond=0,
         )
-        deals = mt5.history_deals_get(start, datetime.now()) or []
-        exits = [
-            deal
-            for deal in deals
-            if deal.entry in [mt5.DEAL_ENTRY_OUT, mt5.DEAL_ENTRY_OUT_BY]
-        ]
+        deals = mt5.history_deals_get(start.astimezone(timezone.utc), now)
+        if deals is None:
+            return {"ok": False, "approved": False, "error": "MT5_HISTORY_UNAVAILABLE"}
+        deposits = [deal for deal in deals if deal.type == mt5.DEAL_TYPE_BALANCE]
+        if deposits:
+            # The verified initial capital is not trading profit. The full FTMO
+            # ledger gate separately rejects additional deposits or adjustments.
+            cfg = configparser.ConfigParser()
+            cfg.read(CONFIG_FILE, encoding="utf-8")
+            initial = cfg.getfloat("FTMO", "initial_balance", fallback=0)
+            if len(deposits) != 1 or initial <= 0 or abs(float(deposits[0].profit) - initial) > .01:
+                return {"ok": False, "approved": False, "error": "BALANCE_ADJUSTMENT_REVIEW_REQUIRED"}
+            deals = [deal for deal in deals if deal.type != mt5.DEAL_TYPE_BALANCE]
         resultado_realizado = sum(
             float(deal.profit)
             + float(deal.commission)
             + float(deal.swap)
             + float(deal.fee)
-            for deal in exits
+            for deal in deals
         )
-        resultado_aberto = float(account.profit)
+        resultado_aberto = float(account.equity) - float(account.balance)
 
         return calcular_limite_perda_diaria(
             saldo_atual=float(account.balance),
@@ -418,7 +427,9 @@ def avaliar_orcamento_risco_aberto(risco_planejado_percentual):
 
     try:
         account = mt5.account_info()
-        positions = mt5.positions_get() or []
+        positions = mt5.positions_get()
+        if positions is None:
+            return {"ok": False, "approved": False, "error": "MT5_POSITIONS_UNAVAILABLE"}
         if account is None or account.balance <= 0:
             return {
                 "ok": False,

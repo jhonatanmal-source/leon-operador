@@ -1,10 +1,11 @@
+from src.paths import BASE_DIR
 # ===================================
 # BOOT COUNTER
 # ===================================
 
 import os
 
-ARQUIVO = "/opt/leon/app/data/boot_count.txt"
+ARQUIVO = f"{BASE_DIR.as_posix()}/data/boot_count.txt"
 
 def contar_inicializacao():
 

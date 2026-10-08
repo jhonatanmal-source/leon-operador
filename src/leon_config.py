@@ -2,7 +2,12 @@
 # LEON CONFIG
 # ===================================
 
-MARKET = "Gold_Spot"
+import configparser
+from src.paths import BASE_DIR
+
+_config = configparser.ConfigParser()
+_config.read(BASE_DIR / "config.ini", encoding="utf-8")
+MARKET = _config.get("OPERATOR", "market_symbol", fallback="Gold_Spot")
 
 TIMEFRAME_MAIN = "M15"
 TIMEFRAME_CONTEXT = "H4"

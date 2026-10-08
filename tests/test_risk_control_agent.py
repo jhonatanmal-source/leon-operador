@@ -9,6 +9,16 @@ from src.risk_control_agent import (
 )
 
 
+@pytest.fixture(autouse=True)
+def isolated_risk_config(monkeypatch):
+    # Contract fixtures must not depend on the user's active trading settings.
+    monkeypatch.setattr("src.risk_control_agent._risk_config", lambda: {
+        "enabled": True, "risk_percent": .5, "max_risk_percent": 1.0,
+        "daily_loss_percent": 2.0, "max_lot": .10, "min_lot": .01,
+        "correction_risk_factor": .5, "max_open_risk_percent": 1.0,
+    })
+
+
 # =============================================================================
 # calcular_limite_perda_diaria — contract tests
 # =============================================================================

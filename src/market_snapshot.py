@@ -1,3 +1,5 @@
+from src.leon_config import MARKET
+from src.paths import BASE_DIR
 # ===================================
 # MARKET SNAPSHOT
 # ===================================
@@ -12,7 +14,7 @@ def salvar_snapshot():
         print("ERRO MT5")
         return
 
-    simbolo = "Gold_Spot"
+    simbolo = MARKET
 
     mt5.symbol_select(simbolo, True)
 
@@ -28,7 +30,7 @@ def salvar_snapshot():
         }
 
         with open(
-            "/opt/leon/app/data/market_snapshot.json",
+            f"{BASE_DIR.as_posix()}/data/market_snapshot.json",
             "w",
             encoding="utf-8"
         ) as arquivo:

@@ -1,3 +1,4 @@
+from src.paths import BASE_DIR
 # ===================================
 # MEMORY RANK
 # ===================================
@@ -6,7 +7,7 @@ import os
 
 def analisar_rank():
 
-    arquivo = "/opt/leon/app/data/trade_memory.csv"
+    arquivo = f"{BASE_DIR.as_posix()}/data/trade_memory.csv"
 
     if not os.path.exists(arquivo):
 

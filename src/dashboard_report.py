@@ -1,3 +1,4 @@
+from src.paths import BASE_DIR
 # ===================================
 # DASHBOARD REPORT
 # ===================================
@@ -19,7 +20,7 @@ def mostrar_dashboard():
 
     for arquivo in arquivos:
 
-        caminho = f"/opt/leon/app/data/{arquivo}"
+        caminho = f"{BASE_DIR.as_posix()}/data/{arquivo}"
 
         if os.path.exists(caminho):
 

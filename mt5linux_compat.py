@@ -1,15 +1,23 @@
-from mt5linux import MetaTrader5 as _ClientBase
+import os
+import sys
+
+if sys.platform == "win32":
+    import MetaTrader5 as _ClientBase
+else:
+    from mt5linux import MetaTrader5 as _ClientBase
 
 _CLIENT = None
 _HOST = "localhost"
 _PORT = 18812
 _TIMEOUT = 10
+_LAST_INIT_ERROR = None
 
 
 def _get_client():
     global _CLIENT
     if _CLIENT is None:
-        _CLIENT = _ClientBase(host=_HOST, port=_PORT, timeout=_TIMEOUT)
+        _CLIENT = (_ClientBase if sys.platform == "win32" else
+                   _ClientBase(host=_HOST, port=_PORT, timeout=_TIMEOUT))
     return _CLIENT
 
 
@@ -19,7 +27,18 @@ def _reset_client():
 
 
 def initialize(*args, **kwargs):
+    global _LAST_INIT_ERROR
+    _LAST_INIT_ERROR = None
     try:
+        if sys.platform == "win32":
+            import psutil
+            if not any(p.info.get("name", "").lower() == "terminal64.exe"
+                       for p in psutil.process_iter(["name"])):
+                _LAST_INIT_ERROR = (-10000, "MT5_TERMINAL_NOT_RUNNING: abra e conecte a conta demo")
+                return False
+            kwargs.setdefault("timeout", 5000)
+            if not args and os.getenv("LEON_MT5_PATH"):
+                args = (os.environ["LEON_MT5_PATH"],)
         return _get_client().initialize(*args, **kwargs)
     except Exception:
         _reset_client()
@@ -118,6 +137,8 @@ def terminal_info(*args, **kwargs):
 
 
 def last_error(*args, **kwargs):
+    if _LAST_INIT_ERROR is not None:
+        return _LAST_INIT_ERROR
     return _get_client().last_error(*args, **kwargs)
 
 

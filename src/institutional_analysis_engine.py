@@ -685,3 +685,4 @@ def analyze_elliott_context(candles, trend):
         "invalidation": points[-1] if points else None,
         "correction_possible": True,
     })
+    return result

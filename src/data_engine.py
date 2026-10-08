@@ -1,3 +1,4 @@
+from src.paths import BASE_DIR
 # ===================================
 # DATA ENGINE
 # ===================================
@@ -15,7 +16,7 @@ def salvar_execucao():
     }
 
     with open(
-        "/opt/leon/app/data/leon_data.json",
+        f"{BASE_DIR.as_posix()}/data/leon_data.json",
         "a",
         encoding="utf-8"
     ) as arquivo:

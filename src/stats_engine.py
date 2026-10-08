@@ -1,3 +1,4 @@
+from src.paths import BASE_DIR
 # ===================================
 # STATS ENGINE
 # ===================================
@@ -10,7 +11,7 @@ def mostrar_estatisticas():
     print("STATS ENGINE")
     print("===================================")
 
-    arquivo = "/opt/leon/app/data/leon_data.json"
+    arquivo = f"{BASE_DIR.as_posix()}/data/leon_data.json"
 
     if os.path.exists(arquivo):
 

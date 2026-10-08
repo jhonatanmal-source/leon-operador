@@ -1,3 +1,4 @@
+from src.paths import BASE_DIR
 # ===================================
 # LEARNING REPORT
 # ===================================
@@ -11,9 +12,9 @@ def gerar_relatorio_aprendizado():
     print("===================================")
 
     arquivos = {
-        "Preços": "/opt/leon/app/data/price_history.csv",
-        "Candles": "/opt/leon/app/data/candle_history.csv",
-        "Sinais": "/opt/leon/app/data/signals.csv"
+        "Preços": f"{BASE_DIR.as_posix()}/data/price_history.csv",
+        "Candles": f"{BASE_DIR.as_posix()}/data/candle_history.csv",
+        "Sinais": f"{BASE_DIR.as_posix()}/data/signals.csv"
     }
 
     for nome, caminho in arquivos.items():

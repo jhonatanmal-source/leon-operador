@@ -1,3 +1,4 @@
+from src.leon_config import MARKET
 # mt5_candles.py
 
 import mt5_safe as mt5
@@ -6,7 +7,7 @@ import pandas as pd
 if mt5.initialize():
 
     rates = mt5.copy_rates_from_pos(
-        "Gold_Spot",
+        MARKET,
         mt5.TIMEFRAME_M15,
         0,
         100
